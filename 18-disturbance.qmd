@@ -1,0 +1,127 @@
+---
+title: "Disturbance Mapping"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Classifying disturbance
+
+The time-series chapter detected change by thresholding a single index. Real disturbance mapping goes further: it *classifies* every pixel into a category, intact forest, harvested, burned, or beetle-killed, by learning the spectral signature of each class from labelled examples. This is **supervised classification**, the engine behind burn-severity and pest-damage maps, and it is a skill an auditor needs both to make disturbance maps and to judge the ones a project submits. The workflow, train a model on labelled pixels, predict across the image, and assess accuracy against held-out data, is the same one I use for burn-severity and mountain-pine-beetle mapping.
+
+```{r}
+library(terra)
+library(caret)
+library(dplyr)
+```
+
+## Feature stack
+
+A classifier learns from **features**, the per-pixel predictors that separate the classes. Here we simulate a two-band feature stack over the study area, standing in for spectral indices such as NDVI and a burn-sensitive index (NBR). Three classes, intact forest, disturbed, and non-forest, occupy different regions of feature space.
+
+```{r}
+set.seed(11)
+r  <- rast(xmin = -124.78, xmax = -124.58, ymin = 49.24, ymax = 49.34,
+           nrows = 80, ncols = 80, crs = "EPSG:4326", nlyrs = 2)
+names(r) <- c("ndvi", "nbr")
+
+# three latent classes across the grid
+cls <- rast(r, nlyrs = 1)
+values(cls) <- sample(1:3, ncell(cls), replace = TRUE, prob = c(.6, .25, .15))
+mu <- list(ndvi = c(0.82, 0.45, 0.15), nbr = c(0.55, 0.10, -0.20))
+r$ndvi <- app(cls, \(k) mu$ndvi[k]) + rnorm(ncell(r), 0, 0.05)
+r$nbr  <- app(cls, \(k) mu$nbr[k])  + rnorm(ncell(r), 0, 0.05)
+
+plot(r, main = c("NDVI", "NBR"))
+```
+
+## Training data
+
+Supervised learning needs labelled pixels. In practice these come from field visits, air-photo interpretation, or known events; here we draw a random sample of pixels and read their true class. We split them into a training set to fit the model and a test set held back to judge it honestly.
+
+```{r}
+set.seed(1)
+samp <- spatSample(c(r, class = cls), size = 600, method = "random", as.df = TRUE, xy = FALSE)
+names(samp)[3] <- "class"
+samp$class <- factor(c("forest", "disturbed", "nonforest")[samp$class],
+                     levels = c("forest", "disturbed", "nonforest"))
+samp <- na.omit(samp)
+
+idx   <- createDataPartition(samp$class, p = 0.7, list = FALSE)
+train <- samp[idx, ]; test <- samp[-idx, ]
+table(train$class)
+```
+
+## Training a classifier
+
+A random forest is the workhorse of land-cover classification: it handles non-linear boundaries, needs little tuning, and reports which features matter. We train it through `caret`, which wraps cross-validation around the fit so the model is tuned without touching the test set.
+
+```{r}
+ctrl <- trainControl(method = "cv", number = 5)
+rf   <- train(class ~ ndvi + nbr, data = train, method = "rf",
+              trControl = ctrl, tuneLength = 2)
+rf
+```
+
+## Predicting the map
+
+The fitted model applies to the whole image at once, turning two feature grids into a classified disturbance map:
+
+```{r}
+cls_map <- terra::predict(r, rf, na.rm = TRUE)
+plot(cls_map, main = "Classified disturbance map")
+```
+
+## Accuracy assessment
+
+A classification is worthless without an accuracy statement, and the standard one is the **confusion matrix**: predicted class against true class on the held-out test data. From it come overall accuracy and Cohen's kappa, which corrects for agreement expected by chance, together with the per-class producer's and user's accuracies that an audit scrutinises.
+
+```{r}
+pred <- predict(rf, test)
+confusionMatrix(pred, test$class)
+```
+
+Producer's accuracy asks "of the truly disturbed pixels, how many did the map catch?"; user's accuracy asks "of the pixels the map calls disturbed, how many really are?". For a reversal check the second matters most, because a false alarm triggers an unnecessary investigation while a miss lets a real loss go uncounted.
+
+## Fire emissions
+
+Once disturbance is mapped, its carbon consequence is quantified. For fire, IPCC guidance gives the emissions from a burn as the product of area, fuel load, combustion completeness, and an emission factor [@ipcc2006gl]:
+
+$$
+L_{fire} = A \times M_B \times C_f \times G_{ef}
+$$
+
+where $A$ is burned area (ha), $M_B$ the fuel mass available (t ha⁻¹), $C_f$ the combustion factor, and $G_{ef}$ the emission factor (g per kg burned). For the disturbed class we can put numbers to it:
+
+```{r}
+disturbed_ha <- sum(values(cls_map) == 2, na.rm = TRUE) * prod(res(cls_map)) * 111^2 / 1e4 * cos(49*pi/180)
+MB  <- 120     # fuel load, t/ha (coastal conifer)
+Cf  <- 0.45    # combustion completeness
+Gef <- 1580    # CO2 emission factor, g/kg (IPCC default, extratropical forest)
+
+emissions_tCO2 <- disturbed_ha * MB * Cf * (Gef / 1000)   # t dry matter * g/kg /1000 = tCO2
+cat("Approx. disturbed area:", round(disturbed_ha), "ha\n")
+cat("First-order fire emissions:", format(round(emissions_tCO2), big.mark = ","), "tCO2\n")
+```
+
+The same chain underlies operational fire-danger and fuel-type mapping systems such as the Canadian Forest Fire Danger Rating System, which classify fuels precisely so that $M_B$ and $C_f$ can be assigned per stand rather than as a single landscape average. For an auditor, the discipline is identical to every other chapter: map the change, quantify its carbon, and state the uncertainty.
+
+## Exercises
+
+1. Add a third feature (for example a simulated shortwave-infrared band) and retrain. Does the extra feature improve overall accuracy and kappa, and which feature does the random forest rank most important?
+2. Change the training/test split from 70/30 to 50/50. How stable are the accuracy statistics, and why does an auditor prefer a larger independent test set?
+3. Interpret the confusion matrix for the "disturbed" class: is the model more prone to false alarms or misses, and which is worse for a reversal check?
+4. Recompute the fire emissions with a fuel load of 80 and 160 t/ha. How sensitive is the emissions estimate to fuel load, and how would per-stand fuel typing narrow that uncertainty?

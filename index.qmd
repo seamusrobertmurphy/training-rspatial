@@ -1,0 +1,53 @@
+---
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  echo: true
+  warning: false
+  message: false
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+# Preface {.unnumbered}
+
+This book is a practical course in spatial data analysis with R, written for people who verify environmental claims for a living: forest inventory practitioners, forest-carbon analysts, and organic-agriculture auditors. It grew out of training material I prepare for field teams who need to move confidently between a stack of shapefiles, a folder of satellite imagery, a plot database, and a defensible number at the end.
+
+The premise is that a modern auditor should be able to open a dataset, understand its coordinate system, join it to field measurements, summarise it, map it, and quantify the uncertainty in the result, all in a single reproducible script. R makes that possible with free, open tools, and this course teaches the workflow end to end.
+
+## Learning outcomes {.unnumbered}
+
+By the end of the course you will be able to:
+
+1. Set up a reproducible R project for spatial work
+2. Distinguish the vector and raster data models and choose between them
+3. Read, inspect, and reproject spatial data in any coordinate reference system
+4. Wrangle vector data with `sf` and the `tidyverse`
+5. Perform geometric operations: buffers, intersections, dissolves, and spatial joins
+6. Read and process raster data with `terra`, including raster algebra and terrain analysis
+7. Extract raster covariates to field plots
+8. Produce publication-quality static and interactive maps
+9. Measure spatial autocorrelation and describe point patterns
+10. Interpolate a continuous surface from sample points using geostatistics
+11. Fit and predict a spatial model across a landscape
+12. Assemble a complete forest-carbon inventory workflow and report its uncertainty
+
+## The running example {.unnumbered}
+
+Every chapter draws on a single study area on Vancouver Island, British Columbia: a coastal temperate rainforest landscape in the Alberni Valley, where Douglas-fir, western redcedar, western hemlock, and Sitka spruce dominate. We work with a forest inventory of 140 plots and the individual-tree measurements behind them, together with terrain, imagery, and administrative layers pulled from open sources.
+
+::: callout-note
+## Inventory data
+
+The plot and tree measurements used throughout this book are **simulated** for teaching. They are generated from realistic coastal-BC species compositions and biomass–diameter relationships so that the numbers behave like a real cruise, but they do not describe any specific stand or landowner. Terrain, imagery, coastline, and place-name layers, by contrast, are real and are downloaded from open services (elevation, MODIS/Sentinel imagery, and OpenStreetMap) at render time. Wherever a layer is real, the code shows exactly where it comes from.
+:::
+
+## Using this book {.unnumbered}
+
+Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises at the end of each chapter. The material is pitched at analysts who know some statistics but may be new to R and to GIS.
+
+## Further reading {.unnumbered}
+
+This course covers the standard curriculum of spatial analysis in R, and readers who want a deeper or more general treatment are well served by the canonical texts in the field: @pebesma2023sds, @lovelace2019geocomputation, and @bivand2013asdar. The `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. The forest-carbon accounting conventions follow @ipcc2006gl, and the illustrative allometry is informed by the Canadian national biomass equations of @ung2008allometric.

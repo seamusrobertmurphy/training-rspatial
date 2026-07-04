@@ -1,0 +1,100 @@
+project:
+  type: book
+
+book:
+  title: "Spatial Data Analysis in R for Forest Carbon"
+  subtitle: "A Practical GIS and Remote Sensing Course for Forest, Carbon, and Agriculture Auditors"
+  author:
+    - name: Dr Seamus Murphy
+      url: https://scholar.google.com/citations?hl=en&user=jDGq9I4AAAAJ
+      orcid: 0000-0002-1792-0351
+      email: seamusrobertmurphy@gmail.com
+  date: last-modified
+  open-graph: true
+  page-footer:
+    left: "[Source](https://github.com/seamusrobertmurphy/training-rspatial)"
+  repo-url: https://github.com/seamusrobertmurphy/training-rspatial
+  repo-branch: main
+  repo-actions: [edit, issue]
+
+  chapters:
+    - index.qmd
+    - part: "I — Foundations"
+      chapters:
+        - 01-r-for-spatial.qmd
+        - 02-data-models.qmd
+        - 03-crs.qmd
+    - part: "II — Vector data"
+      chapters:
+        - 04-vector-sf.qmd
+        - 05-geometry-joins.qmd
+    - part: "III — Raster data"
+      chapters:
+        - 06-raster-terra.qmd
+        - 07-raster-extraction.qmd
+    - part: "IV — LiDAR and forest structure"
+      chapters:
+        - 14-lidar-structure.qmd
+    - part: "V — Analysis and modelling"
+      chapters:
+        - 08-cartography.qmd
+        - 09-autocorrelation.qmd
+        - 10-interpolation.qmd
+        - 11-modelling.qmd
+        - 12-time-series.qmd
+        - 18-disturbance.qmd
+    - part: "VI — Carbon accounting and verification"
+      chapters:
+        - 15-allometry.qmd
+        - 16-carbon-accounting.qmd
+        - 17-mrv-verification.qmd
+    - part: "VII — Applied workflow"
+      chapters:
+        - 13-capstone-carbon.qmd
+
+  appendices:
+    - references/index.qmd
+
+  sidebar:
+    title: "Course Contents"
+    search: true
+    style: "docked"
+    collapse-level: 2
+
+bibliography: references/references.bib
+csl: references/apa.csl
+citeproc: true
+
+number-sections: true
+
+execute:
+  error: true
+  freeze: auto
+
+format:
+  html:
+    toc: true
+    number-sections: true
+    toc-title: "**On this page**"
+    toc-location: right
+    toc-depth: 3
+    theme:
+      - styles.scss
+      - default
+    code-fold: false
+    code-tools: true
+    code-link: true
+    code-overflow: wrap
+
+  docx:
+    toc: true
+    number-sections: true
+    highlight-style: github
+    reference-doc: ./references/style.docx
+
+engine: knitr
+
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"

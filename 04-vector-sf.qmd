@@ -1,0 +1,125 @@
+---
+title: "Vector Data"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Reading and writing
+
+Vector data arrive in many file formats, and `sf` reads almost all of them through one function, `st_read()`. The most common you will meet are the **ESRI shapefile** (a `.shp` file plus a cluster of sidecar files that must travel with it), the **GeoPackage** (`.gpkg`, a single modern file that avoids the shapefile's limitations), and **GeoJSON** (`.geojson`, plain text, good for the web). The same call reads all three:
+
+```{r}
+library(sf)
+library(dplyr)
+
+plots <- st_read("data/forest_plots.shp", quiet = TRUE)
+class(plots)
+```
+
+The object has classes `sf` and `data.frame`: it is a data frame first, spatial second. That is the design idea to hold onto throughout this chapter.
+
+## sf anatomy
+
+An `sf` object is a table whose rows are **features** and whose last column, of class `sfc` (simple feature column), holds the geometry. Each element of that column is a single geometry, an `sfg`. You can pull the pieces apart:
+
+```{r}
+st_geometry(plots)          # the sfc: geometries + CRS + bounding box
+st_drop_geometry(plots) |> head(3)   # just the attribute table
+```
+
+`st_geometry()` is useful when you want to plot only the shapes, with no attribute shading, and `st_drop_geometry()` is useful when you want to treat the layer as an ordinary table, for example to write a plain CSV.
+
+## Attribute operations
+
+Because an `sf` object is a data frame, the whole `dplyr` grammar applies and the geometry column is carried along automatically. Select columns, filter rows, and create new variables exactly as you would for any table:
+
+```{r}
+plots |>
+  filter(stand_type == "old-growth") |>
+  mutate(carbon_t_per_plot = carbon * 0.1) |>   # 0.1 ha plots
+  select(plot_id, stand_type, carbon, carbon_t_per_plot) |>
+  head()
+```
+
+Grouped summaries work too, and here `sf` does something helpful: when you `summarise()` a grouped `sf` object it dissolves the geometries of each group. For now we only want a table, so we drop the geometry first:
+
+```{r}
+plots |>
+  st_drop_geometry() |>
+  group_by(stand_type) |>
+  summarise(n = n(),
+            mean_carbon = round(mean(carbon), 1),
+            sd_carbon   = round(sd(carbon), 1))
+```
+
+## Attribute joins
+
+The real work of an inventory is bringing tables together. Our tree measurements live in a separate file, one row per stem. To attach a tree-derived quantity to each plot, summarise the trees by `plot_id` and **attribute-join** the result to the spatial plots. This is an ordinary table join on a shared key; no geography is involved yet.
+
+```{r}
+trees <- read.csv("data/tree_measurements.csv")
+
+tree_summary <- trees |>
+  group_by(plot_id) |>
+  summarise(n_trees   = n(),
+            qmd_cm    = round(sqrt(mean(dbh_cm^2)), 1),   # quadratic mean diameter
+            tallest_m = max(height_m))
+
+plots_joined <- plots |>
+  left_join(tree_summary, by = "plot_id")
+
+plots_joined |>
+  select(plot_id, stand_type, carbon, n_trees, qmd_cm, tallest_m) |>
+  head()
+```
+
+The joined layer is still `sf`: we have enriched every plot with stand structure computed from its trees, and it remains mappable. Quadratic mean diameter, used above, is the diameter of the tree of average basal area and is a standard stand-structure metric that weights large trees more than a simple mean.
+
+## Adding context
+
+So far every layer has been our own. Auditing usually means placing your data against an authoritative backdrop, a coastline, a municipal boundary, a park. These come from open services. The `rnaturalearth` package pulls administrative and physical layers directly; here we fetch the British Columbia coastline for context. This step needs an internet connection.
+
+```{r}
+#| eval: false
+library(rnaturalearth)
+
+bc_coast <- ne_states(country = "Canada", returnclass = "sf") |>
+  filter(name == "British Columbia")
+
+plot(st_geometry(bc_coast), col = "grey90",
+     xlim = c(-125.5, -124), ylim = c(48.9, 49.6))
+plot(st_geometry(plots), add = TRUE, pch = 19, cex = 0.4, col = "firebrick")
+```
+
+## Writing results
+
+When you have produced a layer worth keeping, write it out. Prefer the **GeoPackage** over the shapefile: it stores long column names, keeps the CRS reliably, and is a single tidy file rather than a scattering of sidecars.
+
+```{r}
+#| eval: false
+st_write(plots_joined, "data/plots_joined.gpkg",
+         delete_dsn = TRUE)          # overwrite if it exists
+```
+
+Shapefiles remain common because so many agencies still use them, but they silently truncate column names to ten characters and cannot store more than one geometry type, which is exactly the kind of quiet corruption an auditor should avoid creating.
+
+## Exercises
+
+1. Read `forest_plots.shp` and write it back out as both a GeoPackage and a GeoJSON. Open the GeoJSON in a text editor: can you see the coordinates and attributes? What does this tell you about the format?
+2. Attribute-join a per-plot count of *Douglas-fir* stems to the plots layer, then map the plots shaded by that count. (Filter `tree_measurements.csv` to `species == "Douglas-fir"` before summarising.)
+3. Compute quadratic mean diameter for every plot and add it to the plots layer. Which stand type has the largest average QMD, and does that match your expectation for old growth versus second growth?
+4. Using `st_drop_geometry()`, export a plain-CSV summary table of carbon by stand type suitable for pasting into a report. Why might you want the non-spatial version for that purpose?
