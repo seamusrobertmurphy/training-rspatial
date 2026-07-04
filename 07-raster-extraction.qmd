@@ -1,0 +1,110 @@
+---
+title: "Raster Extraction"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Why extraction
+
+Everything so far has led here. We have field plots as vector points and terrain as a raster surface, and the question that turns them into an analysis is: what is the elevation, slope, and ruggedness *at each plot*? Answering it is called **extraction**, and it is the bridge between the vector and raster worlds. Once every plot carries the environmental values of the pixel it sits in, we can model carbon against terrain, map predictions across the landscape, and quantify uncertainty, which is the work of the analysis chapters that follow.
+
+```{r}
+library(terra)
+library(sf)
+library(dplyr)
+library(elevatr)
+
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(3005)
+
+aoi <- st_as_sfc(st_bbox(c(xmin = -124.78, xmax = -124.58,
+                           ymin = 49.24,  ymax = 49.34),
+                         crs = st_crs(4326))) |> st_sf()
+dem <- get_elev_raster(aoi, z = 11, clip = "locations") |> rast() |>
+  project("EPSG:3005")
+names(dem) <- "elevation"
+```
+
+## Covariate stack
+
+Extraction is most efficient when all the predictors are in a single multi-layer raster, because then one call reads them all. We derive slope, aspect, and ruggedness from the DEM and stack them together. All layers share the DEM's grid, so they align automatically.
+
+```{r}
+slope  <- terrain(dem, "slope",  unit = "degrees")
+aspect <- terrain(dem, "aspect", unit = "degrees")
+tri    <- terrain(dem, "TRI")
+
+covariates <- c(dem, slope, aspect, tri)
+names(covariates) <- c("elevation", "slope", "aspect", "tri")
+covariates
+```
+
+## Point extraction
+
+`terra::extract()` reads the raster at each vector location. We pass the plots as a `SpatVector` and bind the result back onto the plot attributes:
+
+```{r}
+ex <- terra::extract(covariates, vect(plots), ID = FALSE)
+plots_cov <- bind_cols(st_drop_geometry(plots), ex)
+head(plots_cov)
+```
+
+Each plot now has a value for elevation, slope, aspect, and ruggedness alongside its measured carbon. That single table is the raw material for every model in the rest of the book.
+
+## Buffered extraction
+
+A plot centre is a single point, but a plot samples an area, and a satellite pixel may be coarser than the plot. Extracting the **mean over a buffer** rather than the value at the exact centre is often more honest, because it averages out the pixel lottery. Pass a buffered geometry and a summary function:
+
+```{r}
+plot_buffers <- st_buffer(plots, 50)                # 50 m radius
+elev_mean <- terra::extract(dem, vect(plot_buffers),
+                            fun = mean, na.rm = TRUE, ID = FALSE)
+head(elev_mean)
+```
+
+Whether to use point or buffered extraction is a judgement call that depends on how the plot was measured and how coarse the raster is; the important thing for an audit is to state which you did and why.
+
+## Imagery covariates
+
+Terrain is only one source of predictors. Spectral indices such as NDVI, a measure of vegetation greenness computed from the red and near-infrared bands of satellite imagery, are extracted in exactly the same way once you have the raster. Fetching a real image is a chapter in itself, so here we simply record the pattern: obtain the image (for example a Sentinel-2 scene), compute the index with map algebra, and `extract()` it to the plots just as we did for terrain. The extraction step is identical regardless of the raster's origin.
+
+## Saving the table
+
+Because the covariate table is the input to several later chapters, write it out so we do not have to re-download the DEM every time:
+
+```{r}
+#| eval: false
+write.csv(plots_cov, "data/plots_covariates.csv", row.names = FALSE)
+```
+
+A quick look confirms the extracted terrain carries signal we can model. Carbon-dense stands in this landscape tend to sit on gentler, lower slopes:
+
+```{r}
+plots_cov |>
+  mutate(slope_class = cut(slope, c(0, 10, 20, 90),
+                           labels = c("gentle", "moderate", "steep"))) |>
+  group_by(slope_class) |>
+  summarise(n = n(), mean_carbon = round(mean(carbon), 1))
+```
+
+## Exercises
+
+1. Extract elevation, slope, and ruggedness to the plots and report the correlation of each with `carbon`. Which terrain variable is most strongly associated with carbon density?
+2. Compare point extraction with 50-metre buffered extraction for elevation. How different are the two, and in what kind of terrain would they diverge most?
+3. Add an `aspect` class (north-facing versus south-facing) to the covariate table and compare mean carbon between them. Would you expect aspect to matter on Vancouver Island?
+4. Save the covariate table to `data/plots_covariates.csv` and reload it. Confirm it has one row per plot and columns for each terrain covariate; this file feeds the modelling chapters.

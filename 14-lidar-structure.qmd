@@ -1,0 +1,152 @@
+---
+title: "Forest LiDAR"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Forest in 3D
+
+Field plots sample a few hundred square metres; airborne LiDAR measures the whole estate in three dimensions. A laser scanner mounted on an aircraft fires hundreds of thousands of pulses per second, and each return records where a pulse struck something, the top of a crown, a branch, the ground beneath. From that cloud of points we can reconstruct the terrain under the canopy, the height of every tree, and structural metrics that predict biomass far more cheaply than a wall-to-wall cruise. For a carbon auditor, LiDAR is the bridge between a handful of plots and a defensible landscape estimate.
+
+This chapter follows the operational pipeline I use for airborne LiDAR: read and clean the point cloud, separate ground from vegetation, build a terrain model, normalise heights, derive a canopy height model, and detect individual trees. We work on the `MixedConifer` sample that ships with the `lidR` package [@roussel2020lidr] so that every step is reproducible on your own machine with no download.
+
+```{r}
+library(lidR)
+library(terra)
+library(sf)
+library(dplyr)
+```
+
+## Reading point clouds
+
+LiDAR is distributed as `.las` or compressed `.laz` files. `readLAS()` reads one into a `LAS` object; `las_check()` is the first thing to run on any new tile, because it reports the coordinate system, the classification scheme, and any structural problems before they contaminate an analysis.
+
+```{r}
+f   <- system.file("extdata", "MixedConifer.laz", package = "lidR")
+las <- readLAS(f, select = "xyzc")   # keep coords + classification
+las
+las_check(las)
+```
+
+The summary reports the number of points, the area, the point density (points per m², a key quality metric), and the range of elevations. A plot renders the raw cloud; colouring by height shows the canopy surface immediately:
+
+```{r}
+plot(las, color = "Z", bg = "white", legend = TRUE)
+```
+
+## Ground classification
+
+Every downstream product depends on knowing which returns are ground. Ground classification is a filtering problem, and two algorithms dominate. The Cloth Simulation Filter (CSF) drapes a simulated cloth over the inverted cloud and is robust on steep, complex terrain; the Progressive Morphological Filter (PMF) opens the surface with growing windows. I default to CSF for mountainous coastal ground:
+
+```{r}
+las <- classify_ground(las, csf(sloop_smooth = TRUE,
+                                class_threshold = 0.5,
+                                cloth_resolution = 1))
+```
+
+Scanners and birds produce stray points far above or below the true surface; left in, a single high outlier becomes a phantom "tree". Statistical Outlier Removal (SOR) flags points whose neighbours are implausibly far away, and we drop them:
+
+```{r}
+las <- classify_noise(las, sor(k = 10, m = 3))
+las <- filter_poi(las, Classification != LASNOISE)
+```
+
+## Terrain models
+
+Interpolating the ground returns onto a regular grid gives a **digital terrain model** (DTM), the bare-earth surface beneath the canopy. `rasterize_terrain()` offers several interpolators; inverse-distance weighting on the *k* nearest neighbours is fast and stable:
+
+```{r}
+dtm <- rasterize_terrain(las, res = 1, knnidw(k = 10, p = 2))
+dtm
+
+slope  <- terrain(dtm, "slope",  unit = "radians")
+aspect <- terrain(dtm, "aspect", unit = "radians")
+hs     <- shade(slope, aspect, angle = 40, direction = 270)
+plot(hs, col = grey(0:100 / 100), legend = FALSE, main = "Ground beneath the canopy")
+```
+
+That bare-earth relief, invisible from the air and from optical satellites, is one of LiDAR's unique contributions: it reveals the operability, drainage, and access that shape both the forest and the audit.
+
+## Normalising heights
+
+Raw return elevations are heights above sea level; what we want is height *above ground*. Subtracting the DTM from every point, `normalize_height()`, flattens the terrain so that a point's `Z` becomes its height above the earth beneath it. After normalisation, ground points sit at zero and canopy points carry their true tree height.
+
+```{r}
+las_norm <- normalize_height(las, knnidw(k = 10, p = 2))
+```
+
+## Canopy height
+
+Rasterising the top of the normalised cloud produces the **canopy height model** (CHM), the single most useful LiDAR product for forestry. The pit-free algorithm builds it from a stack of triangulations and avoids the black "pits" that plague naive surfaces:
+
+```{r}
+chm <- rasterize_canopy(las_norm, res = 0.5, pitfree(subcircle = 0.2))
+plot(chm, col = height.colors(50), main = "Canopy height model (m)")
+```
+
+The CHM is a biomass proxy in its own right: taller, denser canopy means more carbon, and differencing two CHMs from different years measures growth or, after a harvest, loss directly, which is the most defensible evidence of a stock change there is.
+
+## Tree detection
+
+Local maxima in the CHM are treetops. `locate_trees()` with a local-maximum filter finds them; the critical parameter is the search-window size, because one window rarely suits both saplings and dominants. A fixed window is the starting point:
+
+```{r}
+ttops <- locate_trees(las_norm, lmf(ws = 5))
+nrow(ttops)
+
+plot(chm, col = height.colors(50), main = "Detected treetops")
+plot(st_geometry(ttops), add = TRUE, pch = 3, cex = 0.5)
+```
+
+Better is a **variable window** that grows with height, so tall crowns get a wide window and small ones a narrow window. This is the window function I use operationally, a linear ramp with a floor so the window never collapses:
+
+```{r}
+wf <- function(x) {
+  y <- 0.07 * x + 0.6      # window diameter grows with point height
+  pmax(y, 0.5)             # never smaller than 0.5 m
+}
+heights <- seq(0, 40, 0.5)
+plot(heights, wf(heights), type = "l",
+     xlab = "Tree height (m)", ylab = "Search-window diameter (m)")
+
+ttops_var <- locate_trees(las_norm, lmf(wf), uniqueness = "bitmerge")
+nrow(ttops_var)
+```
+
+The variable window typically finds more small trees without over-splitting large crowns, and the count of stems it returns is a direct, wall-to-wall estimate of stem density, the same `stems_ha` we measured by hand at the plots, now available everywhere.
+
+## Structure to carbon
+
+The purpose of all this is prediction. LiDAR does not measure biomass; it measures structure that *predicts* biomass. The standard route is the **area-based approach**: summarise the normalised cloud into per-cell metrics, mean and 95th-percentile height, canopy cover, return-height variability, and relate those metrics to the carbon measured at co-located field plots with the same modelling workflow used earlier in this book.
+
+```{r}
+metrics <- pixel_metrics(las_norm, res = 20, func = ~list(
+  zmean = mean(Z),
+  zq95  = quantile(Z, 0.95),
+  cover = sum(Z > 2) / length(Z)      # canopy cover: returns above 2 m
+))
+plot(metrics, main = c("Mean height", "95th-percentile height", "Canopy cover"))
+```
+
+In a full inventory these grids would be extracted to the plots exactly as terrain was in the raster-extraction chapter, a biomass model fitted against them, and the model predicted across the whole LiDAR coverage. The result is a metre-resolution carbon surface anchored to field measurements: the modern backbone of an enhanced forest inventory, and the reason LiDAR has become central to credible carbon accounting.
+
+## Exercises
+
+1. Read the `MixedConifer` sample and report its point density (points per m²). Why is density the first quality metric an auditor should check, and what happens to tree detection when it is too low?
+2. Classify the ground with PMF (`pmf(ws = c(3, 6, 9), th = c(0.5, 1, 1.5))`) instead of CSF and difference the two DTMs. Where do they disagree, and what does that imply on steep ground?
+3. Detect trees with a fixed 3-metre and a fixed 8-metre window, then with the variable window. How does the stem count change, and which is closest to what you would expect for a mixed-conifer stand?
+4. Compute the 95th-percentile canopy height per 20-metre cell and map it. If you had field carbon at plots on this tile, describe the exact steps to turn this metric into a wall-to-wall carbon surface.

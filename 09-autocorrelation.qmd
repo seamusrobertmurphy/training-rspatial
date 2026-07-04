@@ -1,0 +1,110 @@
+---
+title: "Spatial Autocorrelation"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Tobler's law
+
+Tobler's first law of geography states that everything is related to everything else, but near things are more related than distant things [@tobler1970computer]. In a forest, plots a few hundred metres apart share soil, aspect, disturbance history, and management, so their carbon densities tend to be alike. This tendency is **spatial autocorrelation**, and it has a consequence that matters directly to an audit: when nearby plots are correlated, they carry less independent information than their number suggests, so a variance calculated as if they were independent will be too small and your confidence interval too narrow. Measuring autocorrelation is therefore part of stating honest uncertainty.
+
+```{r}
+library(sf)
+library(dplyr)
+library(spdep)
+
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(3005)
+```
+
+## Defining neighbours
+
+Autocorrelation is always relative to a definition of "near". In `spdep` that definition is a **neighbours list**: for each plot, which other plots count as its neighbours. A simple, robust choice is the *k* nearest neighbours. Here each plot is linked to its six closest peers, and the links are given equal weight:
+
+```{r}
+coords <- st_coordinates(plots)
+knn <- knearneigh(coords, k = 6)
+nb  <- knn2nb(knn)
+lw  <- nb2listw(nb, style = "W")     # row-standardised weights
+nb
+```
+
+The printout summarises the graph: 140 plots, each with six neighbours. Plotting the graph shows the web of relationships the statistic will use:
+
+```{r}
+plot(st_geometry(plots), pch = 19, cex = 0.4, col = "grey40")
+plot(nb, coords, add = TRUE, col = "steelblue", lwd = 0.4)
+```
+
+## Global Moran's I
+
+**Moran's I** is the standard global measure of spatial autocorrelation. It ranges from about −1 (neighbouring values systematically opposite, a checkerboard) through 0 (no spatial pattern, values scattered at random) to +1 (neighbouring values alike, smooth clusters). We test whether carbon is autocorrelated across the study area:
+
+```{r}
+moran.test(plots$carbon, lw)
+```
+
+Read the output as you would any test: the Moran's I statistic is the observed autocorrelation, the expectation under no pattern is slightly negative, and the p-value asks whether the observed value could have arisen by chance. A `moran.plot` visualises the same thing, each plot's carbon against the average of its neighbours; a positive slope is positive autocorrelation:
+
+```{r}
+moran.plot(plots$carbon, lw, xlab = "Plot carbon", ylab = "Neighbour mean carbon")
+```
+
+## Local hot spots
+
+Global Moran's I gives one number for the whole landscape, but auditors usually want to know *where* the clustering is. **Local Moran's I** decomposes the global statistic into one value per plot, identifying local clusters of high or low carbon, the hot and cold spots:
+
+```{r}
+locm <- localmoran(plots$carbon, lw)
+plots$local_I <- locm[, "Ii"]
+plots$local_p <- locm[, ncol(locm)]     # last column is the p-value (name varies by version)
+
+plot(plots["local_I"], pch = 19,
+     main = "Local Moran's I for carbon")
+```
+
+Cells with a high positive local I sitting among high values mark carbon-dense clusters; the same statistic flags isolated anomalies, a low-carbon plot amid high-carbon neighbours, which in an audit is exactly the kind of point worth revisiting for a field or data error.
+
+## Point patterns
+
+Autocorrelation asks whether *values* cluster. A related question asks whether *locations* cluster: is a set of points spread evenly, scattered at random, or bunched together? This is **point-pattern analysis**. Our inventory plots are a designed sample, so their arrangement reflects the survey plan rather than a natural process, but the ideas matter whenever you analyse the positions of things themselves, seedlings, windthrow gaps, or illegal clearings detected in imagery.
+
+The reference case is **complete spatial randomness**, points falling independently and uniformly. Simulating it and a clustered alternative shows the difference the eye should learn to see:
+
+```{r}
+set.seed(1)
+random_pts    <- data.frame(x = runif(120), y = runif(120))
+centres       <- data.frame(x = runif(6),   y = runif(6))
+clustered_pts <- do.call(rbind, lapply(1:6, function(i)
+  data.frame(x = rnorm(20, centres$x[i], 0.04),
+             y = rnorm(20, centres$y[i], 0.04))))
+
+par(mfrow = c(1, 2))
+plot(random_pts,    pch = 19, cex = 0.5, main = "Random", asp = 1)
+plot(clustered_pts, pch = 19, cex = 0.5, main = "Clustered", asp = 1)
+par(mfrow = c(1, 1))
+```
+
+A quick numerical check is the mean nearest-neighbour distance: clustered points sit closer to their nearest neighbour than random points do. Formal tools such as Ripley's K (in the `spatstat` package) extend this across all distances, but the intuition, compare the observed spacing to what randomness would produce, is the whole idea.
+
+## Exercises
+
+1. Rebuild the neighbours list using a distance threshold (`dnearneigh`) of 1.5 km instead of six nearest neighbours. Does Moran's I for carbon change? Why might the neighbour definition matter?
+2. Test for autocorrelation in `basal_area` and `stems_ha` as well as carbon. Which forest variable is most strongly clustered in space?
+3. Map the local Moran's I and highlight plots that are significant at p < 0.05. Are the hot spots in particular blocks or elevations?
+4. Simulate a regular (evenly spaced) point pattern and compare its mean nearest-neighbour distance to the random and clustered cases above. Where do designed inventory grids fall on this spectrum?
