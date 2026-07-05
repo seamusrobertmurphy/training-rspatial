@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Maps as evidence
+## Thematic mapping
 
 A map in an audit report is not decoration; it is evidence. A well-made figure lets a reviewer see at a glance where the carbon is, where the plots fell, and whether the sampling covered the claim. A badly made one hides exactly those things. This chapter builds publication-quality maps two ways: with `tmap`, which is purpose-built for thematic cartography, and with `ggplot2`, which fits naturally if you already draw statistical graphics.
 
@@ -70,7 +70,7 @@ tm_shape(plots) +
 
 Classifying by quantile puts an equal number of plots in each colour class, which is a defensible default because it uses the whole palette regardless of the distribution's shape. Other schemes (`"equal"`, `"jenks"`) tell different stories from the same data, and choosing among them is a cartographic decision you should be able to justify.
 
-## Finishing maps
+## Map layout
 
 A figure headed for a report needs the furniture that makes it legible on its own: a title, a scale bar, and a north arrow. These are layers too.
 

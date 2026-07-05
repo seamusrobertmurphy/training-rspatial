@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Points to surface
+## Spatial prediction
 
 An inventory measures carbon at a scatter of plots, but a landowner, a registry, or an auditor usually wants a value *everywhere*, a continuous map from which any area can be totalled. Filling the gaps between sample points with a defensible surface is **spatial interpolation**, and its most rigorous form, **kriging**, also returns a map of its own uncertainty. That second map is what distinguishes a professional carbon surface from a pretty picture: it says where the estimate is trustworthy and where the sampling was too sparse to believe.
 
@@ -58,7 +58,7 @@ plot(st_geometry(plots), add = TRUE, pch = 19, cex = 0.3)
 
 The bullseyes around isolated high plots are IDW's signature weakness: with no model of how carbon varies in space, it cannot tell a real gradient from a lone large tree.
 
-## The variogram
+## Variogram
 
 Kriging fixes this by first *learning* how similarity decays with distance, from the data themselves. The tool is the **variogram**, which plots the average squared difference between plot pairs against the distance separating them. Nearby plots differ little; distant plots differ more, until the curve flattens at the range beyond which plots are effectively independent.
 
@@ -110,3 +110,4 @@ A mean error near zero says the surface is unbiased; the RMSE, in the same units
 2. Carbon is right-skewed because of a few very dense old-growth plots. Repeat the kriging on `log(carbon)` and back-transform. Does the surface or its cross-validated RMSE improve?
 3. Compare the IDW and kriging surfaces cell by cell (subtract one raster from the other). Where do they disagree most, and why?
 4. Coarsen the prediction grid to 500 metres and refit. How do the prediction and the standard-error map change, and what does that tell you about choosing a grid resolution for reporting?
+5. *(Applied.)* Kriging gives one source of uncertainty; a biomass allometric model gives another. In a Monte Carlo loop, draw the mean carbon density from its kriging standard error and multiply by a carbon-fraction factor drawn from `rnorm(1, 0.47, 0.02)`, repeat many times, and report the 90% interval of a landscape total. Which source of uncertainty dominates?

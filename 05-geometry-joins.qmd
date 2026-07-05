@@ -1,5 +1,5 @@
 ---
-title: "Geometry and Joins"
+title: "Spatial Operations"
 format:
   docx:
     reference-doc: ./references/style.docx
@@ -128,3 +128,4 @@ Nearest-feature logic underlies many audit checks: the closest road to a plot, t
 2. Spatially join the plots to the three blocks and produce a table of total carbon stock (MgC, remembering each plot represents 0.1 ha) by block. Which block holds the most carbon, and is that because of density or area?
 3. Use `st_within()` to count how many plots fall in each block, then confirm the counts match your spatial-join table from the previous exercise.
 4. Compute the distance from every plot to the boundary of the East block (hint: `st_boundary()` then `st_distance()`). Which plot is closest to the edge, and how might edge proximity matter for a carbon estimate?
+5. *(Applied.)* A project boundary arrives as two overlapping tenure polygons. Make them valid, use `st_intersection()` to expose the double-counted overlap, and report the reconciled net area with `st_union()`. Why does an unreconciled overlap inflate an area, and therefore a carbon, total?

@@ -1,0 +1,107 @@
+---
+title: "Geometries"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Simple features
+
+All vector data rest on one shared idea: a **feature** is a real-world thing that has both attributes and a geometry, and a geometry is a set of coordinates arranged into a defined shape. The international standard that formalises this is *Simple Features*, and it is the vocabulary every geospatial tool speaks [@pebesma2018sf]. Understanding the standard is the foundation of everything that follows, because once you know the geometry types and how they are represented, reading and manipulating any vector dataset becomes routine.
+
+```{r}
+library(sf)
+```
+
+## Geometry types
+
+The standard defines seven geometry types that cover essentially all vector data. Three are **single** geometries and three are their **multi** counterparts, plus a collection:
+
+- `POINT` — a single location.
+- `LINESTRING` — an ordered path of points.
+- `POLYGON` — one or more rings enclosing an area (an outer ring, optionally with holes).
+- `MULTIPOINT`, `MULTILINESTRING`, `MULTIPOLYGON` — sets of the above, so one feature can be several disjoint shapes (an archipelago is one `MULTIPOLYGON`).
+- `GEOMETRYCOLLECTION` — any mixture of the above in a single feature.
+
+Our forest plots are `POINT` features; a management block is a `POLYGON`; a river network would be a `MULTILINESTRING`. Knowing which type you hold determines which operations are meaningful, you can take the length of a line and the area of a polygon, but not the area of a point.
+
+## Building geometries
+
+`sf` constructs each type from coordinates. A single geometry object has class `sfg`:
+
+```{r}
+pt   <- st_point(c(-124.68, 49.29))
+line <- st_linestring(rbind(c(-124.72, 49.26), c(-124.66, 49.30), c(-124.60, 49.28)))
+poly <- st_polygon(list(rbind(
+  c(-124.74, 49.25), c(-124.60, 49.25), c(-124.60, 49.33),
+  c(-124.74, 49.33), c(-124.74, 49.25))))
+
+st_geometry_type(st_sfc(pt, line, poly))
+```
+
+A `POLYGON` is a *list* of rings because it may contain holes: the first ring is the exterior, any further rings are interior boundaries cut out of it. A `MULTIPOLYGON` nests one level deeper, a list of polygons.
+
+```{r}
+mp <- st_multipoint(rbind(c(-124.7, 49.27), c(-124.65, 49.30), c(-124.62, 49.26)))
+st_geometry_type(st_sfc(mp))
+```
+
+## WKT and WKB
+
+Geometries need a portable text or binary form so they can be stored and exchanged. **Well-Known Text** (WKT) is the human-readable representation; **Well-Known Binary** (WKB) is its compact machine form used inside databases and files. `st_as_text()` shows the WKT:
+
+```{r}
+st_as_text(pt)
+st_as_text(poly)
+```
+
+Reading a WKT string back into a geometry closes the loop, which is exactly what happens every time `sf` reads a GeoPackage or a spatial database column:
+
+```{r}
+st_as_sfc("POINT (-124.68 49.29)")
+```
+
+## Dimensions
+
+Coordinates are usually two-dimensional (XY), but the standard also allows a Z (elevation) and an M (a "measure", such as a distance along a route or a timestamp). A LiDAR return, for instance, is naturally an XYZ point. `sf` tracks this:
+
+```{r}
+p3 <- st_point(c(-124.68, 49.29, 850))   # XYZ: lon, lat, elevation
+st_dimension(st_sfc(p3))
+class(p3)
+```
+
+## Validity
+
+A geometry can be structurally *invalid*, a polygon whose boundary crosses itself, a ring that does not close, and invalid geometries silently corrupt areas, overlays, and joins. Checking and repairing validity is a foundational habit, not a niche concern:
+
+```{r}
+# a bow-tie polygon that self-intersects
+bad <- st_polygon(list(rbind(c(0,0), c(1,1), c(1,0), c(0,1), c(0,0))))
+st_is_valid(bad)
+fixed <- st_make_valid(bad)
+st_is_valid(fixed)
+st_geometry_type(fixed)          # repair may change the type
+```
+
+`st_make_valid()` repairs the geometry using the underlying GEOS library, sometimes changing its type in the process (a self-intersecting polygon may become a `MULTIPOLYGON`). Running a validity check the moment data arrive, before any measurement, is the single cheapest way to avoid a corrupted result.
+
+## Exercises
+
+1. Construct one geometry of each of the seven simple-feature types and confirm each with `st_geometry_type()`. Which types can return a meaningful `st_length()`, and which an `st_area()`?
+2. Write a polygon with a hole (an exterior ring plus one interior ring) and compute its area. Confirm the hole is subtracted.
+3. Convert the forest plots to WKT with `st_as_text()`, then read one point back with `st_as_sfc()`. Why is WKB, not WKT, used inside spatial databases?
+4. *(Applied.)* Airborne LiDAR returns are XYZ points. Build a small `MULTIPOINT` of XYZ coordinates representing tree tops with heights in Z, and confirm the dimension is `XYZ`. How would carrying Z change how you compute a canopy height?

@@ -17,8 +17,9 @@ pkgs <- c(
   "car",                                  # variance inflation factors (Ch 11)
   "MODISTools",                           # real NDVI time series (Ch 12, optional)
   "ranger", "spatstat",                   # used in the exercises
-  "lidR", "ForestTools", "RCSF",          # LiDAR chapter (point clouds, tree detection)
-  "caret", "randomForest"                 # supervised classification (disturbance chapter)
+  "spatstat", "spatialreg",               # point patterns, spatial regression
+  "lidR", "ForestTools", "RCSF",          # optional: applied LiDAR exercises
+  "caret", "randomForest"                 # optional: applied classification exercises
 )
 
 to_install <- pkgs[!pkgs %in% rownames(installed.packages())]

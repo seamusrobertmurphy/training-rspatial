@@ -19,38 +19,22 @@ book:
 
   chapters:
     - index.qmd
-    - part: "I — Foundations"
-      chapters:
-        - 01-r-for-spatial.qmd
-        - 02-data-models.qmd
-        - 03-crs.qmd
-    - part: "II — Vector data"
-      chapters:
-        - 04-vector-sf.qmd
-        - 05-geometry-joins.qmd
-    - part: "III — Raster data"
-      chapters:
-        - 06-raster-terra.qmd
-        - 07-raster-extraction.qmd
-    - part: "IV — LiDAR and forest structure"
-      chapters:
-        - 14-lidar-structure.qmd
-    - part: "V — Analysis and modelling"
-      chapters:
-        - 08-cartography.qmd
-        - 09-autocorrelation.qmd
-        - 10-interpolation.qmd
-        - 11-modelling.qmd
-        - 12-time-series.qmd
-        - 18-disturbance.qmd
-    - part: "VI — Carbon accounting and verification"
-      chapters:
-        - 15-allometry.qmd
-        - 16-carbon-accounting.qmd
-        - 17-mrv-verification.qmd
-    - part: "VII — Applied workflow"
-      chapters:
-        - 13-capstone-carbon.qmd
+    - 01-r-for-spatial.qmd
+    - 02-data-models.qmd
+    - g1-geometries.qmd
+    - 03-crs.qmd
+    - g3-spherical.qmd
+    - 04-vector-sf.qmd
+    - g2-attributes.qmd
+    - 05-geometry-joins.qmd
+    - 06-raster-terra.qmd
+    - 07-raster-extraction.qmd
+    - 12-time-series.qmd
+    - 08-cartography.qmd
+    - g4-point-patterns.qmd
+    - 10-interpolation.qmd
+    - 09-autocorrelation.qmd
+    - 11-modelling.qmd
 
   appendices:
     - references/index.qmd

@@ -129,3 +129,4 @@ Every raster operation in the rest of the course is one of these: algebra, terra
 2. Derive slope in degrees and classify it into three operability classes (for example 0–15°, 15–30°, over 30°). What fraction of the area falls in each class?
 3. Compute a hillshade and overlay the forest plots on it. Do the high-carbon plots tend to sit on gentle or steep terrain?
 4. Resample the DEM to 250-metre resolution and compare its mean elevation to the original. Why does the mean barely change while the file becomes far smaller?
+5. *(Applied.)* Airborne LiDAR yields a digital surface model (canopy top) as well as a terrain model. Given both as rasters, compute a canopy height model by subtraction (`chm <- dsm - dtm`) and describe how you would summarise it to a mean canopy height per plot for a biomass model.

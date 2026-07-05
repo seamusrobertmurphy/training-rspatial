@@ -1,5 +1,5 @@
 ---
-title: "Spatial Autocorrelation"
+title: "Areal Data"
 format:
   docx:
     reference-doc: ./references/style.docx
@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Tobler's law
+## Spatial dependence
 
 Tobler's first law of geography states that everything is related to everything else, but near things are more related than distant things [@tobler1970computer]. In a forest, plots a few hundred metres apart share soil, aspect, disturbance history, and management, so their carbon densities tend to be alike. This tendency is **spatial autocorrelation**, and it has a consequence that matters directly to an audit: when nearby plots are correlated, they carry less independent information than their number suggests, so a variance calculated as if they were independent will be too small and your confidence interval too narrow. Measuring autocorrelation is therefore part of stating honest uncertainty.
 
@@ -65,7 +65,7 @@ Read the output as you would any test: the Moran's I statistic is the observed a
 moran.plot(plots$carbon, lw, xlab = "Plot carbon", ylab = "Neighbour mean carbon")
 ```
 
-## Local hot spots
+## Local indicators
 
 Global Moran's I gives one number for the whole landscape, but auditors usually want to know *where* the clustering is. **Local Moran's I** decomposes the global statistic into one value per plot, identifying local clusters of high or low carbon, the hot and cold spots:
 
@@ -79,28 +79,6 @@ plot(plots["local_I"], pch = 19,
 ```
 
 Cells with a high positive local I sitting among high values mark carbon-dense clusters; the same statistic flags isolated anomalies, a low-carbon plot amid high-carbon neighbours, which in an audit is exactly the kind of point worth revisiting for a field or data error.
-
-## Point patterns
-
-Autocorrelation asks whether *values* cluster. A related question asks whether *locations* cluster: is a set of points spread evenly, scattered at random, or bunched together? This is **point-pattern analysis**. Our inventory plots are a designed sample, so their arrangement reflects the survey plan rather than a natural process, but the ideas matter whenever you analyse the positions of things themselves, seedlings, windthrow gaps, or illegal clearings detected in imagery.
-
-The reference case is **complete spatial randomness**, points falling independently and uniformly. Simulating it and a clustered alternative shows the difference the eye should learn to see:
-
-```{r}
-set.seed(1)
-random_pts    <- data.frame(x = runif(120), y = runif(120))
-centres       <- data.frame(x = runif(6),   y = runif(6))
-clustered_pts <- do.call(rbind, lapply(1:6, function(i)
-  data.frame(x = rnorm(20, centres$x[i], 0.04),
-             y = rnorm(20, centres$y[i], 0.04))))
-
-par(mfrow = c(1, 2))
-plot(random_pts,    pch = 19, cex = 0.5, main = "Random", asp = 1)
-plot(clustered_pts, pch = 19, cex = 0.5, main = "Clustered", asp = 1)
-par(mfrow = c(1, 1))
-```
-
-A quick numerical check is the mean nearest-neighbour distance: clustered points sit closer to their nearest neighbour than random points do. Formal tools such as Ripley's K (in the `spatstat` package) extend this across all distances, but the intuition, compare the observed spacing to what randomness would produce, is the whole idea.
 
 ## Exercises
 

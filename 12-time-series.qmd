@@ -1,5 +1,5 @@
 ---
-title: "Time Series"
+title: "Data Cubes"
 format:
   docx:
     reference-doc: ./references/style.docx
@@ -18,18 +18,18 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Why time matters
+## Data cubes
 
-Everything so far described a landscape at one moment. But an auditor's real questions are about *change*: has this stand been disturbed since the last verification? Is a restoration planting actually greening up? Did a claimed no-harvest commitment hold? Forest-carbon accounting lives or dies on monitoring over time, detecting harvest, fire, and pest damage that reverse stored carbon, and confirming the growth that adds it. Remote sensing answers these questions because satellites revisit the same ground every few days, building a **time series** at every pixel.
+A single raster is a two-dimensional grid. But most Earth-observation data have more dimensions than that: a satellite image has several spectral **bands**, and the same scene is re-imaged on many **dates**. Stack those and a raster becomes a multidimensional array indexed by x, y, band, and time, a **data cube**. The cube is the natural data structure for imagery and for any gridded variable that varies through time, and learning to slice, reduce, and summarise along its dimensions is a foundational skill distinct from single-raster work.
 
-This chapter treats a stack of images through time as a single object, a **raster data cube**, and shows the three operations that matter for monitoring: viewing change, measuring a trend at every pixel, and flagging where change was abrupt enough to be a disturbance.
+A time dimension is the most common extra axis, and it is the one that lets us measure *change*. This chapter builds a raster time series, a cube with a single band observed on several dates, and shows the three operations the cube makes possible: viewing change, reducing along the time axis to a per-pixel trend, and differencing two slices to detect an abrupt event. The example is a vegetation index through time, but the operations are generic to any cube.
 
 ```{r}
 library(terra)
 library(sf)
 ```
 
-## Data cubes
+## Building a cube
 
 A data cube is a raster with a third dimension: time. Each layer is the same grid on a different date. Real cubes come from stacking satellite scenes; here we build a small, reproducible NDVI cube for the study area over six years so the concepts are visible without a large download. The cube starts as mature, high-NDVI coastal forest, then a block in the east is harvested in 2022 and begins to regenerate.
 
@@ -64,7 +64,7 @@ cube
 
 The object is one `SpatRaster` with six layers and a time stamp on each. Everything you learned about single rasters, algebra, extraction, cropping, applies to the whole cube at once.
 
-## Seeing change
+## Visualising change
 
 The simplest monitoring product is a panel of the same place through time. The harvest appears as a dark block from 2022 onward, fading slightly as regeneration begins:
 
@@ -82,7 +82,7 @@ plot(years, ts, type = "b", pch = 19,
      xlab = "Year", ylab = "NDVI", main = "NDVI at a harvested pixel")
 ```
 
-## Per-pixel trends
+## Temporal reduction
 
 A time series per pixel means we can fit a trend *per pixel* and map where the landscape is greening or browning. `app()` applies a function across the layers of every cell; we fit a straight line to each pixel's NDVI against time and keep the slope:
 
@@ -98,7 +98,7 @@ plot(slope, main = "Per-pixel NDVI trend (slope per year)")
 
 The eastern block lights up as strongly negative, a browning trend driven by the harvest, while the undisturbed forest hovers near zero. This single map is a landscape-wide screening tool: it points the auditor straight to where something changed.
 
-## Detecting disturbance
+## Change detection
 
 A trend smooths over the whole period; disturbance is abrupt, so we also difference specific dates. The change between the year before and the year of harvest isolates the event, and a threshold turns the continuous difference into a disturbance flag:
 
@@ -112,7 +112,7 @@ plot(disturbed, main = "Disturbance flag (NDVI drop > 0.2)")
 
 The flagged area is the harvest block, delineated automatically. In a real audit this map is overlaid on tenure boundaries and permits: a disturbance flag inside a no-harvest commitment is a finding; one matching an approved cutblock is confirmation. The threshold itself must be justified and, ideally, calibrated against known events.
 
-## Real imagery
+## Remote-sensing cubes
 
 The workflow is identical for real data; only the source of the cube changes. A production monitoring pipeline pulls a MODIS or Sentinel-2 NDVI series for the area of interest and stacks it into exactly this kind of cube. The pattern, which needs internet access and the `MODISTools` package, is:
 
@@ -130,7 +130,7 @@ ndvi_ts <- mt_subset(product = "MOD13Q1",
 
 For finer detail, an airborne LiDAR canopy-height model differenced between two acquisitions measures height loss directly, the most defensible evidence of harvest there is. Whatever the sensor, the logic of this chapter, cube, trend, change, flag, does not change.
 
-## Change to carbon
+## Applications
 
 Change detection closes the carbon loop. Each disturbed pixel implies a stock change: the carbon that stood there, estimated by the methods of the earlier chapters, is the reversal to account for. Multiplying disturbed area by the pre-disturbance carbon density gives a first-order estimate of committed emissions, and the uncertainty in that number flows from the uncertainty in both the area and the density, which is the subject of the capstone.
 
@@ -140,3 +140,4 @@ Change detection closes the carbon loop. Each disturbed pixel implies a stock ch
 2. Change the disturbance threshold to −0.1 and −0.3. How does the flagged area change, and what is the trade-off between missing real harvests and flagging noise?
 3. Compute the mean NDVI of the whole scene in each year and plot the landscape-average trajectory. Does the single harvest block move the whole-area average appreciably?
 4. Sketch, in code comments, how you would replace the simulated cube with a real Sentinel-2 series and what pre-processing (cloud masking, compositing) you would need before the analysis above could be trusted.
+5. *(Applied.)* Instead of thresholding one band, a disturbance map can be produced by *classifying* each pixel from several bands with a supervised model (for example a random forest via `caret`). Outline the steps, training data, model fit, prediction across the cube, and an accuracy assessment with a confusion matrix, and explain why the accuracy statement matters to a verifier.
