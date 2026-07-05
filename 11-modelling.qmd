@@ -1,5 +1,5 @@
 ---
-title: "Spatial Modelling"
+title: "Spatial Regression"
 format:
   docx:
     reference-doc: ./references/style.docx
@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Why model?
+## Spatial modelling
 
 Kriging in the previous chapter mapped carbon from the plots' *positions* alone. But we also know something about *why* carbon varies: it responds to terrain, to elevation, slope, and ruggedness that shape moisture, exposure, and disturbance. A **spatial model** relates the field measurement to those environmental predictors, so that we can predict carbon anywhere the predictors exist, and, just as importantly, say which drivers matter. Where kriging captures pattern, modelling captures process, and the two are complementary.
 
@@ -35,7 +35,7 @@ plots <- st_as_sf(read.csv("data/forest_plots.csv"),
   st_transform(3005)
 ```
 
-## Modelling table
+## Model data
 
 Modelling needs a table of the response and its predictors at each plot, exactly the covariate extraction from the raster chapter. We rebuild the terrain covariate stack and extract it to the plots.
 
@@ -58,7 +58,7 @@ dat <- plots |>
 head(dat)
 ```
 
-## Fitting a model
+## Model fitting
 
 We start with a linear model, because an auditor should reach for the simplest thing that works and be able to read every coefficient. Carbon is modelled as a function of the three terrain predictors:
 
@@ -80,7 +80,7 @@ A quick look at the residuals confirms the model's assumptions, no strong patter
 par(mfrow = c(1, 2)); plot(m, which = c(1, 2)); par(mfrow = c(1, 1))
 ```
 
-## Predicting a surface
+## Prediction
 
 The payoff of a model is prediction. `terra::predict()` applies the fitted model to the covariate stack, cell by cell, producing a wall-to-wall carbon surface whose layer names match the model's predictors:
 
@@ -115,28 +115,28 @@ The cross-validated RMSE is the typical error of a carbon prediction at an unsur
 
 The strongest carbon surfaces use both chapters at once. **Regression kriging** fits the terrain model, then krige-interpolates its residuals to recover the spatial structure the model missed, and adds the two together. It marries the process-based model of this chapter with the pattern-based interpolation of the last, and is the method of choice when both a driver and residual clustering are present. Building it is a natural extension once both pieces are in hand.
 
-## Enhanced inventory
+## Spatial regression
 
-The operational version of this workflow is the **enhanced forest inventory** (EFI): fuse permanent-sample-plot measurements, LiDAR structure metrics, and existing inventory attributes into a single predictive model, then map the attribute of interest wall to wall. In practice no single learner wins on every attribute, so an **ensemble** that stacks several models, a random forest, a support-vector machine, a generalised linear model, and blends their predictions, is more robust than any one alone. The `caretEnsemble` package builds these ensembles on top of the `caret` interface used above:
+Ordinary regression assumes independent residuals, but spatial data rarely oblige: neighbouring locations share unmeasured drivers, so the residuals themselves are autocorrelated. Ignoring that violates the model's assumptions and understates the uncertainty of the coefficients. The check is to test the residuals for autocorrelation, Moran's I on the residuals, using the neighbour tools from the areal-data chapter; if they cluster, a **spatial regression** model is called for.
+
+Two classical forms account for it. A **spatial lag** model adds a term for the neighbouring values of the response, capturing spillover; a **spatial error** model places the autocorrelation in the error term, for when it reflects unobserved covariates rather than a real process. The `spatialreg` package fits both on a neighbour list:
 
 ```{r}
 #| eval: false
-library(caret); library(caretEnsemble)
+library(spdep); library(spatialreg)
 
-ctrl  <- trainControl(method = "cv", number = 10, savePredictions = "final")
-base  <- caretList(carbon ~ elevation + slope + tri + ndvi + zq95,
-                   data = efi_training,                    # PSP + LiDAR + VRI covariates
-                   trControl = ctrl,
-                   methodList = c("glm", "rf", "svmRadial"))
-stack <- caretStack(base, method = "glm")                  # blend the base learners
-carbon_efi <- terra::predict(covariate_stack, stack)       # map wall to wall
+lw <- nb2listw(knn2nb(knearneigh(st_coordinates(plots), k = 6)))
+lm.morantest(m, lw)                                       # residual autocorrelation?
+
+lag <- lagsarlm(carbon ~ elevation + slope + tri, data = dat, listw = lw)   # spillover
+err <- errorsarlm(carbon ~ elevation + slope + tri, data = dat, listw = lw) # correlated errors
 ```
 
-The covariates that feed it, terrain from this book's raster chapters, canopy metrics from the LiDAR chapter, and spectral indices from the time-series chapter, are exactly the layers we have built. EFI is where every strand of the course converges into the modern inventory backbone.
+The choice between them rests on whether the spillover lives in the process (lag) or only in unobserved covariates (error). Either way the discipline is the one this book returns to everywhere: test the assumption, and if it fails, use a model that respects the spatial structure rather than one that pretends it away.
 
 ## Exercises
 
 1. Add `aspect` (transformed to "northness" as `cos(aspect × π/180)`) to the model. Does it improve the cross-validated RMSE? Why might aspect matter on Vancouver Island?
 2. Fit a random forest (`ranger` or `randomForest`) with the same predictors and compare its cross-validated RMSE to the linear model. What do you gain, and what interpretability do you lose?
-3. Map the difference between the model-predicted surface and the kriged surface from the previous chapter. Where they disagree, which do you believe, and what extra data would settle it?
-4. Sketch, in code comments, how you would turn this into a habitat-suitability model: what would the response become, and which line would change?
+3. Test the linear model's residuals for spatial autocorrelation with `lm.morantest()`. If they are autocorrelated, fit a spatial lag model and compare its coefficients to the ordinary fit.
+4. *(Applied.)* An enhanced forest inventory fuses field plots, LiDAR canopy metrics, and existing inventory layers into one predictive model, often an ensemble of several learners (`caretEnsemble`). Sketch, in code comments, how you would extend this chapter's model into such an ensemble and which covariate layers from earlier chapters would feed it.

@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Two models
+## Vector and raster
 
 Every geographic dataset you will ever open is built on one of two ideas. Either it records **discrete objects** with definite boundaries, a plot centre, a road, a property line, or it records a **continuous field** whose value exists everywhere, elevation, canopy height, a vegetation index. The first idea is the **vector** data model; the second is the **raster** data model. Almost all of applied GIS is knowing which model your data uses, and moving cleanly between the two.
 
@@ -30,7 +30,7 @@ library(terra)
 library(dplyr)
 ```
 
-## Vector model
+## Vector data
 
 In the vector model, geography is stored as coordinates. A **point** is a single coordinate pair; a **line** is an ordered sequence of points; a **polygon** is a closed ring of points enclosing an area. Each of these geometries is attached to a row of attributes, so a vector layer is really a table in which one column holds shape.
 
@@ -69,7 +69,7 @@ plots_sf |>
 
 That is the quiet power of `sf`: spatial data behaves like the tabular data you are used to, until the moment you need it to behave spatially.
 
-## Raster model
+## Raster data
 
 In the raster model, geography is stored as a regular grid of cells, each holding a value. The grid is defined by its **extent** (the geographic rectangle it covers), its **resolution** (the size of one cell), and its **coordinate reference system**. A single grid is one **layer**; stack several aligned grids, for example the bands of a satellite image, and you have a multi-layer raster.
 
@@ -101,7 +101,7 @@ plot(st_geometry(plots_sf), add = TRUE, pch = 19, cex = 0.5)
 
 Real rasters differ only in scale. A Sentinel-2 tile over this valley is the same object with ten-metre cells and several bands instead of two-kilometre cells and one; the model is identical.
 
-## Choosing a model
+## Choosing a representation
 
 The choice is dictated by the phenomenon, not by preference.
 

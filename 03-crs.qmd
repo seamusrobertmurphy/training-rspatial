@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Why CRS matters
+## Coordinate reference systems
 
 A pair of numbers like `-124.68, 49.29` means nothing until you say what the numbers are. Are they degrees of longitude and latitude on a particular model of the Earth's shape? Metres east and north of some origin? Without that context, the coordinates cannot be placed on the ground, and two datasets cannot be overlaid. The context is the **coordinate reference system**, or CRS.
 
@@ -30,7 +30,7 @@ library(terra)
 library(dplyr)
 ```
 
-## CRS families
+## Geographic and projected
 
 There are two families of CRS.
 
@@ -40,7 +40,7 @@ A **projected CRS** flattens the curved Earth onto a plane so that positions can
 
 The rule of thumb: store and share data in `4326` because everything speaks it, but reproject to a metric CRS like `32610` or `3005` whenever you need to measure distance or area.
 
-## Reading the CRS
+## Inspecting the CRS
 
 Load the plots and ask what CRS they carry:
 
@@ -75,7 +75,7 @@ st_bbox(plots_utm)     # metres east/north
 
 The two bounding boxes describe the same ground in different languages: fractions of a degree in one, hundreds of thousands of metres in the other. For raster data the equivalent function is `terra::project()`, which we use in the raster chapters.
 
-## Measuring correctly
+## Measures and units
 
 Reprojecting is not bookkeeping; it changes what you are allowed to compute. Suppose we draw a 500-metre buffer around each plot and ask for its area. In a metric CRS the answer is immediate and correct:
 
@@ -94,7 +94,7 @@ st_distance(plots_utm[1:2, ])
 
 The result is a matrix of separations in metres, ready to feed a neighbour analysis later in the course.
 
-## Choosing a CRS
+## A working CRS
 
 For the forest work in this book we adopt **BC Albers (EPSG 3005)** as the working CRS, for three reasons: it is metric, so areas come out in square metres and hectares directly; it is equal-area, so a hectare in the north of the study area is the same as a hectare in the south, which is essential when you sum carbon over a landscape; and it is the provincial standard, so any BC government layer you download will already be in it, sparing you a reprojection.
 

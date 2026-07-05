@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Why extraction
+## Vector–raster extraction
 
 Everything so far has led here. We have field plots as vector points and terrain as a raster surface, and the question that turns them into an analysis is: what is the elevation, slope, and ruggedness *at each plot*? Answering it is called **extraction**, and it is the bridge between the vector and raster worlds. Once every plot carries the environmental values of the pixel it sits in, we can model carbon against terrain, map predictions across the landscape, and quantify uncertainty, which is the work of the analysis chapters that follow.
 
@@ -83,7 +83,7 @@ Whether to use point or buffered extraction is a judgement call that depends on 
 
 Terrain is only one source of predictors. Spectral indices such as NDVI, a measure of vegetation greenness computed from the red and near-infrared bands of satellite imagery, are extracted in exactly the same way once you have the raster. Fetching a real image is a chapter in itself, so here we simply record the pattern: obtain the image (for example a Sentinel-2 scene), compute the index with map algebra, and `extract()` it to the plots just as we did for terrain. The extraction step is identical regardless of the raster's origin.
 
-## Saving the table
+## Writing outputs
 
 Because the covariate table is the input to several later chapters, write it out so we do not have to re-download the DEM every time:
 

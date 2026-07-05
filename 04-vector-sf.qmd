@@ -89,7 +89,7 @@ plots_joined |>
 
 The joined layer is still `sf`: we have enriched every plot with stand structure computed from its trees, and it remains mappable. Quadratic mean diameter, used above, is the diameter of the tree of average basal area and is a standard stand-structure metric that weights large trees more than a simple mean.
 
-## Adding context
+## Reference layers
 
 So far every layer has been our own. Auditing usually means placing your data against an authoritative backdrop, a coastline, a municipal boundary, a park. These come from open services. The `rnaturalearth` package pulls administrative and physical layers directly; here we fetch the British Columbia coastline for context. This step needs an internet connection.
 

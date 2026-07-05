@@ -13,30 +13,30 @@ csl: ./references/apa.csl
 
 # Preface {.unnumbered}
 
-This book is a practical course in spatial data analysis with R, written for people who verify environmental claims for a living: forest inventory practitioners, forest-carbon analysts, and organic-agriculture auditors. It grew out of training material I prepare for field teams who need to move confidently between a stack of shapefiles, a folder of satellite imagery, a plot database, and a defensible number at the end.
+This book is a practical, comprehensive introduction to geospatial data science with R. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, visualised, and modelled, using free and open tools. It is written for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result, and it assumes some statistics but no prior GIS.
 
-The premise is that a modern auditor should be able to open a dataset, understand its coordinate system, join it to field measurements, summarise it, map it, and quantify the uncertainty in the result, all in a single reproducible script. R makes that possible with free, open tools, and this course teaches the workflow end to end.
+The premise is that spatial analysis should be reproducible: you should be able to open a dataset, understand its geometry and coordinate system, join it to other data, summarise it, map it, and quantify the uncertainty, all in a single script that another person can re-run. This course builds that capability from the ground up, one concept at a time.
 
 ## Learning outcomes {.unnumbered}
 
 By the end of the course you will be able to:
 
 1. Set up a reproducible R project for spatial work
-2. Distinguish the vector and raster data models and choose between them
-3. Read, inspect, and reproject spatial data in any coordinate reference system
-4. Wrangle vector data with `sf` and the `tidyverse`
-5. Perform geometric operations: buffers, intersections, dissolves, and spatial joins
-6. Read and process raster data with `terra`, including raster algebra and terrain analysis
-7. Extract raster covariates to field plots
-8. Produce publication-quality static and interactive maps
-9. Measure spatial autocorrelation and describe point patterns
-10. Interpolate a continuous surface from sample points using geostatistics
-11. Fit and predict a spatial model across a landscape
-12. Assemble a complete forest-carbon inventory workflow and report its uncertainty
+2. Represent vector data with the simple-features standard and its geometry types
+3. Understand coordinate reference systems, projections, and spherical geometry
+4. Reason about attributes, their support, and correct spatial aggregation
+5. Wrangle vector data with `sf` and the `tidyverse`
+6. Perform spatial operations: predicates, overlays, buffers, and joins
+7. Read, process, and align raster data with `terra`
+8. Extract raster values to points and work with spatiotemporal data cubes
+9. Produce publication-quality static and interactive maps
+10. Analyse point patterns and interpolate surfaces with geostatistics
+11. Measure spatial autocorrelation and fit spatial regression models
+12. Apply these foundations to worked problems in forestry, carbon, and ecology
 
 ## The running example {.unnumbered}
 
-Every chapter draws on a single study area on Vancouver Island, British Columbia: a coastal temperate rainforest landscape in the Alberni Valley, where Douglas-fir, western redcedar, western hemlock, and Sitka spruce dominate. We work with a forest inventory of 140 plots and the individual-tree measurements behind them, together with terrain, imagery, and administrative layers pulled from open sources.
+To keep the concepts concrete, every chapter draws on one running dataset: a forest inventory from a coastal temperate-rainforest study area in the Alberni Valley on Vancouver Island, British Columbia. The choice of a forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent real-world grounding and lets the applied exercises connect to problems in forest inventory, carbon, and ecology. We work with 140 plots and the individual-tree measurements behind them, alongside terrain, imagery, and administrative layers pulled from open sources.
 
 ::: callout-note
 ## Inventory data
@@ -50,4 +50,4 @@ Each chapter is a self-contained lesson that builds on the last. Code is shown i
 
 ## Further reading {.unnumbered}
 
-This course covers the standard curriculum of spatial analysis in R, and readers who want a deeper or more general treatment are well served by the canonical texts in the field: @pebesma2023sds, @lovelace2019geocomputation, and @bivand2013asdar. The `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. The forest-carbon accounting conventions follow @ipcc2006gl, and the illustrative allometry is informed by the Canadian national biomass equations of @ung2008allometric.
+This course covers the standard curriculum of spatial analysis in R, and readers who want a deeper or more general treatment are well served by the canonical texts in the field: @pebesma2023sds, @lovelace2019geocomputation, and @bivand2013asdar. The `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied exercises touch forest-carbon conventions, they follow @ipcc2006gl, with illustrative allometry informed by the Canadian national biomass equations of @ung2008allometric.

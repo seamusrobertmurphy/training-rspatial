@@ -18,7 +18,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Why R?
+## Reproducibility
 
 An audit stands or falls on whether someone else can reproduce the number. A spreadsheet that took forty manual clicks to build cannot be re-run, cannot be reviewed line by line, and cannot be trusted a year later when the inputs have changed. A script can. This is the central reason to do spatial work in R: every decision, from the projection you chose to the buffer distance you applied, is written down and repeatable.
 
@@ -26,7 +26,7 @@ R is a free, open-source statistical language with a mature ecosystem for geogra
 
 This course uses the modern R-spatial stack, built around two packages that have become the standard tools of the field [@pebesma2018sf; @hijmans2024terra].
 
-## The toolkit
+## The R-spatial stack
 
 You will meet these packages throughout the book. Install them once before you begin.
 
@@ -77,7 +77,7 @@ training-rspatial/
 
 With a project open, the working directory is the project root, so every path in this book that begins with `data/` will resolve correctly.
 
-## The dataset
+## The example data
 
 The running example is a forest inventory from the Alberni Valley on Vancouver Island. Three files in `data/` describe it:
 
