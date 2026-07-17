@@ -2,7 +2,9 @@
 
 A practical GIS and remote-sensing course in R, written by Dr Seamus Murphy for forest, carbon, and agriculture auditors. Nine short chapters run from simple to complex, each teaching a foundational concept on one running forest dataset and closing with a worked example from a real verification project.
 
-![SCBI stem map](images/01_stem_map.png)
+<p align="center">
+  <img src="images/01_stem_map.png" alt="SCBI stem map" width="760">
+</p>
 
 The running dataset is a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia: 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. Every chapter teaches on this one plot, so a single dataset carries from raw coordinates through to a quantified emission.
 
@@ -28,49 +30,65 @@ An appendix covers the surrounding discipline: reproducible runtimes, spatial-da
 
 Chapters 1 and 2 turn the stem table into geometry, impose a sampling frame, and reason about attribute support. The quadrat grid below is the basis of the closing area check, where claimed area is reconciled against measured geometry and parcels are tested for overlap.
 
-![Quadrat density](images/02_quadrat_density.png)
+<p align="center">
+  <img src="images/02_quadrat_density.png" alt="Quadrat density" width="560">
+</p>
 
 ### Raster data and land-cover reclassification
 
 Chapter 3 rasterises the stems into a continuous surface, then reclassifies it, the exact operation behind any land-use / land-cover map and the forest-area figures a project claims.
 
-![Raster and reclassification](images/03_raster_lulc.png)
+<p align="center">
+  <img src="images/03_raster_lulc.png" alt="Raster and reclassification" width="760">
+</p>
 
 ### Terrain and hydrology
 
 Chapter 4 derives slope, aspect, hillshade, and flow from an elevation model, then thresholds it to map inundation, with a stage–area rating curve that drives every wetland-area claim.
 
-![Terrain and inundation](images/04_terrain_inundation.png)
+<p align="center">
+  <img src="images/04_terrain_inundation.png" alt="Terrain and inundation" width="520">
+</p>
 
 ### LiDAR and point clouds
 
 Chapter 5 builds a canopy height model and detects individual trees, the bridge from wall-to-wall remote sensing to a calibrated biomass map.
 
-![Canopy height model](images/05_chm.png)
+<p align="center">
+  <img src="images/05_chm.png" alt="Canopy height model" width="560">
+</p>
 
 ### Disturbance and spatial risk
 
 Chapter 6 differences two dates to detect loss, validates the map with a confusion matrix, and models where further loss is likely.
 
-![Change detection and risk](images/06_change_risk.png)
+<p align="center">
+  <img src="images/06_change_risk.png" alt="Change detection and risk" width="760">
+</p>
 
 ### Uncertainty
 
 Chapter 7 attaches an honest confidence interval to a carbon estimate by Monte Carlo propagation, then does the same for a land-cover area with the good-practice area-adjusted estimator.
 
-![Monte Carlo carbon](images/07_montecarlo.png)
+<p align="center">
+  <img src="images/07_montecarlo.png" alt="Monte Carlo carbon" width="560">
+</p>
 
 ### Time series — capstone I
 
 Chapter 8 stacks the plot into a nine-year cube, finds the per-pixel trend, detects a fire, and turns the burned area into an IPCC Tier 1 emission with its own interval.
 
-![Pixel trajectories](images/08_timeseries.png)
+<p align="center">
+  <img src="images/08_timeseries.png" alt="Pixel trajectories" width="560">
+</p>
 
 ### Spatial patterns — capstone II
 
 Chapter 9 runs point-pattern analysis on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains. The seedlings cluster sharply near surviving seed sources, quantified by the Clark–Evans ratio and Ripley's K.
 
-![Seedling point pattern and intensity](images/09_seedlings.png)
+<p align="center">
+  <img src="images/09_seedlings.png" alt="Seedling point pattern and intensity" width="760">
+</p>
 
 ## Data
 
