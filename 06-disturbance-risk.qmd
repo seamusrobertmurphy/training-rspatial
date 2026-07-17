@@ -1,0 +1,117 @@
+---
+title: "Disturbance and Risk"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Change detection
+
+The core remote-sensing task in verification is finding where the forest changed. The simplest and most transparent method is image differencing: take a spectral index at two dates and subtract. Where vegetation was lost, the index drops; a threshold on the difference marks candidate disturbance. We build two dates of a synthetic index over the plot, the second with several patches cleared, and difference them.
+
+```{r}
+library(terra)
+library(sf)
+
+stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(32617)
+r <- rast(ext(vect(stems)), resolution = 10, crs = "EPSG:32617")
+
+set.seed(7)
+xy  <- xyFromCell(r, 1:ncell(r))
+t1  <- setValues(r, 0.7 + 0.1 * sin(xy[, 1] / 100) + rnorm(ncell(r), 0, 0.03))
+
+# time 2: same forest, minus three cleared blocks
+t2 <- t1
+clear <- (xy[, 1] > 747050 & xy[, 1] < 747130 & xy[, 2] > 4306100 & xy[, 2] < 4306180) |
+         (xy[, 1] > 747250 & xy[, 1] < 747300 & xy[, 2] > 4306300 & xy[, 2] < 4306380)
+t2[clear] <- 0.15 + rnorm(sum(clear), 0, 0.03)
+names(t1) <- "ndvi_t1"; names(t2) <- "ndvi_t2"
+
+change <- t2 - t1
+plot(change, main = "NDVI change (t2 − t1)")
+```
+
+A negative threshold isolates loss. The disturbed area is the immediate deliverable, and the same number that drives an emissions estimate:
+
+```{r}
+disturbed <- change < -0.3
+cell_ha   <- prod(res(r)) / 1e4
+dist_ha   <- global(disturbed, "sum", na.rm = TRUE)[1, 1] * cell_ha
+round(dist_ha, 2)                                  # hectares of detected loss
+```
+
+## Accuracy assessment
+
+A map is a claim, and an unvalidated map is an unsupported claim. Accuracy assessment compares the map against reference data at a sample of points and summarises the agreement in a confusion matrix. From it come overall accuracy, and the per-class user's and producer's accuracies that ACR and VM0048 require, because a class area is only credible with its accuracy attached. We assess the disturbed / stable map against a reference sample:
+
+```{r}
+set.seed(11)
+ref <- data.frame(
+  reference = sample(c("disturbed", "stable"), 120, replace = TRUE, prob = c(.3, .7)))
+# a map that is mostly right, with some confusion
+ref$mapped <- ifelse(ref$reference == "disturbed",
+                     sample(c("disturbed", "stable"), 120, TRUE, c(.85, .15)),
+                     sample(c("disturbed", "stable"), 120, TRUE, c(.10, .90)))
+
+cm <- table(mapped = ref$mapped, reference = ref$reference)
+cm
+```
+
+```{r}
+overall <- sum(diag(cm)) / sum(cm)
+users   <- diag(cm) / rowSums(cm)      # commission: of mapped X, how many correct
+producers <- diag(cm) / colSums(cm)    # omission: of true X, how many caught
+round(c(overall = overall), 3)
+round(rbind(users, producers), 3)
+```
+
+Overall accuracy is the headline; the per-class figures are where problems hide. A high user's but low producer's accuracy for "disturbed" means the map misses real clearing, an omission error that understates loss, which is exactly the direction an auditor scrutinises. These same counts feed the area-adjusted estimator and its confidence interval in the next chapter.
+
+## Spatial risk
+
+Some verification, additionality and permanence, turns on where disturbance is *likely*, not just where it happened. Risk modelling predicts that probability from spatial covariates. A robust and widely used predictor is proximity: disturbance begets disturbance, so distance to existing clearing is a strong risk covariate, the assumption behind deforestation-risk maps such as those in VM0048 baseline work. We compute distance to the detected disturbance and turn it into a risk surface:
+
+```{r}
+disturbed[disturbed == 0] <- NA
+dist_to_loss <- distance(disturbed)                 # metres to nearest clearing
+risk <- exp(-dist_to_loss / 80)                     # decays with distance
+names(risk) <- "risk"
+plot(risk, main = "Relative deforestation risk")
+```
+
+Classifying the surface into zones gives the map a planner or auditor acts on, and the area in each zone:
+
+```{r}
+risk_zone <- classify(risk, matrix(c(-Inf, 0.2, 1,
+                                      0.2, 0.5, 2,
+                                      0.5, Inf, 3), ncol = 3, byrow = TRUE))
+levels(risk_zone) <- data.frame(id = 1:3, zone = c("low", "medium", "high"))
+f <- freq(risk_zone); f$area_ha <- round(f$count * cell_ha, 1)
+f[, c("value", "area_ha")]
+```
+
+## Keystone: disturbance checks and VM0048 risk
+
+Put together, the chapter is the disturbance-check pipeline: difference two dates to detect loss, quantify the area, validate it with an accuracy assessment, and model where further loss is likely. VM0048 and the associated risk tools formalise the last step into a baseline of expected deforestation; the ACR accuracy requirements formalise the middle step into a mandatory confusion matrix. The auditor's job is to reproduce each: recompute the change area, rebuild the confusion matrix from the reference sample, and check that the risk model's covariates and thresholds are defensible. Every number here, hectares lost, overall accuracy, area at high risk, is one a project reports and a verifier must be able to regenerate.
+
+## Exercises
+
+1. Change the detection threshold from −0.3 to −0.2 and recompute disturbed area. Which way does the estimate move, and how does that trade omission against commission error?
+2. From the confusion matrix, compute the omission and commission error for the "disturbed" class. Which type of error causes a project to *understate* emissions, and why does that concern a verifier most?
+3. Rebuild the risk surface with a slower distance decay (divide by 160 instead of 80). How does the high-risk area change, and what real assumption does the decay rate encode?
+4. *(Applied.)* A project reports 200 ha of avoided deforestation with an overall map accuracy of 78%. Explain why the accuracy figure alone is not enough, and which per-class accuracies you would demand before accepting the area.

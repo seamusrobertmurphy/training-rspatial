@@ -1,0 +1,123 @@
+---
+title: "Time Series"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Data cubes
+
+Everything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering. We build a nine-year annual index cube over the plot, with a slow decline and a fire in 2021 that clears a block and holds it low.
+
+```{r}
+library(terra)
+library(sf)
+
+stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(32617)
+r <- rast(ext(vect(stems)), resolution = 10, crs = "EPSG:32617")
+
+years <- 2016:2024
+set.seed(3)
+xy   <- xyFromCell(r, 1:ncell(r))
+burn <- xy[, 1] > 747100 & xy[, 1] < 747250 & xy[, 2] > 4306150 & xy[, 2] < 4306300
+
+cube <- rast(lapply(seq_along(years), function(k) {
+  v <- 0.80 - 0.008 * (k - 1) + rnorm(ncell(r), 0, 0.015)   # gentle decline
+  if (years[k] >= 2021) v[burn] <- 0.20 + rnorm(sum(burn), 0, 0.02)  # fire + no recovery
+  setValues(r, v)
+}))
+names(cube) <- paste0("y", years)
+nlyr(cube)
+```
+
+## Temporal reduction
+
+A cube is reduced along time the way a single raster is summarised along space. `app()` applies a function to each pixel's time series. The mean over years is the baseline surface; the standard deviation flags where the record is unstable:
+
+```{r}
+mean_ndvi <- app(cube, mean)
+sd_ndvi   <- app(cube, sd)
+plot(c(mean_ndvi, sd_ndvi), main = c("Mean index", "Temporal SD"))
+```
+
+High temporal SD is the signature of disturbance: stable forest barely varies year to year, so the burned block lights up.
+
+## Trends
+
+The direction and rate of change per pixel is the slope of index against year, a linear trend fitted independently at every location. `app()` carries the regression across the cube:
+
+```{r}
+slope <- app(cube, function(v) {
+  if (all(is.na(v))) return(NA)
+  coef(lm(v ~ years))[2]
+})
+names(slope) <- "trend_per_year"
+plot(slope, main = "Per-pixel trend (index / year)")
+```
+
+Strong negative slopes mark sustained loss. This is the engine of trend-based monitoring: a whole landscape of time series reduced to one map of who is gaining and who is losing.
+
+## Detecting the event
+
+A trend says a pixel declined; monitoring needs to know *when*. Differencing consecutive years isolates the step. The fire year is the layer where the largest drop occurs, and thresholding the year-on-year change delineates the burned area:
+
+```{r}
+d2021 <- cube[["y2021"]] - cube[["y2020"]]
+burned <- d2021 < -0.3
+cell_ha  <- prod(res(r)) / 1e4
+burned_ha <- global(burned, "sum", na.rm = TRUE)[1, 1] * cell_ha
+round(burned_ha, 2)                                # hectares burned in 2021
+```
+
+## Keystone: IPCC Tier 1 fire emissions
+
+The capstone joins the whole book: a time series detects a fire, the burned area is measured, and IPCC Tier 1 methods turn that area into an emission. The IPCC-wildfire-emissions workflow runs this chain from burn-area mapping through to emission factors, and the governing equation is the same one every fire inventory uses [@ipcc2006gl]:
+
+$$L_{fire} = A \times M_B \times C_f \times G_{ef} \times 10^{-3}$$
+
+where $A$ is burned area, $M_B$ the fuel biomass available, $C_f$ the combustion factor, and $G_{ef}$ the emission factor for the gas. With the burned area from the cube and IPCC default factors for temperate forest:
+
+```{r}
+A   <- burned_ha        # ha, from the time-series detection
+MB  <- 120              # tonnes dry matter per ha (fuel load)
+Cf  <- 0.45             # combustion factor (fraction consumed)
+Gef <- 1569             # g CO2 per kg dry matter (IPCC default)
+
+CO2_tonnes <- A * MB * Cf * Gef * 1e-3
+round(c(burned_ha = A, CO2_tonnes = CO2_tonnes), 1)
+```
+
+That single number, tonnes of CO2 from the fire, is the end of the pipeline this course has built toward: geospatial data, cleaned and projected in the early chapters, turned into a detected, measured, and quantified emission with every step reproducible. In a real inventory each factor carries its own uncertainty, so the honest final move is to wrap this equation in the Monte Carlo of the previous chapter and report the emission with a confidence interval. The methods are all now in hand.
+
+```{r}
+set.seed(9)
+sim <- replicate(2000, {
+  mb  <- rnorm(1, 120, 20)
+  cf  <- rnorm(1, 0.45, 0.08)
+  gef <- rnorm(1, 1569, 100)
+  A * mb * cf * gef * 1e-3
+})
+round(quantile(sim, c(0.025, 0.5, 0.975)), 0)      # CO2 tonnes: lower, median, upper
+```
+
+## Exercises
+
+1. Reduce the cube with `app()` to the maximum index per pixel instead of the mean. Where does the maximum surface differ most from the mean, and why there?
+2. Fit the per-pixel trend on the pre-fire years only (2016–2020). How does the burned block's slope compare with the full-record slope, and what does that say about mixing a step change into a linear trend?
+3. Recompute burned area with a −0.2 threshold on the 2021 difference. How does the emission estimate move, and which term in the IPCC equation is it multiplying?
+4. *(Applied.)* Using the Monte Carlo output, report the median CO2 and its 95% interval, then state which of the three factors (fuel load, combustion factor, emission factor) you would most want to measure locally to narrow the interval.

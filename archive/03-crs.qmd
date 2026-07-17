@@ -1,0 +1,115 @@
+---
+title: "Coordinate Reference Systems"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Coordinate reference systems
+
+A pair of numbers like `-124.68, 49.29` means nothing until you say what the numbers are. Are they degrees of longitude and latitude on a particular model of the Earth's shape? Metres east and north of some origin? Without that context, the coordinates cannot be placed on the ground, and two datasets cannot be overlaid. The context is the **coordinate reference system**, or CRS.
+
+This is the single most common cause of spatial analyses going silently wrong. Two layers can look fine on their own, but if they carry different coordinate systems they will not line up, and any measurement or overlay between them will be nonsense. An auditor who cannot answer "what CRS is this in?" cannot defend a single downstream number.
+
+```{r}
+library(sf)
+library(terra)
+library(dplyr)
+```
+
+## Geographic and projected
+
+There are two families of CRS.
+
+A **geographic CRS** locates points by angles, longitude and latitude, on a model of the Earth called a datum. The familiar WGS 84 datum, used by GPS and identified by the EPSG code `4326`, is a geographic CRS. Its units are degrees, and its great virtue is that it describes the whole planet in one system.
+
+A **projected CRS** flattens the curved Earth onto a plane so that positions can be given in metres. Every projection distorts something, area, shape, distance, or direction, so projected systems are designed for particular regions where the distortion is acceptable. For Vancouver Island the two you will use constantly are **UTM Zone 10 North** (EPSG `32610`), whose units are metres east and north, and **BC Albers** (EPSG `3005`), an equal-area projection that the Province of British Columbia uses as its standard because it preserves area across the whole province, which is exactly what you want when totalling hectares of forest.
+
+The rule of thumb: store and share data in `4326` because everything speaks it, but reproject to a metric CRS like `32610` or `3005` whenever you need to measure distance or area.
+
+## Inspecting the CRS
+
+Load the plots and ask what CRS they carry:
+
+```{r}
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326)
+st_crs(plots)
+```
+
+`st_crs()` returns the full definition: the human-readable name (`WGS 84`), the EPSG code, and the underlying WKT description. When a dataset arrives with a missing CRS, `st_crs()` returns `NA`, and you must set it, **not transform it**, to whatever the data provider tells you the coordinates already are:
+
+```{r}
+mystery <- st_as_sf(read.csv("data/forest_plots.csv"),
+                    coords = c("lon", "lat"), crs = NA)
+st_crs(mystery)                 # NA: R does not know what these numbers mean
+st_crs(mystery) <- 4326         # we assert: these ARE lon/lat on WGS 84
+```
+
+Setting the CRS attaches a label; it does not move any coordinates. This distinction matters: labelling data with the wrong CRS is like putting the wrong postage on a parcel, it will be sent to the wrong place with complete confidence.
+
+## Reprojecting
+
+To actually move coordinates from one system to another, **transform** them. For vector data this is `st_transform()`:
+
+```{r}
+plots_utm    <- st_transform(plots, 32610)   # UTM Zone 10N, metres
+plots_albers <- st_transform(plots, 3005)    # BC Albers, metres
+
+st_bbox(plots)         # degrees
+st_bbox(plots_utm)     # metres east/north
+```
+
+The two bounding boxes describe the same ground in different languages: fractions of a degree in one, hundreds of thousands of metres in the other. For raster data the equivalent function is `terra::project()`, which we use in the raster chapters.
+
+## Measures and units
+
+Reprojecting is not bookkeeping; it changes what you are allowed to compute. Suppose we draw a 500-metre buffer around each plot and ask for its area. In a metric CRS the answer is immediate and correct:
+
+```{r}
+buf_utm <- st_buffer(plots_utm[1, ], 500)     # 500 m buffer
+st_area(buf_utm)                              # square metres
+```
+
+Modern `sf` is clever enough to compute geodesic areas and distances even for longitude/latitude data, so it will not simply return garbage for a geographic CRS. But most of the wider toolkit, raster alignment, neighbour graphs, variogram distances, assumes planar metric coordinates. Working in a projected CRS makes those operations exact and your intent explicit. The discipline to adopt is: **reproject every layer to a common metric CRS at the start of an analysis**, and do all measurement there.
+
+Distances behave the same way. Between the first two plots:
+
+```{r}
+st_distance(plots_utm[1:2, ])
+```
+
+The result is a matrix of separations in metres, ready to feed a neighbour analysis later in the course.
+
+## A working CRS
+
+For the forest work in this book we adopt **BC Albers (EPSG 3005)** as the working CRS, for three reasons: it is metric, so areas come out in square metres and hectares directly; it is equal-area, so a hectare in the north of the study area is the same as a hectare in the south, which is essential when you sum carbon over a landscape; and it is the provincial standard, so any BC government layer you download will already be in it, sparing you a reprojection.
+
+From here on, whenever we need to measure, we will transform to `3005` first:
+
+```{r}
+plots_work <- st_transform(plots, 3005)
+plots_work
+```
+
+Confirm the change: the geometry column now reports `Projected CRS: NAD83 / BC Albers` and the coordinates are large metric numbers rather than degrees.
+
+## Exercises
+
+1. Load `forest_plots.shp` and confirm its CRS with `st_crs()`. Transform it to UTM Zone 10N and to BC Albers, and compare the three bounding boxes. Which coordinates are in degrees and which in metres?
+2. A colleague sends a CSV of plot coordinates with no `.prj` file and says "they're just lat-longs." Write the two lines of code that make this an `sf` object with the correct CRS. Why would `st_transform()` be the wrong function to reach for here?
+3. Draw a 1-kilometre buffer around every plot in BC Albers, dissolve the buffers into a single polygon with `st_union()`, and report the total area in hectares. Repeat after transforming to UTM Zone 10N; do the two answers agree, and should they?
+4. Explain to a non-technical auditor, in two or three sentences, why totalling forest area in a geographic (degree-based) coordinate system is unsafe, and what an equal-area projection fixes.

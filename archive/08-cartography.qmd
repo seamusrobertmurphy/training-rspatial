@@ -1,0 +1,139 @@
+---
+title: "Cartography"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Thematic mapping
+
+A map in an audit report is not decoration; it is evidence. A well-made figure lets a reviewer see at a glance where the carbon is, where the plots fell, and whether the sampling covered the claim. A badly made one hides exactly those things. This chapter builds publication-quality maps two ways: with `tmap`, which is purpose-built for thematic cartography, and with `ggplot2`, which fits naturally if you already draw statistical graphics.
+
+```{r}
+library(sf)
+library(dplyr)
+library(tmap)
+
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(3005)
+
+make_block <- function(xmin, xmax, name) {
+  p <- st_polygon(list(rbind(
+    c(xmin, 49.24), c(xmax, 49.24), c(xmax, 49.34),
+    c(xmin, 49.34), c(xmin, 49.24))))
+  st_sf(block = name, geometry = st_sfc(p, crs = 4326))
+}
+blocks <- rbind(make_block(-124.78, -124.71, "West"),
+                make_block(-124.71, -124.65, "Central"),
+                make_block(-124.65, -124.58, "East")) |> st_transform(3005)
+```
+
+## tmap grammar
+
+`tmap` builds a map in layers, much as `ggplot2` builds a plot. Each layer starts with `tm_shape()` to name the data, followed by a drawing function: `tm_polygons()`, `tm_dots()`, `tm_lines()`, `tm_raster()`. Layers stack with `+`. The simplest useful map draws the blocks and drops the plots on top:
+
+```{r}
+tmap_mode("plot")
+tm_shape(blocks) +
+  tm_polygons(fill = "grey95", col = "grey40") +
+tm_shape(plots) +
+  tm_dots(size = 0.3)
+```
+
+## Graduated symbols
+
+The point of a thematic map is to encode a variable. To show carbon density we colour the plots by the `carbon` column and let `tmap` build a legend. A sequential green palette reads naturally for a "more forest" variable:
+
+```{r}
+tm_shape(blocks) +
+  tm_polygons(fill = "grey95", col = "grey40") +
+tm_shape(plots) +
+  tm_dots(fill = "carbon",
+          fill.scale = tm_scale_intervals(style = "quantile", values = "brewer.greens"),
+          fill.legend = tm_legend(title = "Carbon (MgC/ha)"),
+          size = 0.4)
+```
+
+Classifying by quantile puts an equal number of plots in each colour class, which is a defensible default because it uses the whole palette regardless of the distribution's shape. Other schemes (`"equal"`, `"jenks"`) tell different stories from the same data, and choosing among them is a cartographic decision you should be able to justify.
+
+## Map layout
+
+A figure headed for a report needs the furniture that makes it legible on its own: a title, a scale bar, and a north arrow. These are layers too.
+
+```{r}
+tm_shape(blocks) +
+  tm_polygons(fill = "grey95", col = "grey40") +
+tm_shape(plots) +
+  tm_dots(fill = "carbon",
+          fill.scale = tm_scale_intervals(style = "quantile", values = "brewer.greens"),
+          fill.legend = tm_legend(title = "Carbon\n(MgC/ha)"),
+          size = 0.4) +
+tm_title("Aboveground carbon, Alberni Valley plots") +
+tm_scalebar(position = c("left", "bottom")) +
+tm_compass(position = c("right", "top")) +
+tm_layout(frame = FALSE, legend.outside = TRUE)
+```
+
+## Interactive maps
+
+The same `tmap` code becomes an interactive, zoomable web map by switching mode. Interactive maps are invaluable in review meetings, because a stakeholder can pan to a plot and read its value directly. A scale bar and north arrow are dropped automatically in this mode.
+
+```{r}
+tmap_mode("view")
+tm_shape(plots) +
+  tm_dots(fill = "carbon",
+          fill.scale = tm_scale_intervals(style = "quantile", values = "brewer.greens"),
+          fill.legend = tm_legend(title = "Carbon (MgC/ha)"),
+          size = 0.1)
+```
+
+```{r}
+#| include: false
+tmap_mode("plot")
+```
+
+## ggplot2 maps
+
+If your reporting is already built on `ggplot2` [@wickham2016ggplot2], the `geom_sf()` layer draws `sf` objects directly, and the full grammar of themes, scales, and facets applies. The same carbon map in `ggplot2`:
+
+```{r}
+library(ggplot2)
+ggplot() +
+  geom_sf(data = blocks, fill = "grey95", colour = "grey40") +
+  geom_sf(data = plots, aes(colour = carbon), size = 2) +
+  scale_colour_viridis_c(option = "viridis", name = "Carbon\n(MgC/ha)") +
+  labs(title = "Aboveground carbon, Alberni Valley plots") +
+  theme_minimal()
+```
+
+Facetting is where `ggplot2` shines for auditing. Splitting the map by stand type shows at once whether the classes are spatially segregated, a check you would otherwise struggle to make:
+
+```{r}
+ggplot() +
+  geom_sf(data = blocks, fill = "grey96", colour = "grey70") +
+  geom_sf(data = plots, aes(colour = carbon), size = 1.6) +
+  scale_colour_viridis_c(name = "Carbon") +
+  facet_wrap(~ stand_type) +
+  theme_minimal()
+```
+
+## Exercises
+
+1. Redraw the carbon map using equal-interval and Jenks classifications instead of quantiles. How does the story change, and which would you defend in a report?
+2. Make a map that shows `stand_type` as the colour of each plot and `carbon` as its size. Is a two-variable map clearer or busier than two separate maps?
+3. Produce an interactive map of the plots on a satellite basemap (add `tm_basemap("Esri.WorldImagery")`). Zoom to a cluster of high-carbon plots: does the imagery corroborate them?
+4. Using `ggplot2`, facet the plot map by an elevation class you create from the covariate table. Do high-carbon plots concentrate at particular elevations?

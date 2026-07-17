@@ -1,0 +1,134 @@
+---
+title: "Uncertainty"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Why uncertainty
+
+Every estimate in this book is wrong by some amount, and the discipline of verification is knowing by how much. A carbon figure without an uncertainty is not conservative, it is simply incomplete, and the crediting standards, ART-TREES, VCS, ACR, all deduct credits in proportion to how uncertain the estimate is. Reducing uncertainty is therefore worth real money, and quantifying it honestly is the auditor's core duty. This chapter builds the estimate, then its error, on the running stem data.
+
+## A carbon estimate
+
+We convert diameters to aboveground biomass with a published generic hardwood equation [@jenkins2003biomass], apply the IPCC default carbon fraction of 0.47 [@ipcc2006gl], and scale to the plot area:
+
+```{r}
+library(dplyr)
+stems <- read.csv("data/scbi_stems.csv")
+
+stems <- stems |>
+  mutate(agb_kg   = exp(-2.48 + 2.4835 * log(dbh)),   # Jenkins generic hardwood
+         carbon_Mg = 0.47 * agb_kg / 1000)
+
+area_ha  <- 25.6
+total_C  <- sum(stems$carbon_Mg)
+C_per_ha <- total_C / area_ha
+round(c(total_MgC = total_C, MgC_per_ha = C_per_ha), 1)
+```
+
+That point estimate is the easy part. Three distinct sources of error sit beneath it: sampling error from measuring plots rather than the whole population, model error in the allometric equation, and parameter error in constants like the carbon fraction.
+
+## Sampling error
+
+Divide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval:
+
+```{r}
+stems$quadrat <- paste(cut(stems$gx, 8), cut(stems$gy, 12))
+quadrat_area  <- 25.6 / (8 * 12)                 # ha per quadrat (equal-area cut)
+
+qd <- stems |>
+  group_by(quadrat) |>
+  summarise(carbon_Mg = sum(carbon_Mg), .groups = "drop") |>
+  mutate(carbon_ha = carbon_Mg / quadrat_area)
+
+m  <- mean(qd$carbon_ha); se <- sd(qd$carbon_ha) / sqrt(nrow(qd))
+ci <- m + c(-1.96, 1.96) * se
+round(c(mean = m, se = se, lower = ci[1], upper = ci[2]), 1)
+```
+
+The half-width relative to the mean is the number the standards care about: the wider it is, the deeper the deduction.
+
+## Monte Carlo propagation
+
+Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl].
+
+```{r}
+set.seed(42)
+n_sim <- 2000
+sim <- numeric(n_sim)
+for (i in seq_len(n_sim)) {
+  b  <- rnorm(1, 2.4835, 0.05)            # allometric exponent uncertainty
+  cf <- rnorm(1, 0.47, 0.02)              # carbon-fraction uncertainty
+  agb <- exp(-2.48 + b * log(stems$dbh))
+  sim[i] <- sum(cf * agb / 1000) / area_ha
+}
+mc_ci <- quantile(sim, c(0.025, 0.975))
+round(c(mean = mean(sim), lower = mc_ci[1], upper = mc_ci[2]), 1)
+```
+
+```{r}
+hist(sim, breaks = 40, col = "grey80", border = "white",
+     main = "Monte Carlo carbon density", xlab = "MgC / ha")
+abline(v = mc_ci, col = "firebrick", lwd = 2, lty = 2)
+```
+
+## Conservative estimates
+
+The standards translate uncertainty into a deduction. A common rule is that when the half-width of the 90% or 95% interval exceeds a threshold (often 15% of the mean), credits are issued against the conservative lower bound rather than the mean. Computing the uncertainty percentage and the conservative estimate is a few lines:
+
+```{r}
+half_width <- (mc_ci[2] - mc_ci[1]) / 2
+unc_pct    <- 100 * half_width / mean(sim)
+conservative <- mean(sim) - half_width           # lower-bound crediting basis
+round(c(uncertainty_pct = unc_pct,
+        mean = mean(sim), conservative = conservative), 1)
+```
+
+If the uncertainty percentage clears the threshold, the gap between the mean and the conservative figure is credit the project forgoes for being imprecise, the direct financial incentive to measure better.
+
+## Keystone: area-adjusted accuracy
+
+The Bolivia land-cover work raises the same question for areas rather than carbon: a class area read straight off a map inherits the map's classification errors, and good practice adjusts it and attaches a confidence interval [@olofsson2014gpg]. This is the LULC counterpart of the carbon deduction, and it uses the confusion matrix from the disturbance chapter. We take mapped forest and non-forest areas and an error matrix, and compute the area-adjusted estimate:
+
+```{r}
+A    <- c(forest = 18000, nonforest = 7000)      # mapped area, ha
+Atot <- sum(A); W <- A / Atot
+
+# error matrix: rows = map class, cols = reference class
+n   <- matrix(c(95, 5, 12, 88), nrow = 2, byrow = TRUE,
+              dimnames = list(map = names(A), ref = names(A)))
+ni  <- rowSums(n)
+
+# Olofsson stratified estimator of the reference area proportion of "forest"
+p_forest <- sum(W * n[, "forest"] / ni)
+se_p     <- sqrt(sum(W^2 * (n[, "forest"]/ni) * (1 - n[, "forest"]/ni) / (ni - 1)))
+
+adj_forest_ha <- Atot * p_forest
+ci_ha         <- Atot * 1.96 * se_p
+round(c(mapped_forest_ha  = A["forest"],
+        adjusted_forest_ha = adj_forest_ha,
+        ci_halfwidth_ha    = ci_ha), 0)
+```
+
+The adjusted area differs from the mapped area because the map commits and omits forest at rates the reference sample reveals, and the confidence interval is the honest precision of the figure. A project that reports only the mapped area, with no adjustment and no interval, has reported a number no auditor can accept. The full Bolivia workflow applies this class by class across the national legend; the estimator is the one above.
+
+## Exercises
+
+1. Recompute the sampling confidence interval using a 4-by-6 quadrat grid instead of 8-by-12. Does the mean change? Does the standard error? Explain the difference.
+2. In the Monte Carlo, double the uncertainty on the carbon fraction (sd 0.04) and rerun. How much does the uncertainty percentage grow, and would it now trigger a 15% deduction?
+3. Report the conservative (lower-bound) carbon density and express the forgone credit as a percentage of the mean. In one sentence, state the incentive this creates.
+4. *(Applied.)* Change the error matrix so the map omits more forest (change the second row to 25, 75). Recompute the adjusted forest area and its interval, and explain which way omission error pushes the adjustment.

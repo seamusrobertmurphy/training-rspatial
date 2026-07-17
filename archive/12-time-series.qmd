@@ -1,0 +1,143 @@
+---
+title: "Data Cubes"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Data cubes
+
+A single raster is a two-dimensional grid. But most Earth-observation data have more dimensions than that: a satellite image has several spectral **bands**, and the same scene is re-imaged on many **dates**. Stack those and a raster becomes a multidimensional array indexed by x, y, band, and time, a **data cube**. The cube is the natural data structure for imagery and for any gridded variable that varies through time, and learning to slice, reduce, and summarise along its dimensions is a foundational skill distinct from single-raster work.
+
+A time dimension is the most common extra axis, and it is the one that lets us measure *change*. This chapter builds a raster time series, a cube with a single band observed on several dates, and shows the three operations the cube makes possible: viewing change, reducing along the time axis to a per-pixel trend, and differencing two slices to detect an abrupt event. The example is a vegetation index through time, but the operations are generic to any cube.
+
+```{r}
+library(terra)
+library(sf)
+```
+
+## Building a cube
+
+A data cube is a raster with a third dimension: time. Each layer is the same grid on a different date. Real cubes come from stacking satellite scenes; here we build a small, reproducible NDVI cube for the study area over six years so the concepts are visible without a large download. The cube starts as mature, high-NDVI coastal forest, then a block in the east is harvested in 2022 and begins to regenerate.
+
+```{r}
+set.seed(11)
+grid <- rast(xmin = -124.78, xmax = -124.58, ymin = 49.24, ymax = 49.34,
+             nrows = 50, ncols = 50, crs = "EPSG:4326")
+
+years <- 2019:2024
+base  <- init(grid, fun = function(n) 0.82 + rnorm(n, 0, 0.03))   # mature forest NDVI
+
+# a harvest block in the east half of the area (columns 32-46)
+harvest <- grid
+harvest[] <- 0
+col_idx <- colFromCell(harvest, 1:ncell(harvest))
+harvest[col_idx >= 32 & col_idx <= 46] <- 1
+
+layers <- lapply(years, function(y) {
+  ndvi <- base + rnorm(ncell(grid), 0, 0.012)          # interannual variation
+  if (y >= 2022) {
+    drop   <- 0.55 * harvest                            # clear-fell in 2022
+    regrow <- 0.06 * (y - 2022) * harvest               # slow regeneration after
+    ndvi   <- ndvi - drop + regrow
+  }
+  ndvi
+})
+cube <- rast(layers)
+names(cube) <- paste0("ndvi_", years)
+time(cube)  <- as.Date(paste0(years, "-07-01"))
+cube
+```
+
+The object is one `SpatRaster` with six layers and a time stamp on each. Everything you learned about single rasters, algebra, extraction, cropping, applies to the whole cube at once.
+
+## Visualising change
+
+The simplest monitoring product is a panel of the same place through time. The harvest appears as a dark block from 2022 onward, fading slightly as regeneration begins:
+
+```{r}
+plot(cube, range = c(0, 1), nc = 3)
+```
+
+To follow a single location, extract its whole time series and plot it against date. A pixel inside the harvest block tells the story an auditor needs, a sharp fall in 2022 and a gradual partial recovery:
+
+```{r}
+harvest_pt <- vect(cbind(-124.62, 49.29), crs = "EPSG:4326")
+ts <- as.numeric(terra::extract(cube, harvest_pt, ID = FALSE))
+
+plot(years, ts, type = "b", pch = 19,
+     xlab = "Year", ylab = "NDVI", main = "NDVI at a harvested pixel")
+```
+
+## Temporal reduction
+
+A time series per pixel means we can fit a trend *per pixel* and map where the landscape is greening or browning. `app()` applies a function across the layers of every cell; we fit a straight line to each pixel's NDVI against time and keep the slope:
+
+```{r}
+idx <- seq_along(years)
+slope <- app(cube, fun = function(v) {
+  if (all(is.na(v))) return(NA_real_)
+  coef(lm(v ~ idx))[2]
+})
+
+plot(slope, main = "Per-pixel NDVI trend (slope per year)")
+```
+
+The eastern block lights up as strongly negative, a browning trend driven by the harvest, while the undisturbed forest hovers near zero. This single map is a landscape-wide screening tool: it points the auditor straight to where something changed.
+
+## Change detection
+
+A trend smooths over the whole period; disturbance is abrupt, so we also difference specific dates. The change between the year before and the year of harvest isolates the event, and a threshold turns the continuous difference into a disturbance flag:
+
+```{r}
+change <- cube[["ndvi_2022"]] - cube[["ndvi_2021"]]
+disturbed <- change < -0.2                      # NDVI drop beyond 0.2 = flag
+
+plot(change,    main = "NDVI change 2021 to 2022")
+plot(disturbed, main = "Disturbance flag (NDVI drop > 0.2)")
+```
+
+The flagged area is the harvest block, delineated automatically. In a real audit this map is overlaid on tenure boundaries and permits: a disturbance flag inside a no-harvest commitment is a finding; one matching an approved cutblock is confirmation. The threshold itself must be justified and, ideally, calibrated against known events.
+
+## Remote-sensing cubes
+
+The workflow is identical for real data; only the source of the cube changes. A production monitoring pipeline pulls a MODIS or Sentinel-2 NDVI series for the area of interest and stacks it into exactly this kind of cube. The pattern, which needs internet access and the `MODISTools` package, is:
+
+```{r}
+#| eval: false
+library(MODISTools)
+ndvi_ts <- mt_subset(product = "MOD13Q1",
+                     lat = 49.29, lon = -124.68,
+                     band = "250m_16_days_NDVI",
+                     start = "2019-01-01", end = "2024-12-31",
+                     km_lr = 5, km_ab = 5, site_name = "alberni",
+                     internal = TRUE, progress = FALSE)
+# mt_to_terra() then rebuilds a real cube on which the analysis above runs unchanged
+```
+
+For finer detail, an airborne LiDAR canopy-height model differenced between two acquisitions measures height loss directly, the most defensible evidence of harvest there is. Whatever the sensor, the logic of this chapter, cube, trend, change, flag, does not change.
+
+## Applications
+
+Change detection closes the carbon loop. Each disturbed pixel implies a stock change: the carbon that stood there, estimated by the methods of the earlier chapters, is the reversal to account for. Multiplying disturbed area by the pre-disturbance carbon density gives a first-order estimate of committed emissions, and the uncertainty in that number flows from the uncertainty in both the area and the density, which is the subject of the capstone.
+
+## Exercises
+
+1. Build the NDVI cube and extract the time series at an *undisturbed* pixel in the west. How does its trend compare to the harvested pixel, and would a threshold of −0.2 ever flag it?
+2. Change the disturbance threshold to −0.1 and −0.3. How does the flagged area change, and what is the trade-off between missing real harvests and flagging noise?
+3. Compute the mean NDVI of the whole scene in each year and plot the landscape-average trajectory. Does the single harvest block move the whole-area average appreciably?
+4. Sketch, in code comments, how you would replace the simulated cube with a real Sentinel-2 series and what pre-processing (cloud masking, compositing) you would need before the analysis above could be trusted.
+5. *(Applied.)* Instead of thresholding one band, a disturbance map can be produced by *classifying* each pixel from several bands with a supervised model (for example a random forest via `caret`). Outline the steps, training data, model fit, prediction across the cube, and an accuracy assessment with a confusion matrix, and explain why the accuracy statement matters to a verifier.

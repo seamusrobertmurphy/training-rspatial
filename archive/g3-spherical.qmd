@@ -1,0 +1,71 @@
+---
+title: "Spherical Geometry"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Spherical geometry
+
+Longitude and latitude are angles on a curved surface, not positions on a flat sheet. Most of the time we quietly ignore this, we plot lon/lat on a rectangular axis and it looks fine, but the moment we *measure* on those coordinates, the curvature matters. A degree of longitude is about 111 km at the equator and shrinks to zero at the poles, so treating lon/lat as if they were metres on a plane distorts every distance and area. This chapter is about doing geometry correctly on a round Earth.
+
+```{r}
+library(sf)
+```
+
+## Planar and spherical
+
+There are two ways to compute with geographic coordinates. **Planar** geometry treats lon/lat as Cartesian x/y and applies flat-earth formulae; it is fast but wrong for anything beyond a small area. **Spherical** geometry computes on the surface of the sphere (or ellipsoid), so distances follow great circles and areas account for convergence toward the poles. The straight line between two points on a map is generally *not* the shortest path on the globe, which is the geodesic.
+
+## The s2 library
+
+Modern `sf` handles this automatically. When data are in a geographic CRS (lon/lat), `sf` uses Google's **s2** spherical-geometry library by default, so measurements and predicates are computed on the sphere without you doing anything. You can see and toggle this:
+
+```{r}
+sf_use_s2()               # TRUE: spherical geometry is active for lon/lat
+```
+
+## Geodesic measures
+
+Because s2 is active, an area or distance computed on lon/lat data is already geodesic, returned in metres and square metres even though the coordinates are degrees:
+
+```{r}
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326)
+
+st_distance(plots[1:2, ])          # geodesic distance in metres, from degrees
+```
+
+The difference between spherical and planar becomes visible if we switch s2 off and compare. With s2 disabled, `sf` falls back to treating degrees as planar coordinates, and the "distance" comes back in meaningless degree units:
+
+```{r}
+sf_use_s2(FALSE)
+st_distance(plots[1:2, ])          # planar: nonsense units (degrees)
+sf_use_s2(TRUE)                    # restore the correct default
+```
+
+This is why simply reading a distance off lon/lat coordinates, without either s2 or a projection, gives numbers that look plausible but are wrong.
+
+## Local and global
+
+The size of the error depends on extent. Over a single valley the curvature is negligible and a local projection and the sphere agree to within centimetres. Over a province or a continent the difference is large, and near the poles or across the antimeridian (the ±180° line) planar formulae fail completely. The working guidance is simple: for **local** analysis, project to a metric CRS and work on the plane, as we do for the forest study area; for **global or continental** extents, keep the data in lon/lat and let spherical geometry do the work. Knowing which regime you are in, and that `sf` defaults to the correct one for geographic data, is the foundational point.
+
+## Exercises
+
+1. Confirm `sf_use_s2()` is `TRUE`, then compute the geodesic distance between the two most widely separated plots. Switch s2 off, repeat, and explain why the second result is not a distance at all.
+2. Compare the area of the study-area bounding box computed on lon/lat (spherical) with the same box reprojected to BC Albers (planar). How close are they, and why so close at this extent?
+3. Explain, for a dataset spanning all of Canada, why an equal-area projection or spherical geometry is essential and a single UTM zone is not.
+4. The shortest path between two points on the globe is a great circle. Sketch why a straight line drawn between two cities on a Mercator map overstates the true travel distance at high latitudes.

@@ -1,0 +1,132 @@
+---
+title: "Raster Data"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Elevation data
+
+The best way to learn raster processing is on a real surface, so we begin by downloading a digital elevation model (DEM) for the study area. The `elevatr` package fetches open elevation tiles and returns a raster clipped to whatever area you give it. We supply the study-area rectangle and convert the result to a `terra` `SpatRaster`. This step needs an internet connection.
+
+```{r}
+library(terra)
+library(sf)
+library(elevatr)
+
+aoi <- st_as_sfc(st_bbox(c(xmin = -124.78, xmax = -124.58,
+                           ymin = 49.24,  ymax = 49.34),
+                         crs = st_crs(4326))) |> st_sf()
+
+dem <- get_elev_raster(aoi, z = 11, clip = "locations") |> rast()
+names(dem) <- "elevation"
+dem
+```
+
+The printout is the raster data model made concrete: rows and columns, cell size in degrees, extent, CRS, and the elevation range in metres. The Alberni Valley climbs from near sea level along its rivers to forested slopes several hundred metres higher, and that relief is what drives species, productivity, and access across the landscape.
+
+## Inspecting rasters
+
+The same handful of accessors describe any raster:
+
+```{r}
+res(dem)          # cell size
+ext(dem)          # bounding box
+crs(dem, describe = TRUE)$name    # CRS name
+global(dem, c("min", "max", "mean"), na.rm = TRUE)
+```
+
+A plot gives the lay of the land, with our plots for orientation:
+
+```{r}
+plots <- st_as_sf(read.csv("data/forest_plots.csv"),
+                  coords = c("lon", "lat"), crs = 4326)
+plot(dem, main = "Elevation (m)")
+plot(st_geometry(plots), add = TRUE, pch = 19, cex = 0.4)
+```
+
+## Raster algebra
+
+Because a raster is a grid of numbers, arithmetic on rasters is arithmetic on cells. This is **map algebra**, and it is the reason continuous surfaces are so easy to work with. To reclassify elevation into low, mid, and high elevation bands, we cut the surface at thresholds:
+
+```{r}
+rcl <- matrix(c(-Inf, 150, 1,
+                 150, 350, 2,
+                 350, Inf, 3), ncol = 3, byrow = TRUE)
+bands <- classify(dem, rcl)
+levels(bands) <- data.frame(id = 1:3, zone = c("low", "mid", "high"))
+plot(bands, main = "Elevation zones")
+```
+
+Ordinary operators work cell by cell. A crude "steepland" mask, cells more than 300 m above the valley floor, is a single expression:
+
+```{r}
+steepland <- dem > 300
+plot(steepland, main = "Above 300 m")
+```
+
+## Terrain analysis
+
+Elevation is rarely the variable of interest; what it *implies*, slope, aspect, ruggedness, is. `terra::terrain()` derives these directly. Slope and aspect need a projected CRS so that horizontal and vertical distances share units, so we project to BC Albers first:
+
+```{r}
+dem_m <- project(dem, "EPSG:3005")
+slope  <- terrain(dem_m, "slope",  unit = "degrees")
+aspect <- terrain(dem_m, "aspect", unit = "degrees")
+tri    <- terrain(dem_m, "TRI")     # terrain ruggedness index
+
+plot(c(slope, tri), main = c("Slope (deg)", "Ruggedness (TRI)"))
+```
+
+Slope matters to an auditor for operability and erosion risk; ruggedness is a useful covariate for productivity because sheltered, gentler terrain often carries taller, denser stands. A **hillshade** turns the terrain into an intuitive relief image by simulating illumination:
+
+```{r}
+hs <- shade(terrain(dem_m, "slope",  unit = "radians"),
+            terrain(dem_m, "aspect", unit = "radians"),
+            angle = 40, direction = 315)
+plot(hs, col = grey(0:100 / 100), legend = FALSE, main = "Hillshade")
+```
+
+## Aligning rasters
+
+Real workflows trim rasters to the area of interest and align them to each other. **Crop** cuts a raster to a rectangle; **mask** sets everything outside a polygon to `NA`; **resample** changes a raster's grid to match another's, which is essential before you can do map algebra between two layers.
+
+```{r}
+west <- st_as_sfc(st_bbox(c(xmin = -124.78, xmax = -124.70,
+                            ymin = 49.24, ymax = 49.34),
+                          crs = st_crs(4326))) |> st_sf() |> st_transform(3005)
+
+dem_west <- crop(dem_m, vect(west)) |> mask(vect(west))
+plot(dem_west, main = "Elevation, West block only")
+```
+
+To resample the DEM onto a coarser 100-metre grid, use bilinear interpolation for continuous data (use nearest-neighbour for categorical rasters such as land cover):
+
+```{r}
+template <- rast(dem_m, resolution = 100)      # empty 100 m grid, same extent/CRS
+dem_100  <- resample(dem_m, template, method = "bilinear")
+res(dem_100)
+```
+
+Every raster operation in the rest of the course is one of these: algebra, terrain derivation, crop, mask, resample, or project. Together they turn a raw elevation download into analysis-ready covariates.
+
+## Exercises
+
+1. Download the DEM for the study area and report its minimum, maximum, and mean elevation. Roughly how much relief does the landscape contain?
+2. Derive slope in degrees and classify it into three operability classes (for example 0–15°, 15–30°, over 30°). What fraction of the area falls in each class?
+3. Compute a hillshade and overlay the forest plots on it. Do the high-carbon plots tend to sit on gentle or steep terrain?
+4. Resample the DEM to 250-metre resolution and compare its mean elevation to the original. Why does the mean barely change while the file becomes far smaller?
+5. *(Applied.)* Airborne LiDAR yields a digital surface model (canopy top) as well as a terrain model. Given both as rasters, compute a canopy height model by subtraction (`chm <- dsm - dtm`) and describe how you would summarise it to a mean canopy height per plot for a biomass model.

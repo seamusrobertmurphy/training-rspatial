@@ -1,0 +1,105 @@
+---
+title: "Spatial Patterns"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Point patterns
+
+Every earlier chapter analysed values measured at locations: carbon at a plot, elevation at a pixel, an index through time. Point-pattern analysis asks a different question, about the locations themselves. Are the events, tree stems, seedlings, detected clearings, spread evenly, scattered at random, or clustered together? The answer characterises the process that generated them, and it is the second capstone of this course: a whole branch of spatial statistics with its own tools. We use `spatstat`, whose `ppp` object holds a point pattern inside an observation window.
+
+The running example here is a real regeneration survey: conifer seedlings mapped after the 2015 Mt Midgeley wildfire in the Darkwoods Conservation Area of the southern Selkirk Mountains, British Columbia [@murphy2026selkirk]. We load the seedlings and build a `ppp` from one four-hectare plot, its bounding box serving as the window:
+
+```{r}
+library(spatstat)
+
+seed <- read.csv("data/darkwoods_seedlings.csv")
+p3   <- subset(seed, plot == 3)
+win  <- owin(range(p3$x), range(p3$y))
+pp   <- ppp(p3$x, p3$y, window = win)
+pp
+```
+
+The printout reports the number of points and the window: a little over 1,600 seedlings in a 200 by 200 metre plot. That is the pattern whose structure we now interrogate.
+
+## Spatial randomness
+
+The reference against which every pattern is judged is complete spatial randomness (CSR): points falling independently and with equal probability everywhere, a homogeneous Poisson process. Real patterns depart from CSR in one of two directions, toward regularity, where points avoid each other as in a planted stand, or toward clustering, where points attract as in natural regeneration around surviving seed trees. The whole toolkit exists to measure that departure and test whether it is real. A plot of the seedlings already suggests the answer:
+
+```{r}
+plot(pp, main = "Mapped conifer seedlings, plot 3", pch = 20, cex = 0.3, cols = "forestgreen")
+```
+
+## Intensity
+
+The intensity is the first-order property: the expected number of points per unit area, and how it varies across the window. A kernel density estimate smooths the points into a continuous intensity surface, the point-pattern analogue of a heat map, revealing where regeneration concentrated:
+
+```{r}
+plot(density(pp, sigma = 8), main = "Seedling intensity (points/m²)")
+points(pp, pch = 20, cex = 0.2)
+```
+
+Regeneration is patchy, not uniform: dense pockets sit near surviving seed sources and gentler, wetter ground, while other areas stay bare. That spatial unevenness is the signal, and explaining it is what the disturbance and terrain covariates in the study were for.
+
+## Nearest neighbour
+
+Whether points cluster or repel is the second-order property, about the interaction between them. The most direct diagnostic is the nearest-neighbour distance: how far, on average, each seedling sits from its closest neighbour, compared with what CSR predicts. Under CSR the expected mean nearest-neighbour distance is $1/(2\sqrt{\lambda})$, so the ratio of observed to expected is the Clark–Evans index: below one means clustered, above one means regular.
+
+```{r}
+ce_ratio <- function(df) {
+  q <- ppp(df$x, df$y, window = win)
+  obs <- mean(nndist(q))
+  expected <- 1 / (2 * sqrt(intensity(q)))
+  obs / expected
+}
+round(ce_ratio(p3), 3)          # < 1 indicates clustering
+```
+
+The ratio sits well below one: seedlings are closer to one another than randomness would allow, the quantitative signature of clustered regeneration.
+
+## Ripley's K
+
+A single number cannot capture how clustering changes with scale, points may cluster tightly at short range yet disperse at long range. Ripley's K function describes the pattern across all distances at once, counting on average how many other points lie within a growing radius of each point, against the CSR expectation. Plotting the observed K with a simulation envelope is the standard test:
+
+```{r}
+K <- envelope(pp, Kest, nsim = 19, verbose = FALSE)
+plot(K, main = "Ripley's K with CSR envelope")
+```
+
+Where the observed curve rises above the envelope the pattern is more clustered than random at that distance; below it, more regular. The seedlings sit above the envelope across the mapped range, confirming clustering is real and not an artefact of a few tight groups, and the scale-explicit view is why K, and its variance-stabilised form the L function, is the workhorse of the field.
+
+## Keystone: seedlings
+
+The published study runs exactly this arc, then goes one step further [@murphy2026selkirk]. Across 3,886 mapped seedlings on three four-hectare plots, point-pattern analysis found significant clustering for all seven conifer species, with intensity governed by fire severity, distance to seed source, topography, and wind. The lean diagnostics above reproduce its core finding on one plot: clustered regeneration, quantified by the Clark–Evans ratio and confirmed by Ripley's K. Repeating the Clark–Evans ratio species by species shows the clustering is not confined to the dominant lodgepole pine but holds across the community:
+
+```{r}
+spp <- c("Pinus_contorta", "Larix", "Picea", "Pseudotsuga")
+sapply(spp, function(s) {
+  q <- subset(p3, species == s)
+  if (nrow(q) < 20) return(NA)
+  round(ce_ratio(q), 3)
+})
+```
+
+Every species returns a ratio below one. The paper then models the intensity surface against the disturbance and terrain covariates with inhomogeneous Cox process models, showing that areas of overlapping beetle mortality and high-severity fire had significantly reduced pine regeneration. That covariate model is the natural next step beyond this book: the foundations here, CSR, intensity, nearest-neighbour, Ripley's K, are what it is built on, and an auditor who understands them can read and challenge such a result.
+
+## Exercises
+
+1. Build the `ppp` for plot 1 instead of plot 3 and compute its Clark–Evans ratio. Is the regeneration there clustered, random, or regular, and how does it compare with plot 3?
+2. Map the intensity surface with a larger smoothing bandwidth (`sigma = 20`) and a smaller one (`sigma = 4`). How does the choice change what you see, and what does that imply about reporting a single heat map?
+3. Run `envelope(pp, Kest)` on a random thinning of the seedlings (`rthin(pp, 0.2)`). Does the clustering signal survive when only a fifth of the points remain? What does that say about sample size and power?
+4. *(Applied.)* Detected clearings in a monitoring image are also a point pattern. Explain how Ripley's K could distinguish scattered natural tree-fall from an organised, clustered harvest front, and why that distinction matters for attributing disturbance.

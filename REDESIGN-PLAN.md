@@ -1,40 +1,35 @@
-# Redesign plan — a keystone-anchored spatial verification course
+# Redesign blueprint — eight progressive chapters, each closing on a keystone
 
-## The core recommendation
+## The design
 
-Redesign the book so that **each chapter is anchored on one of your real training/verification projects**, and teaches the foundational GIS it rests on *through* that project. The current book teaches foundations well but the applied work sits only in exercises; your instinct is right that the milestones should become the spine, not the footnotes. Keep a short foundations primer up front so no prerequisite is skipped, then let every subsequent chapter be a keystone.
+Eight short foundational chapters, ordered simple → complex. Each teaches its GIS concept on the running forest dataset, then **closes with a working example from one of your real verification projects**. Foundations and keystones are fused: the concept earns the example, the example proves the concept. The current 16 chapters consolidate into these 8; nothing foundational is lost, it is redistributed.
 
-This keeps the two things you want at once: complete coverage of foundational GIS, and a book that is unmistakably *forest-carbon-verification* and unmistakably yours.
+## The eight chapters
 
-## Proposed structure
-
-Front matter: Preface + a compact **Foundations** primer (from the current book, condensed): R for spatial work · spatial data models · geometries · coordinate & spherical systems · vector data, attributes and support · spatial operations · raster data and extraction · cartography. These stay as the opening chapters so every reader has the toolkit before the keystones begin.
-
-Then the keystone chapters, in your order:
-
-| # | Keystone chapter | Anchored on (your repos) | Foundational GIS it teaches |
+| # | Chapter (concept, simple → complex) | Closing working example (keystone) | Source repo / data |
 |---|---|---|---|
-| K1 | **Area checks** | area-checks, TREES-charagua, alma-disturbance-check, hiawatha-area-disturbance-checks | geometry validity, overlays, area reconciliation, audit reporting (flextable→Word) |
-| K2 | **LiDAR** *(mid-book, moving toward rasters)* | lidar-forestry, gisborne, la-ronge, ash-dieback | point clouds, DTM/CHM, tree detection, raster extraction |
-| K3 | **Allometry & biomass** | allometric-model-validation, VM0010-starter-template | model fitting, validation (RMSE/bias), biomass→carbon |
-| K4 | **Uncertainty** *(the central keystone)* | **uncertainty** book (allometry · emission factors · activity data · Monte Carlo), TREES-monte-carlo-app | error propagation, Monte Carlo, confidence intervals, ART-TREES deductions |
-| K5 | **Land use & remote sensing** | TREES-bolivia / TREES-ecuador activity data, GEE scripts, acr-remote-sensing-demo | image classification, land-change, accuracy — feeding uncertainty |
-| K6 | **Wetland & hydrology** | mapping-wetland-inundation-lake-chilwa, map-templates (watersheds/streams/topography) | SAR-optical fusion, water indices, cartographic templates |
-| K7 | **Disturbance & risk** | darkwoods (wildfire/beetles), VM0048 (deforisk), VT0007, acr-remote-sensing (accuracy) | change detection, supervised classification, ACR accuracy assessment, VM0048 risk modelling |
-| K8 | **Time series** *(final keystone project)* | IPCC-wildfire-emissions (burn area → fuel → consumption → emission factors), darkwoods time series | data cubes, temporal reduction, change→emissions chain |
-| K9 | **Automation, protocols & registries** *(close)* | sop-library, TREES-demo-repository (renv/git/QAQC/safeguards), GPS/survey SOPs, faostat-mcp | runtime automation, reproducible workflow tools, ISO spatial-data governance, ART-TREES/VERRA/ACR registry practice |
+| 1 | **Getting started** — R for spatial work, vector vs raster, coordinate & spherical systems, a first map | A first real map + CRS check | forest dataset, map-templates |
+| 2 | **Vector data** — points, lines, polygons, shapefiles, geometry types, attributes & support, spatial operations | **Area checks** — validity, overlap reconciliation, area audit report | area-checks, TREES-charagua, alma, hiawatha |
+| 3 | **Raster data** — grids, values, raster algebra, reclassification, extraction | **Land-use / land-cover reclassification** | LULC reclassification (Bolivia carried to Ch 7) |
+| 4 | **Terrain & hydrology** — DEM, slope/aspect/curvature, hillshade, flow derivatives | **Hydrological analysis** — watersheds, inundation | mapping-wetland-inundation-lake-chilwa, map-templates |
+| 5 | **LiDAR & point clouds** — point clouds, returns/waveform, ground classification, DTM/CHM, tree detection | **lidar-forestry** working example | lidar-forestry (+ gisborne, la-ronge, ash-dieback) |
+| 6 | **Disturbance & spatial risk** — change detection, supervised classification, accuracy assessment, risk modelling | **Disturbance checks + VM0048 risk + ACR accuracy** | darkwoods, VM0048 (deforisk), VT0007, acr-remote-sensing |
+| 7 | **Uncertainty statistics** — sampling error, propagation, Monte Carlo, confidence intervals, ART-TREES deductions | **Uncertainty ebook + Bolivia full land-cover classification** | uncertainty book, TREES-bolivia, TREES-monte-carlo |
+| 8 | **Time series — capstone** — data cubes, temporal reduction, trends, change → emissions | **IPCC Tier 1 fire emissions** (burn area → fuel → consumption → emission factors) | IPCC-wildfire-emissions |
 
-## How the current book folds in
+## Where the current chapters go
 
-- The current foundational chapters (1–8) **become the Foundations primer**, lightly condensed. Nothing is thrown away.
-- The current statistics chapters (point patterns, geostatistics, areal data, spatial regression) **distribute into the keystones**: geostatistics and regression into Allometry/Uncertainty; point patterns and areal data into Disturbance & Risk.
-- Uncertainty is promoted from a theme to **the central chapter (K4)**, built directly on your `uncertainty` book's four-part structure — the pedagogical heart of the whole course.
-- Time series moves to the **end** as the capstone (K8), realised as the IPCC-wildfire emissions pipeline you already built.
+- Geometries, attributes & support → **Ch 2**. Cartography → distributed across **Ch 1, 4**.
+- Point patterns, areal data → **Ch 6**. Geostatistics, spatial regression → **Ch 7**.
+- Raster extraction → **Ch 3**; terrain from the raster chapter → **Ch 4**.
+- Allometry & carbon accounting → fold into **Ch 7** (uncertainty is where they matter most).
 
-## The three decisions I need from you
+## Appendix (preserves the "closing" material you mentioned earlier)
 
-1. **Primer length.** Keep the foundations as ~8 short chapters up front (thorough), or compress to ~3–4 (faster to the keystones)?
-2. **Data.** Keep the single simulated Alberni forest dataset across all keystones for consistency, or let each keystone use its own real project data (Charagua area check, Chilwa wetland, Darkwoods disturbance, etc.) so the examples are genuine?
-3. **Depth vs. deadline.** Nine keystone chapters is a large build. Do you want all nine now, or a prioritised first wave (I'd suggest Area checks → LiDAR → Allometry → **Uncertainty** → Time series as the backbone, then the rest)?
+**Appendix A — Automation, protocols & registries:** runtime automation / simple workflow tools, spatial-data protocols and ISO governance, and ART-TREES / VERRA / ACR registry practice. Sources: sop-library, TREES-demo-repository (renv/git/QAQC/safeguards), GPS/survey SOPs, faostat-mcp. Kept as an appendix so it does not break the eight-chapter progression.
 
-Tell me those three and I'll rebuild the `_quarto.yml` around the keystones and start composing, in your voice, from your actual project code.
+## My one assumption (correct me and I'll adjust)
+
+Each chapter **teaches on the simulated Alberni forest dataset** (for a clean, always-runnable progression), then the **closing working example uses the real keystone project's data/outputs** so the example is genuine. If you'd rather each chapter run entirely on its keystone's real data, say so.
+
+On your word I'll consolidate the 16 chapters into these 8, add the keystone closings, and rebuild `_quarto.yml`.

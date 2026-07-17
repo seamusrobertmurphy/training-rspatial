@@ -1,0 +1,119 @@
+---
+title: "Spatial Data Models"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Vector and raster
+
+Every geographic dataset you will ever open is built on one of two ideas. Either it records **discrete objects** with definite boundaries, a plot centre, a road, a property line, or it records a **continuous field** whose value exists everywhere, elevation, canopy height, a vegetation index. The first idea is the **vector** data model; the second is the **raster** data model. Almost all of applied GIS is knowing which model your data uses, and moving cleanly between the two.
+
+For an auditor this is not academic. Your plot locations are vector. The imagery you validate them against is raster. The carbon estimate you report comes from marrying the two. Get the models straight and the rest of the course follows.
+
+```{r}
+library(sf)
+library(terra)
+library(dplyr)
+```
+
+## Vector data
+
+In the vector model, geography is stored as coordinates. A **point** is a single coordinate pair; a **line** is an ordered sequence of points; a **polygon** is a closed ring of points enclosing an area. Each of these geometries is attached to a row of attributes, so a vector layer is really a table in which one column holds shape.
+
+The `sf` package ("simple features") implements this as an ordinary data frame with a special `geometry` column [@pebesma2018sf]. We can build the three geometry types by hand to see them:
+
+```{r}
+pt   <- st_point(c(-124.68, 49.29))
+ln   <- st_linestring(rbind(c(-124.72, 49.26), c(-124.66, 49.30), c(-124.60, 49.28)))
+poly <- st_polygon(list(rbind(
+  c(-124.74, 49.25), c(-124.60, 49.25),
+  c(-124.60, 49.33), c(-124.74, 49.33), c(-124.74, 49.25))))
+
+par(mfrow = c(1, 3))
+plot(pt,   main = "Point",   pch = 19, col = "firebrick")
+plot(ln,   main = "Line",    col = "steelblue", lwd = 2)
+plot(poly, main = "Polygon", col = "darkseagreen")
+par(mfrow = c(1, 1))
+```
+
+In practice you rarely construct geometry by hand. More often you have a table of coordinates, as in our plot inventory, and you promote it to a spatial layer. The `st_as_sf()` function does this: you name the coordinate columns and declare the coordinate reference system (here `4326`, the code for longitude/latitude on the WGS 84 datum, which we unpack in the next chapter).
+
+```{r}
+plots <- read.csv("data/forest_plots.csv")
+plots_sf <- st_as_sf(plots, coords = c("lon", "lat"), crs = 4326)
+plots_sf
+```
+
+The object prints as a data frame with a `geometry` column of type `POINT`. Every `dplyr` verb you already know still works, and the geometry follows along:
+
+```{r}
+plots_sf |>
+  filter(stand_type == "old-growth") |>
+  select(plot_id, carbon) |>
+  head()
+```
+
+That is the quiet power of `sf`: spatial data behaves like the tabular data you are used to, until the moment you need it to behave spatially.
+
+## Raster data
+
+In the raster model, geography is stored as a regular grid of cells, each holding a value. The grid is defined by its **extent** (the geographic rectangle it covers), its **resolution** (the size of one cell), and its **coordinate reference system**. A single grid is one **layer**; stack several aligned grids, for example the bands of a satellite image, and you have a multi-layer raster.
+
+The `terra` package represents rasters as `SpatRaster` objects [@hijmans2024terra]. To see the model clearly, build a small grid over our study area and fill it with values:
+
+```{r}
+r <- rast(xmin = -124.78, xmax = -124.58,
+          ymin = 49.24,  ymax = 49.34,
+          nrows = 10, ncols = 10, crs = "EPSG:4326")
+values(r) <- runif(ncell(r), 100, 900)
+r
+```
+
+Read the printout. It reports the dimensions (`10 x 10 x 1`, rows by columns by layers), the resolution (0.02 degrees per cell), the extent, the CRS, and the range of values. Those five facts define any raster:
+
+```{r}
+dim(r)        # rows, columns, layers
+res(r)        # cell size in map units
+ext(r)        # bounding box
+ncell(r)      # total number of cells
+```
+
+Plotting shows the grid, and we can drop our vector plots on top to confirm the two models share the same corner of the world:
+
+```{r}
+plot(r, main = "A 10 x 10 raster over the study area")
+plot(st_geometry(plots_sf), add = TRUE, pch = 19, cex = 0.5)
+```
+
+Real rasters differ only in scale. A Sentinel-2 tile over this valley is the same object with ten-metre cells and several bands instead of two-kilometre cells and one; the model is identical.
+
+## Choosing a representation
+
+The choice is dictated by the phenomenon, not by preference.
+
+Use **vector** when the thing has a boundary you could walk: inventory plots, harvest blocks, property parcels, streams, roads, the outline of a management unit. Vector preserves exact position and lets you compute lengths, areas, and topological relationships (does this plot fall inside that parcel?).
+
+Use **raster** when the thing varies continuously across space and has no natural boundary: elevation, slope, temperature, a vegetation index, modelled biomass. Raster makes map algebra trivial (subtract last year's canopy height from this year's) and is the native form of all satellite and airborne imagery.
+
+Most real analyses use both. In this course the plots and parcels are vector, the terrain and imagery are raster, and the pivotal operation, covered in the chapter on raster extraction, is **extracting** raster values at vector locations so that a field plot inherits the elevation, slope, and greenness of the pixel it sits in.
+
+## Exercises
+
+1. Build an `sf` layer from `forest_plots.csv` and report its bounding box with `st_bbox()`. How many square kilometres does the study area span? (Reproject to a metric CRS first, or reason from the degree extent.)
+2. Construct a raster with 20-metre resolution covering the study-area extent in a UTM projection (`EPSG:32610`). How many cells does it contain? Why is this so much larger than the 10 × 10 teaching grid?
+3. Explain, for each of the following, whether you would store it as vector or raster and why: a LiDAR canopy-height surface; the boundary of a certified organic farm; a network of logging roads; a modelled soil-carbon map.
+4. Create a two-layer raster by stacking two grids of random values with `c()`. Confirm with `nlyr()` that it has two layers, and plot both.

@@ -19,24 +19,18 @@ book:
 
   chapters:
     - index.qmd
-    - 01-r-for-spatial.qmd
-    - 02-data-models.qmd
-    - g1-geometries.qmd
-    - 03-crs.qmd
-    - g3-spherical.qmd
-    - 04-vector-sf.qmd
-    - g2-attributes.qmd
-    - 05-geometry-joins.qmd
-    - 06-raster-terra.qmd
-    - 07-raster-extraction.qmd
-    - 12-time-series.qmd
-    - 08-cartography.qmd
-    - g4-point-patterns.qmd
-    - 10-interpolation.qmd
-    - 09-autocorrelation.qmd
-    - 11-modelling.qmd
+    - 01-getting-started.qmd
+    - 02-vector-data.qmd
+    - 03-raster-data.qmd
+    - 04-terrain-hydrology.qmd
+    - 05-lidar-point-clouds.qmd
+    - 06-disturbance-risk.qmd
+    - 07-uncertainty.qmd
+    - 08-time-series.qmd
+    - 09-spatial-patterns.qmd
 
   appendices:
+    - A-automation-registries.qmd
     - references/index.qmd
 
   sidebar:

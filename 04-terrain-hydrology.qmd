@@ -1,0 +1,120 @@
+---
+title: "Terrain and Hydrology"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Elevation
+
+Terrain is the covariate behind almost everything else in a forest: it drives productivity, access, erosion, and where water collects. It arrives as a digital elevation model (DEM), a raster whose cell value is height above a datum. In operational work you download one, and the `elevatr` package fetches open tiles for any area:
+
+```{r}
+#| eval: false
+library(elevatr)
+aoi <- st_as_sf(data.frame(x = -78.143, y = 38.896),
+                coords = c("x", "y"), crs = 4326)
+dem <- get_elev_raster(aoi, z = 13) |> rast()
+```
+
+So the chapter runs offline and reproducibly, we build a DEM with a valley over the study plot instead. The surface tilts gently and is cut by a central channel, the kind of relief that governs drainage:
+
+```{r}
+library(terra)
+library(sf)
+
+stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
+                  coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(32617)
+
+dem <- rast(ext(vect(stems)), resolution = 10, crs = "EPSG:32617")
+xy  <- xyFromCell(dem, 1:ncell(dem))
+ymid <- mean(xy[, 2])
+elev <- 120 + 0.03 * (xy[, 1] - min(xy[, 1])) -
+        18 * exp(-((xy[, 2] - ymid) / 70)^2)
+dem  <- setValues(dem, elev)
+names(dem) <- "elevation"
+global(dem, c("min", "max", "mean"))
+```
+
+## Terrain derivatives
+
+Elevation is rarely the variable of interest; what it *implies*, slope, aspect, ruggedness, is. `terrain()` derives these directly. Slope and aspect need a projected DEM so horizontal and vertical distances share units, which ours already is:
+
+```{r}
+slope  <- terrain(dem, "slope",  unit = "degrees")
+aspect <- terrain(dem, "aspect", unit = "degrees")
+tri    <- terrain(dem, "TRI")            # terrain ruggedness index
+plot(c(slope, tri), main = c("Slope (deg)", "Ruggedness (TRI)"))
+```
+
+Slope matters for operability and erosion risk; ruggedness is a useful productivity covariate because sheltered, gentler terrain often carries taller, denser stands. A hillshade turns terrain into an intuitive relief image by simulating illumination, the standard base layer under any map:
+
+```{r}
+hs <- shade(terrain(dem, "slope",  unit = "radians"),
+            terrain(dem, "aspect", unit = "radians"),
+            angle = 40, direction = 315)
+plot(hs, col = grey(0:100 / 100), legend = FALSE, main = "Hillshade")
+```
+
+## Flow direction
+
+Water moves downhill, so a DEM already encodes drainage. `terrain()` computes flow direction, the neighbour each cell drains to, which is the first step of every hydrological routing algorithm and the input to catchment delineation:
+
+```{r}
+flowdir <- terrain(dem, "flowdir")
+plot(flowdir, main = "Flow direction")
+```
+
+Full watershed delineation, flow accumulation, stream networks, catchment boundaries, is the domain of dedicated tools such as `whitebox`, which route flow across the accumulated grid. The principle is the one shown here: every hydrological product begins with elevation and the slope and flow fields derived from it.
+
+## Keystone: hydrological analysis
+
+Wetland and inundation mapping asks a direct question of a DEM: given a water level, what land floods? The Lake Chilwa inundation work answers it across a shallow basin whose area swings enormously with small changes in level. The method is a threshold on elevation, and it is the same logic whether the water is a lake, a floodplain, or a reservoir behind a proposed dam.
+
+We treat the valley floor as the basin. Flooded cells are those below a chosen water level, and the flooded area is the deliverable:
+
+```{r}
+water_level <- min(values(dem), na.rm = TRUE) + 3   # 3 m above the channel floor
+flooded <- dem < water_level
+cell_ha <- prod(res(dem)) / 1e4
+flooded_ha <- global(flooded, "sum", na.rm = TRUE)[1, 1] * cell_ha
+round(flooded_ha, 2)                                  # hectares inundated
+```
+
+```{r}
+plot(hs, col = grey(0:100 / 100), legend = FALSE, main = "Inundation at +3 m")
+plot(flooded, add = TRUE, alpha = 0.5, col = c(NA, "steelblue"), legend = FALSE)
+```
+
+The value of the method is the rating curve: sweep the water level and record the area at each, and you have the relationship between stage and flooded extent that drives flood risk, wetland carbon, and reservoir planning:
+
+```{r}
+levels <- seq(min(values(dem), na.rm = TRUE) + 1,
+              min(values(dem), na.rm = TRUE) + 8, by = 1)
+area_at <- sapply(levels, function(L)
+  global(dem < L, "sum", na.rm = TRUE)[1, 1] * cell_ha)
+data.frame(water_level_m = round(levels, 1), flooded_ha = round(area_at, 1))
+```
+
+Reading down the table, a few metres of stage change a small flooded area into a large one, the non-linearity that makes shallow basins so sensitive and makes stating the assumed water level essential to any wetland-area claim. The real project adds a satellite-derived water mask to validate the DEM prediction, but the analytical core is this thresholded elevation surface.
+
+## Exercises
+
+1. Build the DEM and report its relief (max minus min elevation). Derive slope and describe where the steepest ground lies relative to the central valley.
+2. Compute a hillshade with the sun in the northeast (`direction = 45`) and compare it with the northwest illumination used above. Why does illumination direction change which slopes look bright?
+3. Recompute flooded area at water levels of +2, +4 and +6 m. Plot area against level: is the relationship linear? What does the shape tell you about the basin?
+4. *(Applied.)* A project claims a 50-hectare seasonal wetland. Explain how you would use a DEM, a water-level assumption, and the rating-curve method above to test that claim, and what single assumption most affects your answer.
