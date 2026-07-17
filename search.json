@@ -1,0 +1,688 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "section": "",
+    "text": "Preface\nThis is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.\nThe course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "index.html#the-chapters",
+    "href": "index.html#the-chapters",
+    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "section": "The chapters",
+    "text": "The chapters\n\nGetting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.\nVector Data — geometries, attributes and support, spatial joins; closing on an area check.\nRaster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.\nTerrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.\nLiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.\nDisturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.\nUncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.\nTime Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.\nSpatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley’s K; closing on post-fire conifer regeneration.\n\nAn appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "index.html#the-running-dataset",
+    "href": "index.html#the-running-dataset",
+    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "section": "The running dataset",
+    "text": "The running dataset\nEvery chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.\n\n\n\n\n\n\nAbout the data\n\n\n\nThe stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone (Chapter 9), which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia (Murphy et al., 2026).",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "index.html#using-this-book",
+    "href": "index.html#using-this-book",
+    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "section": "Using this book",
+    "text": "Using this book\nEach chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field (Bivand et al., 2013; Lovelace et al., 2019; Pebesma & Bivand, 2023), and the sf and terra packages that underpin the modern R-spatial stack are described by Pebesma (2018) and Hijmans (2024). Where the applied material touches forest-carbon conventions it follows IPCC (2006).\n\n\n\n\n\n\nBivand, R. S., Pebesma, E., & Gómez-Rubio, V. (2013). Applied spatial data analysis with r (2nd ed.). Springer.\n\n\nHijmans, R. J. (2024). Terra: Spatial data analysis. https://CRAN.R-project.org/package=terra\n\n\nIPCC. (2006). 2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use. Institute for Global Environmental Strategies.\n\n\nLovelace, R., Nowosad, J., & Muenchow, J. (2019). Geocomputation with r. Chapman; Hall/CRC.\n\n\nMurphy, S., Leslie, A., Wilson, J., & Banks, L. K. (2026). Spatial patterns of conifer regeneration following mountain pine beetle outbreak (dendroctonus ponderosae) and mixed-severity wildfire: A point process model of disturbance interactions in the southern selkirk mountains, british columbia. Forest Ecology and Management, 618, 123985. https://doi.org/10.1016/j.foreco.2026.123985\n\n\nPebesma, E. (2018). Simple features for r: Standardized support for spatial vector data. The R Journal, 10(1), 439–446. https://doi.org/10.32614/RJ-2018-009\n\n\nPebesma, E., & Bivand, R. (2023). Spatial data science: With applications in r. Chapman; Hall/CRC. https://doi.org/10.1201/9780429459016",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html",
+    "href": "01-getting-started.html",
+    "title": "\n1  Getting Started\n",
+    "section": "",
+    "text": "1.1 Reproducibility\nAn audit stands or falls on whether someone else can reproduce the number. A spreadsheet built with forty manual clicks cannot be re-run, cannot be reviewed line by line, and cannot be trusted a year later when the inputs have changed. A script can. This is the reason to do spatial work in R: every decision, from the projection you chose to the buffer distance you applied, is written down and repeatable.\nR is a free, open-source language with a mature ecosystem for geographic data. In one session you can read a shapefile a surveyor sent you, pull an elevation model from an open server, overlay the two, extract terrain at your field plots, fit a model, and export a map, without leaving the environment or paying for a licence. For a forest-carbon or agriculture auditor that means the whole chain from raw data to reported estimate lives in one reviewable document. This course uses the modern R-spatial stack, built on two packages that have become the standard tools of the field (Hijmans, 2024; Pebesma, 2018).",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#the-stack",
+    "href": "01-getting-started.html#the-stack",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.2 The stack",
+    "text": "1.2 The stack\nYou will meet these packages throughout the book. Install them once before you begin.\n\n\nPackage\nRole\n\n\n\nsf\nVector data: points, lines, polygons\n\n\nterra\nRaster data: imagery, elevation, gridded surfaces\n\n\n\ndplyr / tidyverse\n\nData wrangling and pipes\n\n\ntmap\nThematic maps, static and interactive\n\n\nggplot2\nStatistical graphics\n\n\ngstat\nGeostatistics and interpolation\n\n\nspdep\nSpatial autocorrelation and neighbours\n\n\n\nTo install everything the course needs, run this once in the console. It is set not to execute when the book renders.\n\ninstall.packages(c(\n  \"sf\", \"terra\", \"dplyr\", \"tidyverse\", \"tmap\",\n  \"ggplot2\", \"gstat\", \"spdep\", \"elevatr\", \"rnaturalearth\"\n))\n\nLoad the core three at the top of any spatial script:\n\nlibrary(sf)\nlibrary(terra)\nlibrary(dplyr)\n\nThe messages sf and terra print on loading name the versions of GDAL, GEOS and PROJ you are linked against. Note them: a projection or geometry result can occasionally differ between library versions.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#projects",
+    "href": "01-getting-started.html#projects",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.3 Projects",
+    "text": "1.3 Projects\nBefore loading data, put your work in an RStudio Project, a folder with an .Rproj marker. It fixes two things that otherwise cause endless confusion: it sets the working directory to the project root, and it lets you refer to data with short relative paths like data/scbi_stems.csv instead of a full path tied to your machine. A tidy layout looks like:\ntraining-rspatial/\n├── data/                 # input datasets\n├── 01-getting-started.qmd\n├── 02-vector-data.qmd\n└── training-rspatial.Rproj\nWith a project open, every path in this book that begins with data/ resolves correctly.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#the-running-dataset",
+    "href": "01-getting-started.html#the-running-dataset",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.4 The running dataset",
+    "text": "1.4 The running dataset\nOne dataset runs through the whole course: a mapped forest-dynamics plot, modelled on the Smithsonian ForestGEO plot at the Conservation Biology Institute in Front Royal, Virginia. Every stem in a 400 by 640 metre plot is stem-mapped, identified to species, and measured for diameter. It is an ideal teaching set because it is large, real in structure, and every tree carries a location.\n\n\n\n\n\n\nAbout the data\n\n\n\nThe stem list (species, diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the map is representative rather than a survey of record. Terrain, imagery and LiDAR layers in later chapters are simulated over the same footprint for a clean, always-runnable progression, and every synthetic layer says so where it is built.\n\n\nThe stem table is an ordinary CSV, so base R reads it without any spatial machinery:\n\nstems &lt;- read.csv(\"data/scbi_stems.csv\")\nstr(stems)\n#&gt; 'data.frame':    2287 obs. of  10 variables:\n#&gt;  $ treeID : int  2695 1229 1230 1295 1229 66 2600 4936 1229 1005 ...\n#&gt;  $ stemID : int  2695 38557 1230 32303 32273 31258 2600 4936 36996 1005 ...\n#&gt;  $ dbh    : num  1.4 1.7 1.4 1 2.5 2.2 1.8 1.4 2 1.4 ...\n#&gt;  $ genus  : chr  \"Acer\" \"Acer\" \"Acer\" \"Acer\" ...\n#&gt;  $ species: chr  \"negundo\" \"negundo\" \"negundo\" \"negundo\" ...\n#&gt;  $ family : chr  \"Sapindaceae\" \"Sapindaceae\" \"Sapindaceae\" \"Sapindaceae\" ...\n#&gt;  $ gx     : num  188 122 164 106 325 ...\n#&gt;  $ gy     : num  466 568 459 157 319 ...\n#&gt;  $ lon    : num  -78.1 -78.1 -78.1 -78.1 -78.1 ...\n#&gt;  $ lat    : num  38.9 38.9 38.9 38.9 38.9 ...\n\nTwo functions tell you almost everything about a new dataset. summary() shows the distribution of each column; a grouped dplyr summary reads the forest:\n\nsummary(stems[, c(\"dbh\", \"gx\", \"gy\")])\n#&gt;       dbh              gx              gy       \n#&gt;  Min.   : 1.00   Min.   :  0.2   Min.   :  0.0  \n#&gt;  1st Qu.: 1.20   1st Qu.: 99.1   1st Qu.:160.9  \n#&gt;  Median : 1.70   Median :202.4   Median :321.7  \n#&gt;  Mean   : 5.52   Mean   :201.5   Mean   :322.4  \n#&gt;  3rd Qu.: 3.40   3rd Qu.:302.0   3rd Qu.:481.4  \n#&gt;  Max.   :92.00   Max.   :400.0   Max.   :639.9\n\nstems |&gt;\n  group_by(genus) |&gt;\n  summarise(n = n(), mean_dbh = round(mean(dbh), 1)) |&gt;\n  arrange(desc(n)) |&gt;\n  head(8)\n#&gt; # A tibble: 8 × 3\n#&gt;   genus           n mean_dbh\n#&gt;   &lt;chr&gt;       &lt;int&gt;    &lt;dbl&gt;\n#&gt; 1 Lindera      1201      1.6\n#&gt; 2 Rosa          151      1.5\n#&gt; 3 Carya         137     12.7\n#&gt; 4 Amelanchier   123      3.1\n#&gt; 5 Hamamelis     107      2.6\n#&gt; 6 Quercus        84     27.8\n#&gt; 7 Fraxinus       76     23.6\n#&gt; 8 Carpinus       57      5.4\n\nDiameters run from saplings at 1 cm to canopy trees near a metre, and a handful of genera dominate the stem count. That is the size and composition structure every biomass and carbon calculation later in the book will rest on.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#vector-and-raster",
+    "href": "01-getting-started.html#vector-and-raster",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.5 Vector and raster",
+    "text": "1.5 Vector and raster\nSpatial data come in two great families, and knowing which you hold is the first decision in any analysis. Vector data represent discrete objects by their geometry: a tree is a point, a road a line, a stand boundary a polygon, each carrying attributes in a table. Raster data represent a continuous surface as a grid of equal cells, each holding one value: elevation, reflectance, canopy height. Our stems are vector; the elevation and imagery we bring in later are raster. Most real analysis moves between the two, and the middle chapters of this book are about doing that cleanly.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#a-first-map",
+    "href": "01-getting-started.html#a-first-map",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.6 A first map",
+    "text": "1.6 A first map\nThe CSV knows nothing about geography yet: lon and lat are just numbers. sf turns them into geometry by naming the coordinate columns and the coordinate reference system, here WGS 84 longitude/latitude, whose EPSG code is 4326:\n\nstems_sf &lt;- st_as_sf(stems, coords = c(\"lon\", \"lat\"), crs = 4326)\nstems_sf\n#&gt; Simple feature collection with 2287 features and 8 fields\n#&gt; Geometry type: POINT\n#&gt; Dimension:     XY\n#&gt; Bounding box:  xmin: -78.1454 ymin: 38.8935 xmax: -78.14078 ymax: 38.89925\n#&gt; Geodetic CRS:  WGS 84\n#&gt; First 10 features:\n#&gt;    treeID stemID dbh genus species      family    gx    gy\n#&gt; 1    2695   2695 1.4  Acer negundo Sapindaceae 188.0 466.1\n#&gt; 2    1229  38557 1.7  Acer negundo Sapindaceae 121.5 567.9\n#&gt; 3    1230   1230 1.4  Acer negundo Sapindaceae 164.0 458.6\n#&gt; 4    1295  32303 1.0  Acer negundo Sapindaceae 106.1 156.9\n#&gt; 5    1229  32273 2.5  Acer negundo Sapindaceae 325.0 318.9\n#&gt; 6      66  31258 2.2  Acer negundo Sapindaceae 166.3 465.8\n#&gt; 7    2600   2600 1.8  Acer negundo Sapindaceae 385.3 198.1\n#&gt; 8    4936   4936 1.4  Acer negundo Sapindaceae 281.6 332.4\n#&gt; 9    1229  36996 2.0  Acer negundo Sapindaceae 292.5 639.8\n#&gt; 10   1005   1005 1.4  Acer negundo Sapindaceae  82.6 481.7\n#&gt;                      geometry\n#&gt; 1  POINT (-78.14323 38.89769)\n#&gt; 2     POINT (-78.144 38.8986)\n#&gt; 3  POINT (-78.14351 38.89762)\n#&gt; 4  POINT (-78.14418 38.89491)\n#&gt; 5  POINT (-78.14165 38.89637)\n#&gt; 6  POINT (-78.14348 38.89768)\n#&gt; 7  POINT (-78.14095 38.89528)\n#&gt; 8  POINT (-78.14215 38.89649)\n#&gt; 9  POINT (-78.14202 38.89925)\n#&gt; 10 POINT (-78.14445 38.89783)\n\nNotice what sf prints: the geometry type (POINT), the bounding box, the CRS (Geodetic CRS: WGS 84), and the attribute table with a geometry column on the end. An sf object is a data frame that also knows where each row sits on Earth. The plot layer also ships as a shapefile, read the same way with st_read(\"data/scbi_stems.shp\").\nPlotting one attribute draws a map coloured by that value. We map the larger stems to keep the picture legible:\n\ncanopy &lt;- stems_sf[stems_sf$dbh &gt;= 20, ]\nplot(canopy[\"dbh\"], pch = 19, cex = 0.5, main = \"Stems ≥ 20 cm DBH\")\n\n\n\n\n\n\n\nThere is the plot: canopy trees scattered across the footprint, shaded by diameter. From here the course is about doing this properly.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#first-checks",
+    "href": "01-getting-started.html#first-checks",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.7 First checks",
+    "text": "1.7 First checks\nThe first thing to do on any real project is not analysis but a coordinate sanity check. A layer whose CRS is wrong, or missing, will silently misplace every downstream result, and the error is invisible on a plot that looks fine on its own axes. Two questions answer it: does the layer declare a CRS, and does it land where it should on Earth?\n\nst_crs(stems_sf)$epsg              # 4326: the layer knows its CRS\n#&gt; [1] 4326\nst_bbox(stems_sf)                  # does the extent sit where you expect?\n#&gt;      xmin      ymin      xmax      ymax \n#&gt; -78.14540  38.89350 -78.14078  38.89925\n\nThe bounding box should fall over Front Royal, Virginia (near 78.1° W, 38.9° N). If it landed in the Gulf of Guinea at (0, 0), the coordinates were never georeferenced. This is exactly the opening move of any mapping template: read the layer, confirm its CRS, confirm its extent, and only then begin. Every keystone project in this book starts here, because a defensible result begins with knowing your data are where they claim to be.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "01-getting-started.html#exercises",
+    "href": "01-getting-started.html#exercises",
+    "title": "\n1  Getting Started\n",
+    "section": "\n1.8 Exercises",
+    "text": "1.8 Exercises\n\nRead scbi_stems.csv and report the number of stems, the number of distinct genera, and the mean and maximum diameter. Which genus has the most stems?\nConvert the table to an sf object with st_as_sf(), then confirm its CRS with st_crs() and its extent with st_bbox(). In one sentence, why is checking the CRS the first thing you should do?\nMap the stems coloured by genus for the three most common genera only. Do they appear mixed or spatially segregated?\nAdd a basal_area column (the cross-sectional area of each stem, pi * (dbh/2)^2 in cm²) and report total basal area by genus. Which genus dominates the stand by basal area rather than by stem count?\n\n\n\n\n\n\n\nHijmans, R. J. (2024). Terra: Spatial data analysis. https://CRAN.R-project.org/package=terra\n\n\nPebesma, E. (2018). Simple features for r: Standardized support for spatial vector data. The R Journal, 10(1), 439–446. https://doi.org/10.32614/RJ-2018-009",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Getting Started</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html",
+    "href": "02-vector-data.html",
+    "title": "\n2  Vector Data\n",
+    "section": "",
+    "text": "2.1 Geometry types\nVector data represent the world as discrete shapes. The simple-features standard, which sf implements, defines a small family of geometry types built from coordinates: a point is a single location, a linestring an ordered path, a polygon an enclosed area, and each has a multi form for features made of several parts. Almost everything an auditor handles is one of these: stems and plot centres are points, streams and roads are lines, stands and ownership parcels are polygons.\nlibrary(sf)\nlibrary(dplyr)\n\nstems &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                  coords = c(\"lon\", \"lat\"), crs = 4326)\nst_geometry_type(stems)[1]\n#&gt; [1] POINT\n#&gt; 18 Levels: GEOMETRY POINT LINESTRING POLYGON MULTIPOINT ... TRIANGLE\nEvery metric operation, area, distance, overlap, is meaningless on longitude and latitude, because a degree is not a fixed length. So the first move in vector analysis is to project to a coordinate system whose units are metres. For this plot in Virginia that is UTM zone 17 North, EPSG 32617:\nstems &lt;- st_transform(stems, 32617)\nst_bbox(stems)          # now in metres\n#&gt;      xmin      ymin      xmax      ymax \n#&gt;  747559.3 4308835.3  747976.6 4309480.1",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#sf-anatomy",
+    "href": "02-vector-data.html#sf-anatomy",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.2 sf anatomy",
+    "text": "2.2 sf anatomy\nAn sf object is a table whose rows are features and whose last column, of class sfc, holds the geometry. Because it is a data frame first and spatial second, the whole dplyr grammar applies and the geometry is carried along automatically:\n\nstems |&gt;\n  filter(dbh &gt;= 30) |&gt;\n  mutate(basal_area_cm2 = pi * (dbh / 2)^2) |&gt;\n  select(treeID, genus, dbh, basal_area_cm2) |&gt;\n  head()\n#&gt; Simple feature collection with 6 features and 4 fields\n#&gt; Geometry type: POINT\n#&gt; Dimension:     XY\n#&gt; Bounding box:  xmin: 747567.3 ymin: 4308977 xmax: 747908.4 ymax: 4309385\n#&gt; Projected CRS: WGS 84 / UTM zone 17N\n#&gt;   treeID genus  dbh basal_area_cm2                 geometry\n#&gt; 1   1139  Acer 44.0      1520.5308 POINT (747859.4 4309329)\n#&gt; 2   2436  Acer 37.4      1098.5835 POINT (747648.9 4309107)\n#&gt; 3   1134  Acer 60.0      2827.4334 POINT (747588.6 4308977)\n#&gt; 4   1031  Acer 42.5      1418.6254 POINT (747567.3 4309385)\n#&gt; 5   3800  Acer 33.2       865.6973 POINT (747908.4 4309047)\n#&gt; 6     29  Acer 32.6       834.6898 POINT (747905.6 4309230)\n\nst_drop_geometry() turns the layer back into an ordinary table when you want a plain summary, and st_geometry() extracts just the shapes when you want to plot outlines with no attribute shading.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#building-polygons",
+    "href": "02-vector-data.html#building-polygons",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.3 Building polygons",
+    "text": "2.3 Building polygons\nAnalysis usually needs areas, not just points. We divide the plot into 100-metre quadrats with st_make_grid(), the standard way to impose a regular sampling frame, and keep only the cells that cover the stems:\n\ngrid &lt;- st_make_grid(stems, cellsize = 100) |&gt; st_as_sf()\ngrid$quadrat &lt;- seq_len(nrow(grid))\ngrid &lt;- grid[lengths(st_intersects(grid, stems)) &gt; 0, ]\nnrow(grid)\n#&gt; [1] 34",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#spatial-joins",
+    "href": "02-vector-data.html#spatial-joins",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.4 Spatial joins",
+    "text": "2.4 Spatial joins\nA spatial join attaches attributes by location rather than by a shared key. st_join() labels each stem with the quadrat that contains it, after which the counting is ordinary dplyr:\n\nstems_q &lt;- st_join(stems, grid, join = st_within)\n\nper_quadrat &lt;- stems_q |&gt;\n  st_drop_geometry() |&gt;\n  group_by(quadrat) |&gt;\n  summarise(n_stems = n(),\n            mean_dbh = round(mean(dbh), 1))\nhead(per_quadrat)\n#&gt; # A tibble: 6 × 3\n#&gt;   quadrat n_stems mean_dbh\n#&gt;     &lt;int&gt;   &lt;int&gt;    &lt;dbl&gt;\n#&gt; 1       1      80      5.8\n#&gt; 2       2     100      4.8\n#&gt; 3       3      98      4  \n#&gt; 4       4      76      6.6\n#&gt; 5       5       9      2  \n#&gt; 6       6      62      7.4\n\nThis point-in-polygon join is the workhorse of inventory: it is how you assign field stems to strata, plots to ownership parcels, or detections to management units.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#support",
+    "href": "02-vector-data.html#support",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.5 Support",
+    "text": "2.5 Support\nAn attribute value stands in a particular relationship to the geometry it is attached to, and getting that relationship wrong is one of the most common and least visible errors in spatial analysis. The support of an attribute is the area over which it was measured or to which it applies. A stem count has each quadrat as its support; a per-hectare density refers to a hectare. Two numbers can look identical yet mean different things because their support differs.\nAttributes divide into two kinds by how they behave when a geometry changes size. An extensive attribute is a total that scales with area, a count of stems or a tonnage of carbon; split a polygon and the value divides between the pieces. An intensive attribute is a rate or density that does not scale, stems per hectare or mean diameter; split the polygon and each piece keeps the value. The distinction dictates how you aggregate: sum the extensive total, average the intensive rate.\n\ngrid_join &lt;- left_join(grid, per_quadrat, by = \"quadrat\")\ngrid_join$area_ha  &lt;- as.numeric(st_area(grid_join)) / 1e4     # support, in ha\ngrid_join$stems_ha &lt;- grid_join$n_stems / grid_join$area_ha    # intensive\n\n# extensive -&gt; sum; intensive -&gt; area-weighted mean\nc(total_stems = sum(grid_join$n_stems),\n  mean_density = round(weighted.mean(grid_join$stems_ha, grid_join$area_ha), 0))\n#&gt;  total_stems mean_density \n#&gt;         2285           67\n\nSumming a density, or averaging a total, is simply wrong, and it is exactly how reported area totals silently inflate. Always be able to state the support of a number, and never combine values of different support without an explicit rule.\n\nplot(grid_join[\"stems_ha\"], main = \"Stem density (stems/ha)\")",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#keystone-area-checks",
+    "href": "02-vector-data.html#keystone-area-checks",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.6 Keystone: area checks",
+    "text": "2.6 Keystone: area checks\nThe applied heart of vector GIS in verification work is the area check: confirming that the area a project claims matches the area its geometry actually encloses, and that its parcels do not overlap or leave gaps. Overstated area is overstated crediting, so this is often the first quantitative finding in an audit. The tools are exactly those above, st_area, st_is_valid, st_intersection, applied to the project’s own polygons.\nWe stand in for the project boundary with the plot’s nominal extent and check it against the mapped stems. First, geometry validity, because area and overlap operations on an invalid polygon return nonsense:\n\nboundary &lt;- st_as_sfc(st_bbox(stems)) |&gt; st_sf(id = \"claimed_boundary\")\nall(st_is_valid(boundary))\n#&gt; [1] TRUE\n\nNow the area reconciliation. A claimed area is compared with the geometry’s measured area; the auditor reports the difference:\n\nclaimed_ha  &lt;- 25.6                                   # nominal 400 x 640 m plot\nmeasured_ha &lt;- as.numeric(st_area(boundary)) / 1e4\n\ndata.frame(\n  claimed_ha  = claimed_ha,\n  measured_ha = round(measured_ha, 2),\n  difference_ha = round(measured_ha - claimed_ha, 2),\n  pct_error   = round(100 * (measured_ha - claimed_ha) / claimed_ha, 1)\n)\n#&gt;   claimed_ha measured_ha difference_ha pct_error\n#&gt; 1       25.6        26.9           1.3       5.1\n\nFinally, overlap detection between parcels. Where two subareas are submitted, their intersection must be empty; any positive intersection area is double-counted land:\n\na &lt;- st_as_sfc(st_bbox(c(xmin = 747000, xmax = 747250,\n                         ymin = 4306000, ymax = 4306400), crs = 32617))\nb &lt;- st_as_sfc(st_bbox(c(xmin = 747200, xmax = 747450,\n                         ymin = 4306000, ymax = 4306400), crs = 32617))\noverlap &lt;- st_intersection(a, b)\nas.numeric(st_area(overlap)) / 1e4          # hectares of double-counted area\n#&gt; [1] 2\n\nA non-zero result is a finding: those hectares are claimed twice and must be reconciled before any area total is accepted. The full project workflow layers on shapefile ingest, coordinate-system checks, and a written report, but the logic is this: validate the geometry, measure the area, compare to the claim, and test every parcel pair for overlap.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "02-vector-data.html#exercises",
+    "href": "02-vector-data.html#exercises",
+    "title": "\n2  Vector Data\n",
+    "section": "\n2.7 Exercises",
+    "text": "2.7 Exercises\n\nProject the stems to UTM 17N and build a 50-metre quadrat grid. How many quadrats cover the plot, and how does the mean stem count per quadrat change from the 100-metre version? Relate this to support.\nClassify n_stems and stems_ha as extensive or intensive, and state which should be summed and which averaged when quadrats are merged into blocks.\nTake the claimed_ha of 25.6 and imagine the true mapped boundary were 5% smaller. Compute the over-crediting in hectares and explain why an auditor treats positive area error differently from negative.\n\n(Applied.) Two submitted parcels overlap by 3 ha out of a claimed 40 ha total. Write the st_intersection and st_area calls that quantify the overlap, and state the corrected non-overlapping total.",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Vector Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html",
+    "href": "03-raster-data.html",
+    "title": "\n3  Raster Data\n",
+    "section": "",
+    "text": "3.1 The raster model\nA raster represents a surface as a grid of equal cells, each holding one value. Where vector data draw discrete objects, rasters describe things that vary continuously across space, elevation, reflectance, temperature, canopy height, and the things we derive from imagery: land cover, disturbance, biomass. The data model is nothing more than a matrix plus the georeferencing that ties cell (1,1) to a place and fixes the cell size. terra is the modern package for it (Hijmans, 2024).\nWe build a raster over the study plot by summarising the stems onto a grid. First project the stems and give each a basal area, then lay down a 10-metre grid and total the basal area falling in each cell:\nlibrary(terra)\nlibrary(sf)\n\nstems_sf &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                     coords = c(\"lon\", \"lat\"), crs = 4326) |&gt;\n  st_transform(32617)\nstems_sf$ba &lt;- pi * (stems_sf$dbh / 2)^2 / 1e4     # basal area, m² per stem\n\nstems &lt;- vect(stems_sf)\nr  &lt;- rast(ext(stems), resolution = 10, crs = \"EPSG:32617\")\n#&gt; Error:\n#&gt; ! [rast] empty srs\nba &lt;- rasterize(stems, r, field = \"ba\", fun = sum, background = 0)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'y' in selecting a method for function 'rasterize': object 'r' not found\nnames(ba) &lt;- \"basal_area\"\n#&gt; Error:\n#&gt; ! object 'ba' not found\nba\n#&gt; Error:\n#&gt; ! object 'ba' not found\nThe printout is the raster data model made concrete: rows and columns, cell size, extent, CRS, and the value range. Each 10-metre cell now holds the total stem basal area within it, a crude but genuine biomass proxy.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#inspecting-rasters",
+    "href": "03-raster-data.html#inspecting-rasters",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.2 Inspecting rasters",
+    "text": "3.2 Inspecting rasters\nThe same handful of accessors describe any raster:\n\nres(ba)                                        # cell size, metres\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'ba' not found\next(ba)                                        # bounding box\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'ext': object 'ba' not found\nglobal(ba, c(\"min\", \"max\", \"mean\"))            # value range\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'ba' not found\nplot(ba, main = \"Basal area per 10 m cell (m²)\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'ba' not found",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#raster-algebra",
+    "href": "03-raster-data.html#raster-algebra",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.3 Raster algebra",
+    "text": "3.3 Raster algebra\nBecause a raster is a grid of numbers, arithmetic on rasters is arithmetic on cells. This is map algebra, and it is why continuous surfaces are so easy to work with. Converting basal area to an aboveground-carbon proxy is one expression applied to every cell at once:\n\ncarbon &lt;- ba * 12          # illustrative MgC per cell from basal area\n#&gt; Error:\n#&gt; ! object 'ba' not found\nnames(carbon) &lt;- \"carbon\"\n#&gt; Error:\n#&gt; ! object 'carbon' not found\n\nLogical operators work the same way and return a mask of ones and zeros. A “stocked” mask, cells carrying any measurable basal area, is a single comparison:\n\nstocked &lt;- ba &gt; 0.05\n#&gt; Error:\n#&gt; ! object 'ba' not found\nplot(stocked, main = \"Stocked cells\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'stocked' not found",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#reclassification",
+    "href": "03-raster-data.html#reclassification",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.4 Reclassification",
+    "text": "3.4 Reclassification\nTurning a continuous surface into a small number of classes is reclassification, the operation behind every land-cover and zonation map. classify() takes a matrix of from–to–becomes rows and cuts the surface at the thresholds:\n\nrcl &lt;- matrix(c(-Inf, 0.05, 1,     # sparse\n                0.05, 0.30, 2,     # moderate\n                0.30, Inf, 3),     # dense\n              ncol = 3, byrow = TRUE)\nzones &lt;- classify(ba, rcl)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'ba' not found\nlevels(zones) &lt;- data.frame(id = 1:3, class = c(\"sparse\", \"moderate\", \"dense\"))\n#&gt; Error:\n#&gt; ! object 'zones' not found\nplot(zones, main = \"Stocking classes\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'zones' not found",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#extraction",
+    "href": "03-raster-data.html#extraction",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.5 Extraction",
+    "text": "3.5 Extraction\nThe bridge from raster back to field data is extraction: reading the raster value at each point location. terra::extract() samples the surface wherever a plot, a tree, or a sample sits, which is how gridded covariates enter a plot-level model:\n\npts &lt;- spatSample(as.polygons(ext(ba), crs = crs(ba)), 5, method = \"random\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'spatSample': error in evaluating the argument 'x' in selecting a method for function 'as.polygons': error in evaluating the argument 'x' in selecting a method for function 'ext': object 'ba' not found\nextract(ba, pts)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'extract': object 'ba' not found\n\nExtraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#keystone-land-cover-reclassification",
+    "href": "03-raster-data.html#keystone-land-cover-reclassification",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.6 Keystone: land-cover reclassification",
+    "text": "3.6 Keystone: land-cover reclassification\nRemote-sensing verification turns imagery into a land-use / land-cover (LULC) map and then reasons about it: how much forest, how much converted, how the classes change through time. The Bolivia national land-cover work does this at country scale; the mechanics are the reclassification and area accounting shown here, which we later carry into the uncertainty chapter to attach a confidence interval to each class area.\nWe stand in for a spectral index with a smooth synthetic surface over the plot, classify it into cover types by threshold, then reclassify to the forest / non-forest split that most carbon accounting turns on:\n\nset.seed(1)\nxy  &lt;- xyFromCell(r, 1:ncell(r))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'r' not found\nval &lt;- 0.55 + 0.30 * sin(xy[, 1] / 120) + 0.20 * cos(xy[, 2] / 160) +\n       rnorm(ncell(r), 0, 0.05)\n#&gt; Error:\n#&gt; ! object 'xy' not found\nndvi &lt;- setValues(r, pmin(pmax(val, -0.1, na.rm = TRUE), 0.95))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'setValues': object 'r' not found\nnames(ndvi) &lt;- \"ndvi\"\n#&gt; Error:\n#&gt; ! object 'ndvi' not found\n\n# thresholds -&gt; cover classes\nlulc &lt;- classify(ndvi, matrix(c(-Inf, 0.2, 1,     # water/bare\n                                 0.2, 0.5, 2,      # grass/shrub\n                                 0.5, Inf, 3),     # forest\n                              ncol = 3, byrow = TRUE))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'ndvi' not found\nlevels(lulc) &lt;- data.frame(id = 1:3,\n                           cover = c(\"water/bare\", \"grass/shrub\", \"forest\"))\n#&gt; Error:\n#&gt; ! object 'lulc' not found\nplot(lulc, main = \"Land cover from a spectral index\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'lulc' not found\n\nThe class areas are the deliverable. freq() counts cells per class, and multiplying by the cell area gives hectares:\n\ncell_ha &lt;- prod(res(lulc)) / 1e4\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'lulc' not found\nf &lt;- freq(lulc)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'freq': object 'lulc' not found\nf$area_ha &lt;- round(f$count * cell_ha, 2)\n#&gt; Error:\n#&gt; ! object 'f' not found\nf[, c(\"value\", \"count\", \"area_ha\")]\n#&gt; Error:\n#&gt; ! object 'f' not found\n\nReclassifying the three classes into a forest mask, the exact step behind a forest-area or deforestation figure, is one more classify():\n\nforest &lt;- classify(lulc, matrix(c(1, 0, 2, 0, 3, 1), ncol = 2, byrow = TRUE))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'lulc' not found\nforest_ha &lt;- global(forest, \"sum\", na.rm = TRUE)[1, 1] * cell_ha\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'forest' not found\nround(forest_ha, 1)                             # hectares of forest\n#&gt; Error:\n#&gt; ! object 'forest_ha' not found\n\nThat single number, forest area, is what a project claims and an auditor recomputes. Chapter 7 returns to it to ask how certain the number is, because a class area is only as good as the map’s accuracy.",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "03-raster-data.html#exercises",
+    "href": "03-raster-data.html#exercises",
+    "title": "\n3  Raster Data\n",
+    "section": "\n3.7 Exercises",
+    "text": "3.7 Exercises\n\nBuild the basal-area raster at 20-metre resolution instead of 10. How do the mean cell value and the number of cells change, and why does total basal area stay the same?\nReclassify the basal-area surface into four stocking classes and report the area in hectares of each. Which class covers the most ground?\nExtract the basal-area value at the location of every stem with extract(). Why is the extracted value not the same as the stem’s own basal area?\n\n(Applied.) Change the forest threshold on the synthetic index from 0.5 to 0.45 and recompute forest area. By how many hectares does the estimate move, and what does that sensitivity imply for defining a class boundary in a real LULC map?\n\n\n\n\n\n\n\nHijmans, R. J. (2024). Terra: Spatial data analysis. https://CRAN.R-project.org/package=terra",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>Raster Data</span>"
+    ]
+  },
+  {
+    "objectID": "04-terrain-hydrology.html",
+    "href": "04-terrain-hydrology.html",
+    "title": "\n4  Terrain and Hydrology\n",
+    "section": "",
+    "text": "4.1 Elevation\nTerrain is the covariate behind almost everything else in a forest: it drives productivity, access, erosion, and where water collects. It arrives as a digital elevation model (DEM), a raster whose cell value is height above a datum. In operational work you download one, and the elevatr package fetches open tiles for any area:\nlibrary(elevatr)\naoi &lt;- st_as_sf(data.frame(x = -78.143, y = 38.896),\n                coords = c(\"x\", \"y\"), crs = 4326)\ndem &lt;- get_elev_raster(aoi, z = 13) |&gt; rast()\nSo the chapter runs offline and reproducibly, we build a DEM with a valley over the study plot instead. The surface tilts gently and is cut by a central channel, the kind of relief that governs drainage:\nlibrary(terra)\nlibrary(sf)\n\nstems &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                  coords = c(\"lon\", \"lat\"), crs = 4326) |&gt;\n  st_transform(32617)\n\ndem &lt;- rast(ext(vect(stems)), resolution = 10, crs = \"EPSG:32617\")\n#&gt; Error:\n#&gt; ! [rast] empty srs\nxy  &lt;- xyFromCell(dem, 1:ncell(dem))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'dem' not found\nymid &lt;- mean(xy[, 2])\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'mean': object 'xy' not found\nelev &lt;- 120 + 0.03 * (xy[, 1] - min(xy[, 1])) -\n        18 * exp(-((xy[, 2] - ymid) / 70)^2)\n#&gt; Error:\n#&gt; ! object 'xy' not found\ndem  &lt;- setValues(dem, elev)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'setValues': object 'dem' not found\nnames(dem) &lt;- \"elevation\"\n#&gt; Error:\n#&gt; ! object 'dem' not found\nglobal(dem, c(\"min\", \"max\", \"mean\"))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'dem' not found",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Terrain and Hydrology</span>"
+    ]
+  },
+  {
+    "objectID": "04-terrain-hydrology.html#terrain-derivatives",
+    "href": "04-terrain-hydrology.html#terrain-derivatives",
+    "title": "\n4  Terrain and Hydrology\n",
+    "section": "\n4.2 Terrain derivatives",
+    "text": "4.2 Terrain derivatives\nElevation is rarely the variable of interest; what it implies, slope, aspect, ruggedness, is. terrain() derives these directly. Slope and aspect need a projected DEM so horizontal and vertical distances share units, which ours already is:\n\nslope  &lt;- terrain(dem, \"slope\",  unit = \"degrees\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'terrain': object 'dem' not found\naspect &lt;- terrain(dem, \"aspect\", unit = \"degrees\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'terrain': object 'dem' not found\ntri    &lt;- terrain(dem, \"TRI\")            # terrain ruggedness index\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'terrain': object 'dem' not found\nplot(c(slope, tri), main = c(\"Slope (deg)\", \"Ruggedness (TRI)\"))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'slope' not found\n\nSlope matters for operability and erosion risk; ruggedness is a useful productivity covariate because sheltered, gentler terrain often carries taller, denser stands. A hillshade turns terrain into an intuitive relief image by simulating illumination, the standard base layer under any map:\n\nhs &lt;- shade(terrain(dem, \"slope\",  unit = \"radians\"),\n            terrain(dem, \"aspect\", unit = \"radians\"),\n            angle = 40, direction = 315)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'terrain': object 'dem' not found\nplot(hs, col = grey(0:100 / 100), legend = FALSE, main = \"Hillshade\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'hs' not found",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Terrain and Hydrology</span>"
+    ]
+  },
+  {
+    "objectID": "04-terrain-hydrology.html#flow-direction",
+    "href": "04-terrain-hydrology.html#flow-direction",
+    "title": "\n4  Terrain and Hydrology\n",
+    "section": "\n4.3 Flow direction",
+    "text": "4.3 Flow direction\nWater moves downhill, so a DEM already encodes drainage. terrain() computes flow direction, the neighbour each cell drains to, which is the first step of every hydrological routing algorithm and the input to catchment delineation:\n\nflowdir &lt;- terrain(dem, \"flowdir\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'terrain': object 'dem' not found\nplot(flowdir, main = \"Flow direction\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'flowdir' not found\n\nFull watershed delineation, flow accumulation, stream networks, catchment boundaries, is the domain of dedicated tools such as whitebox, which route flow across the accumulated grid. The principle is the one shown here: every hydrological product begins with elevation and the slope and flow fields derived from it.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Terrain and Hydrology</span>"
+    ]
+  },
+  {
+    "objectID": "04-terrain-hydrology.html#keystone-hydrological-analysis",
+    "href": "04-terrain-hydrology.html#keystone-hydrological-analysis",
+    "title": "\n4  Terrain and Hydrology\n",
+    "section": "\n4.4 Keystone: hydrological analysis",
+    "text": "4.4 Keystone: hydrological analysis\nWetland and inundation mapping asks a direct question of a DEM: given a water level, what land floods? The Lake Chilwa inundation work answers it across a shallow basin whose area swings enormously with small changes in level. The method is a threshold on elevation, and it is the same logic whether the water is a lake, a floodplain, or a reservoir behind a proposed dam.\nWe treat the valley floor as the basin. Flooded cells are those below a chosen water level, and the flooded area is the deliverable:\n\nwater_level &lt;- min(values(dem), na.rm = TRUE) + 3   # 3 m above the channel floor\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'values': object 'dem' not found\nflooded &lt;- dem &lt; water_level\n#&gt; Error:\n#&gt; ! object 'dem' not found\ncell_ha &lt;- prod(res(dem)) / 1e4\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'dem' not found\nflooded_ha &lt;- global(flooded, \"sum\", na.rm = TRUE)[1, 1] * cell_ha\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'flooded' not found\nround(flooded_ha, 2)                                  # hectares inundated\n#&gt; Error:\n#&gt; ! object 'flooded_ha' not found\n\n\nplot(hs, col = grey(0:100 / 100), legend = FALSE, main = \"Inundation at +3 m\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'hs' not found\nplot(flooded, add = TRUE, alpha = 0.5, col = c(NA, \"steelblue\"), legend = FALSE)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'flooded' not found\n\nThe value of the method is the rating curve: sweep the water level and record the area at each, and you have the relationship between stage and flooded extent that drives flood risk, wetland carbon, and reservoir planning:\n\nlevels &lt;- seq(min(values(dem), na.rm = TRUE) + 1,\n              min(values(dem), na.rm = TRUE) + 8, by = 1)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'values': object 'dem' not found\narea_at &lt;- sapply(levels, function(L)\n  global(dem &lt; L, \"sum\", na.rm = TRUE)[1, 1] * cell_ha)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'dem' not found\ndata.frame(water_level_m = round(levels, 1), flooded_ha = round(area_at, 1))\n#&gt; Error in `round()`:\n#&gt; ! non-numeric argument to mathematical function\n\nReading down the table, a few metres of stage change a small flooded area into a large one, the non-linearity that makes shallow basins so sensitive and makes stating the assumed water level essential to any wetland-area claim. The real project adds a satellite-derived water mask to validate the DEM prediction, but the analytical core is this thresholded elevation surface.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Terrain and Hydrology</span>"
+    ]
+  },
+  {
+    "objectID": "04-terrain-hydrology.html#exercises",
+    "href": "04-terrain-hydrology.html#exercises",
+    "title": "\n4  Terrain and Hydrology\n",
+    "section": "\n4.5 Exercises",
+    "text": "4.5 Exercises\n\nBuild the DEM and report its relief (max minus min elevation). Derive slope and describe where the steepest ground lies relative to the central valley.\nCompute a hillshade with the sun in the northeast (direction = 45) and compare it with the northwest illumination used above. Why does illumination direction change which slopes look bright?\nRecompute flooded area at water levels of +2, +4 and +6 m. Plot area against level: is the relationship linear? What does the shape tell you about the basin?\n\n(Applied.) A project claims a 50-hectare seasonal wetland. Explain how you would use a DEM, a water-level assumption, and the rating-curve method above to test that claim, and what single assumption most affects your answer.",
+    "crumbs": [
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>Terrain and Hydrology</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html",
+    "href": "05-lidar-point-clouds.html",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "",
+    "text": "5.1 Point clouds\nAirborne LiDAR measures the forest in three dimensions. A scanner fires laser pulses and times their return, and each pulse can produce several returns as it passes through the canopy: the first off the treetops, later ones off branches and understory, the last off the ground. The result is a dense point cloud, millions of x, y, z points, from which we reconstruct both the ground surface and the vegetation above it. Full-waveform sensors record the entire returned energy profile rather than discrete points, giving even finer vertical structure. The dedicated R package is lidR, which reads the LAS/LAZ files LiDAR ships in.\nWe illustrate the vertical structure with a simulated transect: a sloping ground surface with canopy returns scattered above it, exactly the mix a single scan line produces.\nset.seed(1)\nn &lt;- 2000\nx &lt;- runif(n, 0, 100)\nground &lt;- 100 + 0.05 * x\ncanopy &lt;- runif(n) &lt; 0.6\nz &lt;- ground + ifelse(canopy, rgamma(n, 2, 0.25), 0)\n\nplot(x, z, pch = 20, cex = 0.4,\n     col = ifelse(canopy, \"forestgreen\", \"tan4\"),\n     xlab = \"Distance (m)\", ylab = \"Elevation (m)\",\n     main = \"LiDAR returns: ground (brown) and canopy (green)\")",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html#ground-and-canopy",
+    "href": "05-lidar-point-clouds.html#ground-and-canopy",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "\n5.2 Ground and canopy",
+    "text": "5.2 Ground and canopy\nTwo surfaces come out of a point cloud. Classifying the lowest returns as ground and interpolating them gives the digital terrain model (DTM), the bare earth. Taking the highest returns gives the digital surface model (DSM), the top of the canopy. Their difference is the quantity forestry cares about, the canopy height model (CHM):\n\\[\\text{CHM} = \\text{DSM} - \\text{DTM}\\]\nGround classification is the delicate step, separating last returns that hit soil from those that hit low vegetation, and lidR implements the standard algorithms (cloth simulation, progressive morphological filters). The principle is that height above ground, not height above sea level, is what relates to biomass.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html#building-a-chm",
+    "href": "05-lidar-point-clouds.html#building-a-chm",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "\n5.3 Building a CHM",
+    "text": "5.3 Building a CHM\nRather than process raw LAS here, we construct a CHM from the stem map, since each tree’s height and crown define the canopy top. We give every stem a height from its diameter with a standard saturating growth curve, then rasterise the maximum height in each 5-metre cell:\n\nlibrary(terra)\nlibrary(sf)\n\nstems &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                  coords = c(\"lon\", \"lat\"), crs = 4326) |&gt;\n  st_transform(32617)\nstems$height &lt;- 1.3 + 27 * (1 - exp(-0.035 * stems$dbh))   # DBH → height (m)\n\nv   &lt;- vect(stems)\nr   &lt;- rast(ext(v), resolution = 5, crs = \"EPSG:32617\")\n#&gt; Error:\n#&gt; ! [rast] empty srs\nchm &lt;- rasterize(v, r, field = \"height\", fun = max, background = 0)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'y' in selecting a method for function 'rasterize': object 'r' not found\nnames(chm) &lt;- \"canopy_height\"\n#&gt; Error:\n#&gt; ! object 'chm' not found\nplot(chm, main = \"Canopy height model (m)\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'chm' not found",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html#tree-detection",
+    "href": "05-lidar-point-clouds.html#tree-detection",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "\n5.4 Tree detection",
+    "text": "5.4 Tree detection\nA CHM lets you find individual trees: each treetop is a local maximum, a cell higher than its neighbours. This is the basis of individual-tree detection, and the crown-radius-varying window in ForestTools refines it. We do the core operation directly, flagging cells that equal the maximum in a moving window and clear a minimum height:\n\nwin  &lt;- focal(chm, w = matrix(1, 5, 5), fun = max, na.policy = \"omit\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'focal': object 'chm' not found\ntops &lt;- (chm == win) & (chm &gt; 5)\n#&gt; Error:\n#&gt; ! object 'chm' not found\ntops[tops == 0] &lt;- NA\n#&gt; Error:\n#&gt; ! object 'tops' not found\ntop_pts &lt;- as.points(tops)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'as.points': object 'tops' not found\nnrow(top_pts)                              # detected treetops\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'top_pts' not found\n\n\nplot(chm, main = \"Detected treetops\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'chm' not found\nplot(top_pts, add = TRUE, pch = 3, cex = 0.6)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'top_pts' not found",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html#keystone-lidar-forestry",
+    "href": "05-lidar-point-clouds.html#keystone-lidar-forestry",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "\n5.5 Keystone: lidar-forestry",
+    "text": "5.5 Keystone: lidar-forestry\nThe lidar-forestry workflow chains exactly these steps into an inventory: classify ground, build the DTM and CHM, detect treetops, segment crowns, and derive canopy metrics that predict biomass. The reason it matters for verification is that a CHM covers every square metre, where field plots sample a fraction of a percent, so LiDAR turns a handful of plots into a wall-to-wall map, provided the plot-to-LiDAR relationship is calibrated and its error carried through.\nThe bridge to biomass is a canopy metric summarised per unit area and regressed on plot biomass. Mean canopy height is the simplest such metric:\n\ncell_ha &lt;- prod(res(chm)) / 1e4\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'chm' not found\nmetrics &lt;- data.frame(\n  mean_canopy_height = round(global(chm, \"mean\", na.rm = TRUE)[1, 1], 1),\n  p95_height         = round(quantile(values(chm), 0.95, na.rm = TRUE), 1),\n  detected_trees     = nrow(top_pts),\n  area_ha            = round(ncell(chm) * cell_ha, 1))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'chm' not found\nmetrics\n#&gt; Error:\n#&gt; ! object 'metrics' not found\n\nDetected trees will fall short of the true stem count, because the understory hides beneath the canopy and only dominant trees form local maxima. That gap is the central caution of LiDAR inventory: it sees the canopy, not the stand, and the correction comes from calibrating against field plots that do count every stem. The height metrics, by contrast, are robust and are what a LiDAR biomass model is built on. The full project fits that model and maps predicted biomass with its prediction error, the subject of the uncertainty chapter.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "05-lidar-point-clouds.html#exercises",
+    "href": "05-lidar-point-clouds.html#exercises",
+    "title": "\n5  LiDAR and Point Clouds\n",
+    "section": "\n5.6 Exercises",
+    "text": "5.6 Exercises\n\nRebuild the CHM at 2-metre resolution and describe how the number of detected treetops changes. Why does a finer grid tend to split single crowns into several maxima?\nRaise the minimum-height threshold in the detection step from 5 m to 15 m. How does the detected count change, and which trees are you now excluding?\nCompute the 25th, 50th, 75th and 95th height percentiles of the CHM. Explain why upper percentiles are better biomass predictors than the mean.\n\n(Applied.) You have LiDAR over 10,000 ha and field plots on 30 ha. Describe, in steps, how you would use the plots to calibrate a CHM-based biomass model and produce a wall-to-wall estimate, and where the two main sources of error enter.",
+    "crumbs": [
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>LiDAR and Point Clouds</span>"
+    ]
+  },
+  {
+    "objectID": "06-disturbance-risk.html",
+    "href": "06-disturbance-risk.html",
+    "title": "\n6  Disturbance and Risk\n",
+    "section": "",
+    "text": "6.1 Change detection\nThe core remote-sensing task in verification is finding where the forest changed. The simplest and most transparent method is image differencing: take a spectral index at two dates and subtract. Where vegetation was lost, the index drops; a threshold on the difference marks candidate disturbance. We build two dates of a synthetic index over the plot, the second with several patches cleared, and difference them.\nlibrary(terra)\nlibrary(sf)\n\nstems &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                  coords = c(\"lon\", \"lat\"), crs = 4326) |&gt;\n  st_transform(32617)\nr &lt;- rast(ext(vect(stems)), resolution = 10, crs = \"EPSG:32617\")\n#&gt; Error:\n#&gt; ! [rast] empty srs\n\nset.seed(7)\nxy  &lt;- xyFromCell(r, 1:ncell(r))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'r' not found\nt1  &lt;- setValues(r, 0.7 + 0.1 * sin(xy[, 1] / 100) + rnorm(ncell(r), 0, 0.03))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'setValues': object 'r' not found\n\n# time 2: same forest, minus three cleared blocks\nt2 &lt;- t1\n#&gt; Error:\n#&gt; ! object 't1' not found\nclear &lt;- (xy[, 1] &gt; 747050 & xy[, 1] &lt; 747130 & xy[, 2] &gt; 4306100 & xy[, 2] &lt; 4306180) |\n         (xy[, 1] &gt; 747250 & xy[, 1] &lt; 747300 & xy[, 2] &gt; 4306300 & xy[, 2] &lt; 4306380)\n#&gt; Error:\n#&gt; ! object 'xy' not found\nt2[clear] &lt;- 0.15 + rnorm(sum(clear), 0, 0.03)\n#&gt; Error:\n#&gt; ! object 'clear' not found\nnames(t1) &lt;- \"ndvi_t1\"; names(t2) &lt;- \"ndvi_t2\"\n#&gt; Error:\n#&gt; ! object 't1' not found\n\nchange &lt;- t2 - t1\n#&gt; Error:\n#&gt; ! object 't2' not found\nplot(change, main = \"NDVI change (t2 − t1)\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'change' not found\nA negative threshold isolates loss. The disturbed area is the immediate deliverable, and the same number that drives an emissions estimate:\ndisturbed &lt;- change &lt; -0.3\n#&gt; Error:\n#&gt; ! object 'change' not found\ncell_ha   &lt;- prod(res(r)) / 1e4\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'r' not found\ndist_ha   &lt;- global(disturbed, \"sum\", na.rm = TRUE)[1, 1] * cell_ha\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'disturbed' not found\nround(dist_ha, 2)                                  # hectares of detected loss\n#&gt; Error:\n#&gt; ! object 'dist_ha' not found",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Disturbance and Risk</span>"
+    ]
+  },
+  {
+    "objectID": "06-disturbance-risk.html#accuracy-assessment",
+    "href": "06-disturbance-risk.html#accuracy-assessment",
+    "title": "\n6  Disturbance and Risk\n",
+    "section": "\n6.2 Accuracy assessment",
+    "text": "6.2 Accuracy assessment\nA map is a claim, and an unvalidated map is an unsupported claim. Accuracy assessment compares the map against reference data at a sample of points and summarises the agreement in a confusion matrix. From it come overall accuracy, and the per-class user’s and producer’s accuracies that ACR and VM0048 require, because a class area is only credible with its accuracy attached. We assess the disturbed / stable map against a reference sample:\n\nset.seed(11)\nref &lt;- data.frame(\n  reference = sample(c(\"disturbed\", \"stable\"), 120, replace = TRUE, prob = c(.3, .7)))\n# a map that is mostly right, with some confusion\nref$mapped &lt;- ifelse(ref$reference == \"disturbed\",\n                     sample(c(\"disturbed\", \"stable\"), 120, TRUE, c(.85, .15)),\n                     sample(c(\"disturbed\", \"stable\"), 120, TRUE, c(.10, .90)))\n\ncm &lt;- table(mapped = ref$mapped, reference = ref$reference)\ncm\n#&gt;            reference\n#&gt; mapped      disturbed stable\n#&gt;   disturbed        20      7\n#&gt;   stable            2     91\n\n\noverall &lt;- sum(diag(cm)) / sum(cm)\nusers   &lt;- diag(cm) / rowSums(cm)      # commission: of mapped X, how many correct\nproducers &lt;- diag(cm) / colSums(cm)    # omission: of true X, how many caught\nround(c(overall = overall), 3)\n#&gt; overall \n#&gt;   0.925\nround(rbind(users, producers), 3)\n#&gt;           disturbed stable\n#&gt; users         0.741  0.978\n#&gt; producers     0.909  0.929\n\nOverall accuracy is the headline; the per-class figures are where problems hide. A high user’s but low producer’s accuracy for “disturbed” means the map misses real clearing, an omission error that understates loss, which is exactly the direction an auditor scrutinises. These same counts feed the area-adjusted estimator and its confidence interval in the next chapter.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Disturbance and Risk</span>"
+    ]
+  },
+  {
+    "objectID": "06-disturbance-risk.html#spatial-risk",
+    "href": "06-disturbance-risk.html#spatial-risk",
+    "title": "\n6  Disturbance and Risk\n",
+    "section": "\n6.3 Spatial risk",
+    "text": "6.3 Spatial risk\nSome verification, additionality and permanence, turns on where disturbance is likely, not just where it happened. Risk modelling predicts that probability from spatial covariates. A robust and widely used predictor is proximity: disturbance begets disturbance, so distance to existing clearing is a strong risk covariate, the assumption behind deforestation-risk maps such as those in VM0048 baseline work. We compute distance to the detected disturbance and turn it into a risk surface:\n\ndisturbed[disturbed == 0] &lt;- NA\n#&gt; Error:\n#&gt; ! object 'disturbed' not found\ndist_to_loss &lt;- distance(disturbed)                 # metres to nearest clearing\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'distance': object 'disturbed' not found\nrisk &lt;- exp(-dist_to_loss / 80)                     # decays with distance\n#&gt; Error:\n#&gt; ! object 'dist_to_loss' not found\nnames(risk) &lt;- \"risk\"\n#&gt; Error:\n#&gt; ! object 'risk' not found\nplot(risk, main = \"Relative deforestation risk\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'risk' not found\n\nClassifying the surface into zones gives the map a planner or auditor acts on, and the area in each zone:\n\nrisk_zone &lt;- classify(risk, matrix(c(-Inf, 0.2, 1,\n                                      0.2, 0.5, 2,\n                                      0.5, Inf, 3), ncol = 3, byrow = TRUE))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'risk' not found\nlevels(risk_zone) &lt;- data.frame(id = 1:3, zone = c(\"low\", \"medium\", \"high\"))\n#&gt; Error:\n#&gt; ! object 'risk_zone' not found\nf &lt;- freq(risk_zone); f$area_ha &lt;- round(f$count * cell_ha, 1)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'freq': object 'risk_zone' not found\nf[, c(\"value\", \"area_ha\")]\n#&gt; Error:\n#&gt; ! object 'f' not found",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Disturbance and Risk</span>"
+    ]
+  },
+  {
+    "objectID": "06-disturbance-risk.html#keystone-disturbance-checks-and-vm0048-risk",
+    "href": "06-disturbance-risk.html#keystone-disturbance-checks-and-vm0048-risk",
+    "title": "\n6  Disturbance and Risk\n",
+    "section": "\n6.4 Keystone: disturbance checks and VM0048 risk",
+    "text": "6.4 Keystone: disturbance checks and VM0048 risk\nPut together, the chapter is the disturbance-check pipeline: difference two dates to detect loss, quantify the area, validate it with an accuracy assessment, and model where further loss is likely. VM0048 and the associated risk tools formalise the last step into a baseline of expected deforestation; the ACR accuracy requirements formalise the middle step into a mandatory confusion matrix. The auditor’s job is to reproduce each: recompute the change area, rebuild the confusion matrix from the reference sample, and check that the risk model’s covariates and thresholds are defensible. Every number here, hectares lost, overall accuracy, area at high risk, is one a project reports and a verifier must be able to regenerate.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Disturbance and Risk</span>"
+    ]
+  },
+  {
+    "objectID": "06-disturbance-risk.html#exercises",
+    "href": "06-disturbance-risk.html#exercises",
+    "title": "\n6  Disturbance and Risk\n",
+    "section": "\n6.5 Exercises",
+    "text": "6.5 Exercises\n\nChange the detection threshold from −0.3 to −0.2 and recompute disturbed area. Which way does the estimate move, and how does that trade omission against commission error?\nFrom the confusion matrix, compute the omission and commission error for the “disturbed” class. Which type of error causes a project to understate emissions, and why does that concern a verifier most?\nRebuild the risk surface with a slower distance decay (divide by 160 instead of 80). How does the high-risk area change, and what real assumption does the decay rate encode?\n\n(Applied.) A project reports 200 ha of avoided deforestation with an overall map accuracy of 78%. Explain why the accuracy figure alone is not enough, and which per-class accuracies you would demand before accepting the area.",
+    "crumbs": [
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>Disturbance and Risk</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html",
+    "href": "07-uncertainty.html",
+    "title": "\n7  Uncertainty\n",
+    "section": "",
+    "text": "7.1 Why uncertainty\nEvery estimate in this book is wrong by some amount, and the discipline of verification is knowing by how much. A carbon figure without an uncertainty is not conservative, it is simply incomplete, and the crediting standards, ART-TREES, VCS, ACR, all deduct credits in proportion to how uncertain the estimate is. Reducing uncertainty is therefore worth real money, and quantifying it honestly is the auditor’s core duty. This chapter builds the estimate, then its error, on the running stem data.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#a-carbon-estimate",
+    "href": "07-uncertainty.html#a-carbon-estimate",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.2 A carbon estimate",
+    "text": "7.2 A carbon estimate\nWe convert diameters to aboveground biomass with a published generic hardwood equation (Jenkins et al., 2003), apply the IPCC default carbon fraction of 0.47 (IPCC, 2006), and scale to the plot area:\n\nlibrary(dplyr)\nstems &lt;- read.csv(\"data/scbi_stems.csv\")\n\nstems &lt;- stems |&gt;\n  mutate(agb_kg   = exp(-2.48 + 2.4835 * log(dbh)),   # Jenkins generic hardwood\n         carbon_Mg = 0.47 * agb_kg / 1000)\n\narea_ha  &lt;- 25.6\ntotal_C  &lt;- sum(stems$carbon_Mg)\nC_per_ha &lt;- total_C / area_ha\nround(c(total_MgC = total_C, MgC_per_ha = C_per_ha), 1)\n#&gt;  total_MgC MgC_per_ha \n#&gt;       82.3        3.2\n\nThat point estimate is the easy part. Three distinct sources of error sit beneath it: sampling error from measuring plots rather than the whole population, model error in the allometric equation, and parameter error in constants like the carbon fraction.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#sampling-error",
+    "href": "07-uncertainty.html#sampling-error",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.3 Sampling error",
+    "text": "7.3 Sampling error\nDivide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval:\n\nstems$quadrat &lt;- paste(cut(stems$gx, 8), cut(stems$gy, 12))\nquadrat_area  &lt;- 25.6 / (8 * 12)                 # ha per quadrat (equal-area cut)\n\nqd &lt;- stems |&gt;\n  group_by(quadrat) |&gt;\n  summarise(carbon_Mg = sum(carbon_Mg), .groups = \"drop\") |&gt;\n  mutate(carbon_ha = carbon_Mg / quadrat_area)\n\nm  &lt;- mean(qd$carbon_ha); se &lt;- sd(qd$carbon_ha) / sqrt(nrow(qd))\nci &lt;- m + c(-1.96, 1.96) * se\nround(c(mean = m, se = se, lower = ci[1], upper = ci[2]), 1)\n#&gt;  mean    se lower upper \n#&gt;   3.2   0.4   2.5   3.9\n\nThe half-width relative to the mean is the number the standards care about: the wider it is, the deeper the deduction.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#monte-carlo-propagation",
+    "href": "07-uncertainty.html#monte-carlo-propagation",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.4 Monte Carlo propagation",
+    "text": "7.4 Monte Carlo propagation\nSampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like \\(a\\,D^{b}\\), the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results (IPCC, 2006).\n\nset.seed(42)\nn_sim &lt;- 2000\nsim &lt;- numeric(n_sim)\nfor (i in seq_len(n_sim)) {\n  b  &lt;- rnorm(1, 2.4835, 0.05)            # allometric exponent uncertainty\n  cf &lt;- rnorm(1, 0.47, 0.02)              # carbon-fraction uncertainty\n  agb &lt;- exp(-2.48 + b * log(stems$dbh))\n  sim[i] &lt;- sum(cf * agb / 1000) / area_ha\n}\nmc_ci &lt;- quantile(sim, c(0.025, 0.975))\nround(c(mean = mean(sim), lower = mc_ci[1], upper = mc_ci[2]), 1)\n#&gt;        mean  lower.2.5% upper.97.5% \n#&gt;         3.3         2.2         4.7\n\n\nhist(sim, breaks = 40, col = \"grey80\", border = \"white\",\n     main = \"Monte Carlo carbon density\", xlab = \"MgC / ha\")\nabline(v = mc_ci, col = \"firebrick\", lwd = 2, lty = 2)",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#conservative-estimates",
+    "href": "07-uncertainty.html#conservative-estimates",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.5 Conservative estimates",
+    "text": "7.5 Conservative estimates\nThe standards translate uncertainty into a deduction. A common rule is that when the half-width of the 90% or 95% interval exceeds a threshold (often 15% of the mean), credits are issued against the conservative lower bound rather than the mean. Computing the uncertainty percentage and the conservative estimate is a few lines:\n\nhalf_width &lt;- (mc_ci[2] - mc_ci[1]) / 2\nunc_pct    &lt;- 100 * half_width / mean(sim)\nconservative &lt;- mean(sim) - half_width           # lower-bound crediting basis\nround(c(uncertainty_pct = unc_pct,\n        mean = mean(sim), conservative = conservative), 1)\n#&gt; uncertainty_pct.97.5%                  mean    conservative.97.5% \n#&gt;                  38.9                   3.3                   2.0\n\nIf the uncertainty percentage clears the threshold, the gap between the mean and the conservative figure is credit the project forgoes for being imprecise, the direct financial incentive to measure better.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#keystone-area-adjusted-accuracy",
+    "href": "07-uncertainty.html#keystone-area-adjusted-accuracy",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.6 Keystone: area-adjusted accuracy",
+    "text": "7.6 Keystone: area-adjusted accuracy\nThe Bolivia land-cover work raises the same question for areas rather than carbon: a class area read straight off a map inherits the map’s classification errors, and good practice adjusts it and attaches a confidence interval (Olofsson et al., 2014). This is the LULC counterpart of the carbon deduction, and it uses the confusion matrix from the disturbance chapter. We take mapped forest and non-forest areas and an error matrix, and compute the area-adjusted estimate:\n\nA    &lt;- c(forest = 18000, nonforest = 7000)      # mapped area, ha\nAtot &lt;- sum(A); W &lt;- A / Atot\n\n# error matrix: rows = map class, cols = reference class\nn   &lt;- matrix(c(95, 5, 12, 88), nrow = 2, byrow = TRUE,\n              dimnames = list(map = names(A), ref = names(A)))\nni  &lt;- rowSums(n)\n\n# Olofsson stratified estimator of the reference area proportion of \"forest\"\np_forest &lt;- sum(W * n[, \"forest\"] / ni)\nse_p     &lt;- sqrt(sum(W^2 * (n[, \"forest\"]/ni) * (1 - n[, \"forest\"]/ni) / (ni - 1)))\n\nadj_forest_ha &lt;- Atot * p_forest\nci_ha         &lt;- Atot * 1.96 * se_p\nround(c(mapped_forest_ha  = A[\"forest\"],\n        adjusted_forest_ha = adj_forest_ha,\n        ci_halfwidth_ha    = ci_ha), 0)\n#&gt; mapped_forest_ha.forest      adjusted_forest_ha         ci_halfwidth_ha \n#&gt;                   18000                   17940                     893\n\nThe adjusted area differs from the mapped area because the map commits and omits forest at rates the reference sample reveals, and the confidence interval is the honest precision of the figure. A project that reports only the mapped area, with no adjustment and no interval, has reported a number no auditor can accept. The full Bolivia workflow applies this class by class across the national legend; the estimator is the one above.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "07-uncertainty.html#exercises",
+    "href": "07-uncertainty.html#exercises",
+    "title": "\n7  Uncertainty\n",
+    "section": "\n7.7 Exercises",
+    "text": "7.7 Exercises\n\nRecompute the sampling confidence interval using a 4-by-6 quadrat grid instead of 8-by-12. Does the mean change? Does the standard error? Explain the difference.\nIn the Monte Carlo, double the uncertainty on the carbon fraction (sd 0.04) and rerun. How much does the uncertainty percentage grow, and would it now trigger a 15% deduction?\nReport the conservative (lower-bound) carbon density and express the forgone credit as a percentage of the mean. In one sentence, state the incentive this creates.\n\n(Applied.) Change the error matrix so the map omits more forest (change the second row to 25, 75). Recompute the adjusted forest area and its interval, and explain which way omission error pushes the adjustment.\n\n\n\n\n\n\n\nIPCC. (2006). 2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use. Institute for Global Environmental Strategies.\n\n\nJenkins, J. C., Chojnacky, D. C., Heath, L. S., & Birdsey, R. A. (2003). National-scale biomass estimators for united states tree species. Forest Science, 49(1), 12–35. https://doi.org/10.1093/forestscience/49.1.12\n\n\nOlofsson, P., Foody, G. M., Herold, M., Stehman, S. V., Woodcock, C. E., & Wulder, M. A. (2014). Good practices for estimating area and assessing accuracy of land change. Remote Sensing of Environment, 148, 42–57. https://doi.org/10.1016/j.rse.2014.02.015",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Uncertainty</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html",
+    "href": "08-time-series.html",
+    "title": "\n8  Time Series\n",
+    "section": "",
+    "text": "8.1 Data cubes\nEverything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering. We build a nine-year annual index cube over the plot, with a slow decline and a fire in 2021 that clears a block and holds it low.\nlibrary(terra)\nlibrary(sf)\n\nstems &lt;- st_as_sf(read.csv(\"data/scbi_stems.csv\"),\n                  coords = c(\"lon\", \"lat\"), crs = 4326) |&gt;\n  st_transform(32617)\nr &lt;- rast(ext(vect(stems)), resolution = 10, crs = \"EPSG:32617\")\n#&gt; Error:\n#&gt; ! [rast] empty srs\n\nyears &lt;- 2016:2024\nset.seed(3)\nxy   &lt;- xyFromCell(r, 1:ncell(r))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'r' not found\nburn &lt;- xy[, 1] &gt; 747100 & xy[, 1] &lt; 747250 & xy[, 2] &gt; 4306150 & xy[, 2] &lt; 4306300\n#&gt; Error:\n#&gt; ! object 'xy' not found\n\ncube &lt;- rast(lapply(seq_along(years), function(k) {\n  v &lt;- 0.80 - 0.008 * (k - 1) + rnorm(ncell(r), 0, 0.015)   # gentle decline\n  if (years[k] &gt;= 2021) v[burn] &lt;- 0.20 + rnorm(sum(burn), 0, 0.02)  # fire + no recovery\n  setValues(r, v)\n}))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'rast': error in evaluating the argument 'x' in selecting a method for function 'ncell': object 'r' not found\nnames(cube) &lt;- paste0(\"y\", years)\n#&gt; Error:\n#&gt; ! object 'cube' not found\nnlyr(cube)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'nlyr': object 'cube' not found",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html#temporal-reduction",
+    "href": "08-time-series.html#temporal-reduction",
+    "title": "\n8  Time Series\n",
+    "section": "\n8.2 Temporal reduction",
+    "text": "8.2 Temporal reduction\nA cube is reduced along time the way a single raster is summarised along space. app() applies a function to each pixel’s time series. The mean over years is the baseline surface; the standard deviation flags where the record is unstable:\n\nmean_ndvi &lt;- app(cube, mean)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found\nsd_ndvi   &lt;- app(cube, sd)\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found\nplot(c(mean_ndvi, sd_ndvi), main = c(\"Mean index\", \"Temporal SD\"))\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'mean_ndvi' not found\n\nHigh temporal SD is the signature of disturbance: stable forest barely varies year to year, so the burned block lights up.",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html#trends",
+    "href": "08-time-series.html#trends",
+    "title": "\n8  Time Series\n",
+    "section": "\n8.3 Trends",
+    "text": "8.3 Trends\nThe direction and rate of change per pixel is the slope of index against year, a linear trend fitted independently at every location. app() carries the regression across the cube:\n\nslope &lt;- app(cube, function(v) {\n  if (all(is.na(v))) return(NA)\n  coef(lm(v ~ years))[2]\n})\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found\nnames(slope) &lt;- \"trend_per_year\"\n#&gt; Error:\n#&gt; ! object 'slope' not found\nplot(slope, main = \"Per-pixel trend (index / year)\")\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'slope' not found\n\nStrong negative slopes mark sustained loss. This is the engine of trend-based monitoring: a whole landscape of time series reduced to one map of who is gaining and who is losing.",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html#detecting-the-event",
+    "href": "08-time-series.html#detecting-the-event",
+    "title": "\n8  Time Series\n",
+    "section": "\n8.4 Detecting the event",
+    "text": "8.4 Detecting the event\nA trend says a pixel declined; monitoring needs to know when. Differencing consecutive years isolates the step. The fire year is the layer where the largest drop occurs, and thresholding the year-on-year change delineates the burned area:\n\nd2021 &lt;- cube[[\"y2021\"]] - cube[[\"y2020\"]]\n#&gt; Error:\n#&gt; ! object 'cube' not found\nburned &lt;- d2021 &lt; -0.3\n#&gt; Error:\n#&gt; ! object 'd2021' not found\ncell_ha  &lt;- prod(res(r)) / 1e4\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'r' not found\nburned_ha &lt;- global(burned, \"sum\", na.rm = TRUE)[1, 1] * cell_ha\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'burned' not found\nround(burned_ha, 2)                                # hectares burned in 2021\n#&gt; Error:\n#&gt; ! object 'burned_ha' not found",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html#keystone-ipcc-tier-1-fire-emissions",
+    "href": "08-time-series.html#keystone-ipcc-tier-1-fire-emissions",
+    "title": "\n8  Time Series\n",
+    "section": "\n8.5 Keystone: IPCC Tier 1 fire emissions",
+    "text": "8.5 Keystone: IPCC Tier 1 fire emissions\nThe capstone joins the whole book: a time series detects a fire, the burned area is measured, and IPCC Tier 1 methods turn that area into an emission. The IPCC-wildfire-emissions workflow runs this chain from burn-area mapping through to emission factors, and the governing equation is the same one every fire inventory uses (IPCC, 2006):\n\\[L_{fire} = A \\times M_B \\times C_f \\times G_{ef} \\times 10^{-3}\\]\nwhere \\(A\\) is burned area, \\(M_B\\) the fuel biomass available, \\(C_f\\) the combustion factor, and \\(G_{ef}\\) the emission factor for the gas. With the burned area from the cube and IPCC default factors for temperate forest:\n\nA   &lt;- burned_ha        # ha, from the time-series detection\n#&gt; Error:\n#&gt; ! object 'burned_ha' not found\nMB  &lt;- 120              # tonnes dry matter per ha (fuel load)\nCf  &lt;- 0.45             # combustion factor (fraction consumed)\nGef &lt;- 1569             # g CO2 per kg dry matter (IPCC default)\n\nCO2_tonnes &lt;- A * MB * Cf * Gef * 1e-3\n#&gt; Error:\n#&gt; ! object 'A' not found\nround(c(burned_ha = A, CO2_tonnes = CO2_tonnes), 1)\n#&gt; Error:\n#&gt; ! object 'A' not found\n\nThat single number, tonnes of CO2 from the fire, is the end of the pipeline this course has built toward: geospatial data, cleaned and projected in the early chapters, turned into a detected, measured, and quantified emission with every step reproducible. In a real inventory each factor carries its own uncertainty, so the honest final move is to wrap this equation in the Monte Carlo of the previous chapter and report the emission with a confidence interval. The methods are all now in hand.\n\nset.seed(9)\nsim &lt;- replicate(2000, {\n  mb  &lt;- rnorm(1, 120, 20)\n  cf  &lt;- rnorm(1, 0.45, 0.08)\n  gef &lt;- rnorm(1, 1569, 100)\n  A * mb * cf * gef * 1e-3\n})\n#&gt; Error in `FUN()`:\n#&gt; ! object 'A' not found\nround(quantile(sim, c(0.025, 0.5, 0.975)), 0)      # CO2 tonnes: lower, median, upper\n#&gt; Error in `h()`:\n#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'quantile': object 'sim' not found",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "08-time-series.html#exercises",
+    "href": "08-time-series.html#exercises",
+    "title": "\n8  Time Series\n",
+    "section": "\n8.6 Exercises",
+    "text": "8.6 Exercises\n\nReduce the cube with app() to the maximum index per pixel instead of the mean. Where does the maximum surface differ most from the mean, and why there?\nFit the per-pixel trend on the pre-fire years only (2016–2020). How does the burned block’s slope compare with the full-record slope, and what does that say about mixing a step change into a linear trend?\nRecompute burned area with a −0.2 threshold on the 2021 difference. How does the emission estimate move, and which term in the IPCC equation is it multiplying?\n\n(Applied.) Using the Monte Carlo output, report the median CO2 and its 95% interval, then state which of the three factors (fuel load, combustion factor, emission factor) you would most want to measure locally to narrow the interval.\n\n\n\n\n\n\n\nIPCC. (2006). 2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use. Institute for Global Environmental Strategies.",
+    "crumbs": [
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Time Series</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html",
+    "href": "09-spatial-patterns.html",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "",
+    "text": "9.1 Point patterns\nEvery earlier chapter analysed values measured at locations: carbon at a plot, elevation at a pixel, an index through time. Point-pattern analysis asks a different question, about the locations themselves. Are the events, tree stems, seedlings, detected clearings, spread evenly, scattered at random, or clustered together? The answer characterises the process that generated them, and it is the second capstone of this course: a whole branch of spatial statistics with its own tools. We use spatstat, whose ppp object holds a point pattern inside an observation window.\nThe running example here is a real regeneration survey: conifer seedlings mapped after the 2015 Mt Midgeley wildfire in the Darkwoods Conservation Area of the southern Selkirk Mountains, British Columbia (Murphy et al., 2026). We load the seedlings and build a ppp from one four-hectare plot, its bounding box serving as the window:\nlibrary(spatstat)\n#&gt; Error in `library()`:\n#&gt; ! there is no package called 'spatstat'\n\nseed &lt;- read.csv(\"data/darkwoods_seedlings.csv\")\np3   &lt;- subset(seed, plot == 3)\nwin  &lt;- owin(range(p3$x), range(p3$y))\n#&gt; Error in `owin()`:\n#&gt; ! could not find function \"owin\"\npp   &lt;- ppp(p3$x, p3$y, window = win)\n#&gt; Error in `ppp()`:\n#&gt; ! could not find function \"ppp\"\npp\n#&gt; Error:\n#&gt; ! object 'pp' not found\nThe printout reports the number of points and the window: a little over 1,600 seedlings in a 200 by 200 metre plot. That is the pattern whose structure we now interrogate.",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#spatial-randomness",
+    "href": "09-spatial-patterns.html#spatial-randomness",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.2 Spatial randomness",
+    "text": "9.2 Spatial randomness\nThe reference against which every pattern is judged is complete spatial randomness (CSR): points falling independently and with equal probability everywhere, a homogeneous Poisson process. Real patterns depart from CSR in one of two directions, toward regularity, where points avoid each other as in a planted stand, or toward clustering, where points attract as in natural regeneration around surviving seed trees. The whole toolkit exists to measure that departure and test whether it is real. A plot of the seedlings already suggests the answer:\n\nplot(pp, main = \"Mapped conifer seedlings, plot 3\", pch = 20, cex = 0.3, cols = \"forestgreen\")\n#&gt; Error:\n#&gt; ! object 'pp' not found",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#intensity",
+    "href": "09-spatial-patterns.html#intensity",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.3 Intensity",
+    "text": "9.3 Intensity\nThe intensity is the first-order property: the expected number of points per unit area, and how it varies across the window. A kernel density estimate smooths the points into a continuous intensity surface, the point-pattern analogue of a heat map, revealing where regeneration concentrated:\n\nplot(density(pp, sigma = 8), main = \"Seedling intensity (points/m²)\")\n#&gt; Error:\n#&gt; ! object 'pp' not found\npoints(pp, pch = 20, cex = 0.2)\n#&gt; Error:\n#&gt; ! object 'pp' not found\n\nRegeneration is patchy, not uniform: dense pockets sit near surviving seed sources and gentler, wetter ground, while other areas stay bare. That spatial unevenness is the signal, and explaining it is what the disturbance and terrain covariates in the study were for.",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#nearest-neighbour",
+    "href": "09-spatial-patterns.html#nearest-neighbour",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.4 Nearest neighbour",
+    "text": "9.4 Nearest neighbour\nWhether points cluster or repel is the second-order property, about the interaction between them. The most direct diagnostic is the nearest-neighbour distance: how far, on average, each seedling sits from its closest neighbour, compared with what CSR predicts. Under CSR the expected mean nearest-neighbour distance is \\(1/(2\\sqrt{\\lambda})\\), so the ratio of observed to expected is the Clark–Evans index: below one means clustered, above one means regular.\n\nce_ratio &lt;- function(df) {\n  q &lt;- ppp(df$x, df$y, window = win)\n  obs &lt;- mean(nndist(q))\n  expected &lt;- 1 / (2 * sqrt(intensity(q)))\n  obs / expected\n}\nround(ce_ratio(p3), 3)          # &lt; 1 indicates clustering\n#&gt; Error in `ppp()`:\n#&gt; ! could not find function \"ppp\"\n\nThe ratio sits well below one: seedlings are closer to one another than randomness would allow, the quantitative signature of clustered regeneration.",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#ripleys-k",
+    "href": "09-spatial-patterns.html#ripleys-k",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.5 Ripley’s K",
+    "text": "9.5 Ripley’s K\nA single number cannot capture how clustering changes with scale, points may cluster tightly at short range yet disperse at long range. Ripley’s K function describes the pattern across all distances at once, counting on average how many other points lie within a growing radius of each point, against the CSR expectation. Plotting the observed K with a simulation envelope is the standard test:\n\nK &lt;- envelope(pp, Kest, nsim = 19, verbose = FALSE)\n#&gt; Error in `envelope()`:\n#&gt; ! could not find function \"envelope\"\nplot(K, main = \"Ripley's K with CSR envelope\")\n#&gt; Error:\n#&gt; ! object 'K' not found\n\nWhere the observed curve rises above the envelope the pattern is more clustered than random at that distance; below it, more regular. The seedlings sit above the envelope across the mapped range, confirming clustering is real and not an artefact of a few tight groups, and the scale-explicit view is why K, and its variance-stabilised form the L function, is the workhorse of the field.",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#keystone-seedlings",
+    "href": "09-spatial-patterns.html#keystone-seedlings",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.6 Keystone: seedlings",
+    "text": "9.6 Keystone: seedlings\nThe published study runs exactly this arc, then goes one step further (Murphy et al., 2026). Across 3,886 mapped seedlings on three four-hectare plots, point-pattern analysis found significant clustering for all seven conifer species, with intensity governed by fire severity, distance to seed source, topography, and wind. The lean diagnostics above reproduce its core finding on one plot: clustered regeneration, quantified by the Clark–Evans ratio and confirmed by Ripley’s K. Repeating the Clark–Evans ratio species by species shows the clustering is not confined to the dominant lodgepole pine but holds across the community:\n\nspp &lt;- c(\"Pinus_contorta\", \"Larix\", \"Picea\", \"Pseudotsuga\")\nsapply(spp, function(s) {\n  q &lt;- subset(p3, species == s)\n  if (nrow(q) &lt; 20) return(NA)\n  round(ce_ratio(q), 3)\n})\n#&gt; Error in `ppp()`:\n#&gt; ! could not find function \"ppp\"\n\nEvery species returns a ratio below one. The paper then models the intensity surface against the disturbance and terrain covariates with inhomogeneous Cox process models, showing that areas of overlapping beetle mortality and high-severity fire had significantly reduced pine regeneration. That covariate model is the natural next step beyond this book: the foundations here, CSR, intensity, nearest-neighbour, Ripley’s K, are what it is built on, and an auditor who understands them can read and challenge such a result.",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "09-spatial-patterns.html#exercises",
+    "href": "09-spatial-patterns.html#exercises",
+    "title": "\n9  Spatial Patterns\n",
+    "section": "\n9.7 Exercises",
+    "text": "9.7 Exercises\n\nBuild the ppp for plot 1 instead of plot 3 and compute its Clark–Evans ratio. Is the regeneration there clustered, random, or regular, and how does it compare with plot 3?\nMap the intensity surface with a larger smoothing bandwidth (sigma = 20) and a smaller one (sigma = 4). How does the choice change what you see, and what does that imply about reporting a single heat map?\nRun envelope(pp, Kest) on a random thinning of the seedlings (rthin(pp, 0.2)). Does the clustering signal survive when only a fifth of the points remain? What does that say about sample size and power?\n\n(Applied.) Detected clearings in a monitoring image are also a point pattern. Explain how Ripley’s K could distinguish scattered natural tree-fall from an organised, clustered harvest front, and why that distinction matters for attributing disturbance.\n\n\n\n\n\n\n\nMurphy, S., Leslie, A., Wilson, J., & Banks, L. K. (2026). Spatial patterns of conifer regeneration following mountain pine beetle outbreak (dendroctonus ponderosae) and mixed-severity wildfire: A point process model of disturbance interactions in the southern selkirk mountains, british columbia. Forest Ecology and Management, 618, 123985. https://doi.org/10.1016/j.foreco.2026.123985",
+    "crumbs": [
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Spatial Patterns</span>"
+    ]
+  },
+  {
+    "objectID": "A-automation-registries.html",
+    "href": "A-automation-registries.html",
+    "title": "Appendix A — Automation, Protocols and Registries",
+    "section": "",
+    "text": "A.1 Beyond the analysis\nA defensible result is only half the job. The other half is the discipline around it: making the work reproducible, governing the data to a recognised standard, and delivering credits into a registry that will accept them. This appendix sketches that surrounding practice. Its code is illustrative and is not run at render time.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Automation, Protocols and Registries</span>"
+    ]
+  },
+  {
+    "objectID": "A-automation-registries.html#reproducible-runtimes",
+    "href": "A-automation-registries.html#reproducible-runtimes",
+    "title": "Appendix A — Automation, Protocols and Registries",
+    "section": "\nA.2 Reproducible runtimes",
+    "text": "A.2 Reproducible runtimes\nThe analysis in this book runs today; the test is whether it runs in three years, on another machine, for a reviewer who was not there. Two habits carry most of that weight. Pin your package versions so an update cannot silently change a result, and script the whole pipeline end to end so there are no undocumented manual steps.\n\n# Pin the project's package library to exact versions\nrenv::init()        # snapshot the library\nrenv::snapshot()    # write renv.lock, committed with the project\nrenv::restore()     # a reviewer rebuilds the exact environment\n\nA single entry point that runs every stage in order is the other half. When the raw data change, one command regenerates every figure and number, and nothing depends on remembering which script to run first.\n\n# run.R — the one command that rebuilds everything\nsource(\"01-ingest.R\")       # read and validate raw survey data\nsource(\"02-process.R\")      # projection, extraction, modelling\nsource(\"03-report.R\")       # render outputs with quarto::quarto_render()",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Automation, Protocols and Registries</span>"
+    ]
+  },
+  {
+    "objectID": "A-automation-registries.html#data-protocols-and-qaqc",
+    "href": "A-automation-registries.html#data-protocols-and-qaqc",
+    "title": "Appendix A — Automation, Protocols and Registries",
+    "section": "\nA.3 Data protocols and QA/QC",
+    "text": "A.3 Data protocols and QA/QC\nEvery number inherits the quality of the survey that produced it. Standardised digital capture, enforced schemas, and a logged accuracy estimate on every GPS fix are what let an auditor trust a plot table at all. The governing reference is the geospatial data-quality framework of the ISO 19100 series, which defines the quality elements, completeness, logical consistency, positional accuracy, thematic accuracy, an auditor should expect to see documented. In practice this means a QA/QC step that checks geometry validity, coordinate ranges, attribute domains, and duplicate records before any analysis begins.\n\n# Minimal ingest QA gate\nstopifnot(\n  all(sf::st_is_valid(layer)),                     # geometry validity\n  all(sf::st_coordinates(layer)[, 1] &gt; -180),      # coordinates in range\n  !anyDuplicated(layer$plot_id)                    # no duplicate keys\n)",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Automation, Protocols and Registries</span>"
+    ]
+  },
+  {
+    "objectID": "A-automation-registries.html#registries",
+    "href": "A-automation-registries.html#registries",
+    "title": "Appendix A — Automation, Protocols and Registries",
+    "section": "\nA.4 Registries",
+    "text": "A.4 Registries\nCredits live or die at the registry. ART-TREES, Verra (VCS), and ACR each publish methodologies, uncertainty and accuracy requirements, and validation and verification procedures that a project must meet before issuance. The analytical chapters of this book map directly onto their requirements: the area check onto boundary and area rules, the accuracy assessment onto the mandatory confusion matrix, the Monte Carlo onto the uncertainty deduction, the fire-emissions chain onto the reporting equations. Knowing which registry a project targets, and reading its methodology as the specification the analysis must satisfy, is the final piece of the auditor’s craft.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Automation, Protocols and Registries</span>"
+    ]
+  },
+  {
+    "objectID": "A-automation-registries.html#further-practice",
+    "href": "A-automation-registries.html#further-practice",
+    "title": "Appendix A — Automation, Protocols and Registries",
+    "section": "\nA.5 Further practice",
+    "text": "A.5 Further practice\nThe workflows referenced here, standard operating procedures, demonstration repositories with renv and version control, safeguards and QA/QC templates, and data-service automation, are where the habits of this book become an operational system. The analysis is the visible part; the reproducibility, governance, and registry alignment are what make it hold up under scrutiny.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Automation, Protocols and Registries</span>"
+    ]
+  },
+  {
+    "objectID": "references/index.html",
+    "href": "references/index.html",
+    "title": "Appendix B — References",
+    "section": "",
+    "text": "Bivand, R. S., Pebesma, E., & Gómez-Rubio, V. (2013). Applied\nspatial data analysis with r (2nd ed.). Springer.\n\n\nHijmans, R. J. (2024). Terra: Spatial data analysis. https://CRAN.R-project.org/package=terra\n\n\nIPCC. (2006). 2006 IPCC guidelines for national greenhouse gas\ninventories, volume 4: Agriculture, forestry and other land use.\nInstitute for Global Environmental Strategies.\n\n\nJenkins, J. C., Chojnacky, D. C., Heath, L. S., & Birdsey, R. A.\n(2003). National-scale biomass estimators for united states tree\nspecies. Forest Science, 49(1), 12–35. https://doi.org/10.1093/forestscience/49.1.12\n\n\nLovelace, R., Nowosad, J., & Muenchow, J. (2019). Geocomputation\nwith r. Chapman; Hall/CRC.\n\n\nMurphy, S., Leslie, A., Wilson, J., & Banks, L. K. (2026). Spatial\npatterns of conifer regeneration following mountain pine beetle outbreak\n(dendroctonus ponderosae) and mixed-severity wildfire: A point process\nmodel of disturbance interactions in the southern selkirk mountains,\nbritish columbia. Forest Ecology and Management, 618,\n123985. https://doi.org/10.1016/j.foreco.2026.123985\n\n\nOlofsson, P., Foody, G. M., Herold, M., Stehman, S. V., Woodcock, C. E.,\n& Wulder, M. A. (2014). Good practices for estimating area and\nassessing accuracy of land change. Remote Sensing of\nEnvironment, 148, 42–57. https://doi.org/10.1016/j.rse.2014.02.015\n\n\nPebesma, E. (2018). Simple features for r: Standardized support for\nspatial vector data. The R Journal, 10(1), 439–446. https://doi.org/10.32614/RJ-2018-009\n\n\nPebesma, E., & Bivand, R. (2023). Spatial data science: With\napplications in r. Chapman; Hall/CRC. https://doi.org/10.1201/9780429459016",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>B</span>  <span class='chapter-title'>References</span>"
+    ]
+  }
+]
