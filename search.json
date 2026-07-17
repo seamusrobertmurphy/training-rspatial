@@ -2,7 +2,7 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "title": "Spatial Data Analysis in R for Forest Carbon VVBs",
     "section": "",
     "text": "Preface\nThis is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.\nThe course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.",
     "crumbs": [
@@ -12,7 +12,7 @@
   {
     "objectID": "index.html#the-chapters",
     "href": "index.html#the-chapters",
-    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "title": "Spatial Data Analysis in R for Forest Carbon VVBs",
     "section": "The chapters",
     "text": "The chapters\n\nGetting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.\nVector Data — geometries, attributes and support, spatial joins; closing on an area check.\nRaster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.\nTerrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.\nLiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.\nDisturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.\nUncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.\nTime Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.\nSpatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley’s K; closing on post-fire conifer regeneration.\n\nAn appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.",
     "crumbs": [
@@ -22,7 +22,7 @@
   {
     "objectID": "index.html#the-running-dataset",
     "href": "index.html#the-running-dataset",
-    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "title": "Spatial Data Analysis in R for Forest Carbon VVBs",
     "section": "The running dataset",
     "text": "The running dataset\nEvery chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.\n\n\n\n\n\n\nAbout the data\n\n\n\nThe stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone (Chapter 9), which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia (Murphy et al., 2026).",
     "crumbs": [
@@ -32,7 +32,7 @@
   {
     "objectID": "index.html#using-this-book",
     "href": "index.html#using-this-book",
-    "title": "Spatial Data Analysis in R for Forest Carbon",
+    "title": "Spatial Data Analysis in R for Forest Carbon VVBs",
     "section": "Using this book",
     "text": "Using this book\nEach chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field (Bivand et al., 2013; Lovelace et al., 2019; Pebesma & Bivand, 2023), and the sf and terra packages that underpin the modern R-spatial stack are described by Pebesma (2018) and Hijmans (2024). Where the applied material touches forest-carbon conventions it follows IPCC (2006).\n\n\n\n\n\n\nBivand, R. S., Pebesma, E., & Gómez-Rubio, V. (2013). Applied spatial data analysis with r (2nd ed.). Springer.\n\n\nHijmans, R. J. (2024). Terra: Spatial data analysis. https://CRAN.R-project.org/package=terra\n\n\nIPCC. (2006). 2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use. Institute for Global Environmental Strategies.\n\n\nLovelace, R., Nowosad, J., & Muenchow, J. (2019). Geocomputation with r. Chapman; Hall/CRC.\n\n\nMurphy, S., Leslie, A., Wilson, J., & Banks, L. K. (2026). Spatial patterns of conifer regeneration following mountain pine beetle outbreak (dendroctonus ponderosae) and mixed-severity wildfire: A point process model of disturbance interactions in the southern selkirk mountains, british columbia. Forest Ecology and Management, 618, 123985. https://doi.org/10.1016/j.foreco.2026.123985\n\n\nPebesma, E. (2018). Simple features for r: Standardized support for spatial vector data. The R Journal, 10(1), 439–446. https://doi.org/10.32614/RJ-2018-009\n\n\nPebesma, E., & Bivand, R. (2023). Spatial data science: With applications in r. Chapman; Hall/CRC. https://doi.org/10.1201/9780429459016",
     "crumbs": [
