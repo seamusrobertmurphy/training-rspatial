@@ -1,0 +1,59 @@
+---
+title: "Automation, Protocols and Registries"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Beyond the analysis
+
+A defensible result is only half the job. The other half is the discipline around it: making the work reproducible, governing the data to a recognised standard, and delivering credits into a registry that will accept them. This appendix sketches that surrounding practice. Its code is illustrative and is not run at render time.
+
+## Reproducible runtimes
+
+The analysis in this book runs today; the test is whether it runs in three years, on another machine, for a reviewer who was not there. Two habits carry most of that weight. Pin your package versions so an update cannot silently change a result, and script the whole pipeline end to end so there are no undocumented manual steps.
+
+```{r}
+# Pin the project's package library to exact versions
+renv::init()        # snapshot the library
+renv::snapshot()    # write renv.lock, committed with the project
+renv::restore()     # a reviewer rebuilds the exact environment
+```
+
+A single entry point that runs every stage in order is the other half. When the raw data change, one command regenerates every figure and number, and nothing depends on remembering which script to run first.
+
+```{r}
+# run.R — the one command that rebuilds everything
+source("01-ingest.R")       # read and validate raw survey data
+source("02-process.R")      # projection, extraction, modelling
+source("03-report.R")       # render outputs with quarto::quarto_render()
+```
+
+## Data protocols and QA/QC
+
+Every number inherits the quality of the survey that produced it. Standardised digital capture, enforced schemas, and a logged accuracy estimate on every GPS fix are what let an auditor trust a plot table at all. The governing reference is the geospatial data-quality framework of the ISO 19100 series, which defines the quality elements, completeness, logical consistency, positional accuracy, thematic accuracy, an auditor should expect to see documented. In practice this means a QA/QC step that checks geometry validity, coordinate ranges, attribute domains, and duplicate records before any analysis begins.
+
+```{r}
+# Minimal ingest QA gate
+stopifnot(
+  all(sf::st_is_valid(layer)),                     # geometry validity
+  all(sf::st_coordinates(layer)[, 1] > -180),      # coordinates in range
+  !anyDuplicated(layer$plot_id)                    # no duplicate keys
+)
+```
+
+## Registries
+
+Credits live or die at the registry. ART-TREES, Verra (VCS), and ACR each publish methodologies, uncertainty and accuracy requirements, and validation and verification procedures that a project must meet before issuance. The analytical chapters of this book map directly onto their requirements: the area check onto boundary and area rules, the accuracy assessment onto the mandatory confusion matrix, the Monte Carlo onto the uncertainty deduction, the fire-emissions chain onto the reporting equations. Knowing which registry a project targets, and reading its methodology as the specification the analysis must satisfy, is the final piece of the auditor's craft.
+
+## Further practice
+
+The workflows referenced here, standard operating procedures, demonstration repositories with `renv` and version control, safeguards and QA/QC templates, and data-service automation, are where the habits of this book become an operational system. The analysis is the visible part; the reproducibility, governance, and registry alignment are what make it hold up under scrutiny.

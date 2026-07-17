@@ -13,41 +13,34 @@ csl: ./references/apa.csl
 
 # Preface {.unnumbered}
 
-This book is a practical, comprehensive introduction to geospatial data science with R. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, visualised, and modelled, using free and open tools. It is written for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result, and it assumes some statistics but no prior GIS.
+This is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.
 
-The premise is that spatial analysis should be reproducible: you should be able to open a dataset, understand its geometry and coordinate system, join it to other data, summarise it, map it, and quantify the uncertainty, all in a single script that another person can re-run. This course builds that capability from the ground up, one concept at a time.
+The course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.
 
-## Learning outcomes {.unnumbered}
+## The chapters {.unnumbered}
 
-By the end of the course you will be able to:
+1. Getting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.
+2. Vector Data — geometries, attributes and support, spatial joins; closing on an area check.
+3. Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.
+4. Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.
+5. LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.
+6. Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.
+7. Uncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.
+8. Time Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.
+9. Spatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.
 
-1. Set up a reproducible R project for spatial work
-2. Represent vector data with the simple-features standard and its geometry types
-3. Understand coordinate reference systems, projections, and spherical geometry
-4. Reason about attributes, their support, and correct spatial aggregation
-5. Wrangle vector data with `sf` and the `tidyverse`
-6. Perform spatial operations: predicates, overlays, buffers, and joins
-7. Read, process, and align raster data with `terra`
-8. Extract raster values to points and work with spatiotemporal data cubes
-9. Produce publication-quality static and interactive maps
-10. Analyse point patterns and interpolate surfaces with geostatistics
-11. Measure spatial autocorrelation and fit spatial regression models
-12. Apply these foundations to worked problems in forestry, carbon, and ecology
+An appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.
 
-## The running example {.unnumbered}
+## The running dataset {.unnumbered}
 
-To keep the concepts concrete, every chapter draws on one running dataset: a forest inventory from a coastal temperate-rainforest study area in the Alberni Valley on Vancouver Island, British Columbia. The choice of a forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent real-world grounding and lets the applied exercises connect to problems in forest inventory, carbon, and ecology. We work with 140 plots and the individual-tree measurements behind them, alongside terrain, imagery, and administrative layers pulled from open sources.
+Every chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.
 
 ::: callout-note
-## Inventory data
+## About the data
 
-The plot and tree measurements used throughout this book are **simulated** for teaching. They are generated from realistic coastal-BC species compositions and biomass–diameter relationships so that the numbers behave like a real cruise, but they do not describe any specific stand or landowner. Terrain, imagery, coastline, and place-name layers, by contrast, are real and are downloaded from open services (elevation, MODIS/Sentinel imagery, and OpenStreetMap) at render time. Wherever a layer is real, the code shows exactly where it comes from.
+The stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone (Chapter 9), which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia [@murphy2026selkirk].
 :::
 
 ## Using this book {.unnumbered}
 
-Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises at the end of each chapter. The material is pitched at analysts who know some statistics but may be new to R and to GIS.
-
-## Further reading {.unnumbered}
-
-This course covers the standard curriculum of spatial analysis in R, and readers who want a deeper or more general treatment are well served by the canonical texts in the field: @pebesma2023sds, @lovelace2019geocomputation, and @bivand2013asdar. The `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied exercises touch forest-carbon conventions, they follow @ipcc2006gl, with illustrative allometry informed by the Canadian national biomass equations of @ung2008allometric.
+Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field [@pebesma2023sds; @lovelace2019geocomputation; @bivand2013asdar], and the `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied material touches forest-carbon conventions it follows @ipcc2006gl.

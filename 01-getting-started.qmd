@@ -1,0 +1,146 @@
+---
+title: "Getting Started"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Reproducibility
+
+An audit stands or falls on whether someone else can reproduce the number. A spreadsheet built with forty manual clicks cannot be re-run, cannot be reviewed line by line, and cannot be trusted a year later when the inputs have changed. A script can. This is the reason to do spatial work in R: every decision, from the projection you chose to the buffer distance you applied, is written down and repeatable.
+
+R is a free, open-source language with a mature ecosystem for geographic data. In one session you can read a shapefile a surveyor sent you, pull an elevation model from an open server, overlay the two, extract terrain at your field plots, fit a model, and export a map, without leaving the environment or paying for a licence. For a forest-carbon or agriculture auditor that means the whole chain from raw data to reported estimate lives in one reviewable document. This course uses the modern R-spatial stack, built on two packages that have become the standard tools of the field [@pebesma2018sf; @hijmans2024terra].
+
+## The stack
+
+You will meet these packages throughout the book. Install them once before you begin.
+
+| Package | Role |
+|---|---|
+| `sf` | Vector data: points, lines, polygons |
+| `terra` | Raster data: imagery, elevation, gridded surfaces |
+| `dplyr` / `tidyverse` | Data wrangling and pipes |
+| `tmap` | Thematic maps, static and interactive |
+| `ggplot2` | Statistical graphics |
+| `gstat` | Geostatistics and interpolation |
+| `spdep` | Spatial autocorrelation and neighbours |
+
+To install everything the course needs, run this once in the console. It is set not to execute when the book renders.
+
+```{r}
+#| eval: false
+install.packages(c(
+  "sf", "terra", "dplyr", "tidyverse", "tmap",
+  "ggplot2", "gstat", "spdep", "elevatr", "rnaturalearth"
+))
+```
+
+Load the core three at the top of any spatial script:
+
+```{r}
+library(sf)
+library(terra)
+library(dplyr)
+```
+
+The messages `sf` and `terra` print on loading name the versions of GDAL, GEOS and PROJ you are linked against. Note them: a projection or geometry result can occasionally differ between library versions.
+
+## Projects
+
+Before loading data, put your work in an RStudio Project, a folder with an `.Rproj` marker. It fixes two things that otherwise cause endless confusion: it sets the working directory to the project root, and it lets you refer to data with short relative paths like `data/scbi_stems.csv` instead of a full path tied to your machine. A tidy layout looks like:
+
+```
+training-rspatial/
+├── data/                 # input datasets
+├── 01-getting-started.qmd
+├── 02-vector-data.qmd
+└── training-rspatial.Rproj
+```
+
+With a project open, every path in this book that begins with `data/` resolves correctly.
+
+## The running dataset
+
+One dataset runs through the whole course: a mapped forest-dynamics plot, modelled on the Smithsonian ForestGEO plot at the Conservation Biology Institute in Front Royal, Virginia. Every stem in a 400 by 640 metre plot is stem-mapped, identified to species, and measured for diameter. It is an ideal teaching set because it is large, real in structure, and every tree carries a location.
+
+::: callout-note
+## About the data
+
+The stem list (species, diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the map is representative rather than a survey of record. Terrain, imagery and LiDAR layers in later chapters are simulated over the same footprint for a clean, always-runnable progression, and every synthetic layer says so where it is built.
+:::
+
+The stem table is an ordinary CSV, so base R reads it without any spatial machinery:
+
+```{r}
+stems <- read.csv("data/scbi_stems.csv")
+str(stems)
+```
+
+Two functions tell you almost everything about a new dataset. `summary()` shows the distribution of each column; a grouped `dplyr` summary reads the forest:
+
+```{r}
+summary(stems[, c("dbh", "gx", "gy")])
+
+stems |>
+  group_by(genus) |>
+  summarise(n = n(), mean_dbh = round(mean(dbh), 1)) |>
+  arrange(desc(n)) |>
+  head(8)
+```
+
+Diameters run from saplings at 1 cm to canopy trees near a metre, and a handful of genera dominate the stem count. That is the size and composition structure every biomass and carbon calculation later in the book will rest on.
+
+## Vector and raster
+
+Spatial data come in two great families, and knowing which you hold is the first decision in any analysis. Vector data represent discrete objects by their geometry: a tree is a point, a road a line, a stand boundary a polygon, each carrying attributes in a table. Raster data represent a continuous surface as a grid of equal cells, each holding one value: elevation, reflectance, canopy height. Our stems are vector; the elevation and imagery we bring in later are raster. Most real analysis moves between the two, and the middle chapters of this book are about doing that cleanly.
+
+## A first map
+
+The CSV knows nothing about geography yet: `lon` and `lat` are just numbers. `sf` turns them into geometry by naming the coordinate columns and the coordinate reference system, here WGS 84 longitude/latitude, whose EPSG code is 4326:
+
+```{r}
+stems_sf <- st_as_sf(stems, coords = c("lon", "lat"), crs = 4326)
+stems_sf
+```
+
+Notice what `sf` prints: the geometry type (`POINT`), the bounding box, the CRS (`Geodetic CRS: WGS 84`), and the attribute table with a `geometry` column on the end. An `sf` object is a data frame that also knows where each row sits on Earth. The plot layer also ships as a shapefile, read the same way with `st_read("data/scbi_stems.shp")`.
+
+Plotting one attribute draws a map coloured by that value. We map the larger stems to keep the picture legible:
+
+```{r}
+canopy <- stems_sf[stems_sf$dbh >= 20, ]
+plot(canopy["dbh"], pch = 19, cex = 0.5, main = "Stems ≥ 20 cm DBH")
+```
+
+There is the plot: canopy trees scattered across the footprint, shaded by diameter. From here the course is about doing this properly.
+
+## First checks
+
+The first thing to do on any real project is not analysis but a coordinate sanity check. A layer whose CRS is wrong, or missing, will silently misplace every downstream result, and the error is invisible on a plot that looks fine on its own axes. Two questions answer it: does the layer declare a CRS, and does it land where it should on Earth?
+
+```{r}
+st_crs(stems_sf)$epsg              # 4326: the layer knows its CRS
+st_bbox(stems_sf)                  # does the extent sit where you expect?
+```
+
+The bounding box should fall over Front Royal, Virginia (near 78.1° W, 38.9° N). If it landed in the Gulf of Guinea at (0, 0), the coordinates were never georeferenced. This is exactly the opening move of any mapping template: read the layer, confirm its CRS, confirm its extent, and only then begin. Every keystone project in this book starts here, because a defensible result begins with knowing your data are where they claim to be.
+
+## Exercises
+
+1. Read `scbi_stems.csv` and report the number of stems, the number of distinct genera, and the mean and maximum diameter. Which genus has the most stems?
+2. Convert the table to an `sf` object with `st_as_sf()`, then confirm its CRS with `st_crs()` and its extent with `st_bbox()`. In one sentence, why is checking the CRS the first thing you should do?
+3. Map the stems coloured by genus for the three most common genera only. Do they appear mixed or spatially segregated?
+4. Add a `basal_area` column (the cross-sectional area of each stem, `pi * (dbh/2)^2` in cm²) and report total basal area by genus. Which genus dominates the stand by basal area rather than by stem count?

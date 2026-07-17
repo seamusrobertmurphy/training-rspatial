@@ -1,0 +1,145 @@
+---
+title: "Raster Data"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## The raster model
+
+A raster represents a surface as a grid of equal cells, each holding one value. Where vector data draw discrete objects, rasters describe things that vary continuously across space, elevation, reflectance, temperature, canopy height, and the things we derive from imagery: land cover, disturbance, biomass. The data model is nothing more than a matrix plus the georeferencing that ties cell (1,1) to a place and fixes the cell size. `terra` is the modern package for it [@hijmans2024terra].
+
+We build a raster over the study plot by summarising the stems onto a grid. First project the stems and give each a basal area, then lay down a 10-metre grid and total the basal area falling in each cell:
+
+```{r}
+library(terra)
+library(sf)
+
+stems_sf <- st_as_sf(read.csv("data/scbi_stems.csv"),
+                     coords = c("lon", "lat"), crs = 4326) |>
+  st_transform(32617)
+stems_sf$ba <- pi * (stems_sf$dbh / 2)^2 / 1e4     # basal area, m² per stem
+
+stems <- vect(stems_sf)
+r  <- rast(ext(stems), resolution = 10, crs = "EPSG:32617")
+ba <- rasterize(stems, r, field = "ba", fun = sum, background = 0)
+names(ba) <- "basal_area"
+ba
+```
+
+The printout is the raster data model made concrete: rows and columns, cell size, extent, CRS, and the value range. Each 10-metre cell now holds the total stem basal area within it, a crude but genuine biomass proxy.
+
+## Inspecting rasters
+
+The same handful of accessors describe any raster:
+
+```{r}
+res(ba)                                        # cell size, metres
+ext(ba)                                        # bounding box
+global(ba, c("min", "max", "mean"))            # value range
+plot(ba, main = "Basal area per 10 m cell (m²)")
+```
+
+## Raster algebra
+
+Because a raster is a grid of numbers, arithmetic on rasters is arithmetic on cells. This is map algebra, and it is why continuous surfaces are so easy to work with. Converting basal area to an aboveground-carbon proxy is one expression applied to every cell at once:
+
+```{r}
+carbon <- ba * 12          # illustrative MgC per cell from basal area
+names(carbon) <- "carbon"
+```
+
+Logical operators work the same way and return a mask of ones and zeros. A "stocked" mask, cells carrying any measurable basal area, is a single comparison:
+
+```{r}
+stocked <- ba > 0.05
+plot(stocked, main = "Stocked cells")
+```
+
+## Reclassification
+
+Turning a continuous surface into a small number of classes is reclassification, the operation behind every land-cover and zonation map. `classify()` takes a matrix of from–to–becomes rows and cuts the surface at the thresholds:
+
+```{r}
+rcl <- matrix(c(-Inf, 0.05, 1,     # sparse
+                0.05, 0.30, 2,     # moderate
+                0.30, Inf, 3),     # dense
+              ncol = 3, byrow = TRUE)
+zones <- classify(ba, rcl)
+levels(zones) <- data.frame(id = 1:3, class = c("sparse", "moderate", "dense"))
+plot(zones, main = "Stocking classes")
+```
+
+## Extraction
+
+The bridge from raster back to field data is extraction: reading the raster value at each point location. `terra::extract()` samples the surface wherever a plot, a tree, or a sample sits, which is how gridded covariates enter a plot-level model:
+
+```{r}
+pts <- spatSample(as.polygons(ext(ba), crs = crs(ba)), 5, method = "random")
+extract(ba, pts)
+```
+
+Extraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.
+
+## Keystone: land-cover reclassification
+
+Remote-sensing verification turns imagery into a land-use / land-cover (LULC) map and then reasons about it: how much forest, how much converted, how the classes change through time. The Bolivia national land-cover work does this at country scale; the mechanics are the reclassification and area accounting shown here, which we later carry into the uncertainty chapter to attach a confidence interval to each class area.
+
+We stand in for a spectral index with a smooth synthetic surface over the plot, classify it into cover types by threshold, then reclassify to the forest / non-forest split that most carbon accounting turns on:
+
+```{r}
+set.seed(1)
+xy  <- xyFromCell(r, 1:ncell(r))
+val <- 0.55 + 0.30 * sin(xy[, 1] / 120) + 0.20 * cos(xy[, 2] / 160) +
+       rnorm(ncell(r), 0, 0.05)
+ndvi <- setValues(r, pmin(pmax(val, -0.1, na.rm = TRUE), 0.95))
+names(ndvi) <- "ndvi"
+
+# thresholds -> cover classes
+lulc <- classify(ndvi, matrix(c(-Inf, 0.2, 1,     # water/bare
+                                 0.2, 0.5, 2,      # grass/shrub
+                                 0.5, Inf, 3),     # forest
+                              ncol = 3, byrow = TRUE))
+levels(lulc) <- data.frame(id = 1:3,
+                           cover = c("water/bare", "grass/shrub", "forest"))
+plot(lulc, main = "Land cover from a spectral index")
+```
+
+The class areas are the deliverable. `freq()` counts cells per class, and multiplying by the cell area gives hectares:
+
+```{r}
+cell_ha <- prod(res(lulc)) / 1e4
+f <- freq(lulc)
+f$area_ha <- round(f$count * cell_ha, 2)
+f[, c("value", "count", "area_ha")]
+```
+
+Reclassifying the three classes into a forest mask, the exact step behind a forest-area or deforestation figure, is one more `classify()`:
+
+```{r}
+forest <- classify(lulc, matrix(c(1, 0, 2, 0, 3, 1), ncol = 2, byrow = TRUE))
+forest_ha <- global(forest, "sum", na.rm = TRUE)[1, 1] * cell_ha
+round(forest_ha, 1)                             # hectares of forest
+```
+
+That single number, forest area, is what a project claims and an auditor recomputes. Chapter 7 returns to it to ask how *certain* the number is, because a class area is only as good as the map's accuracy.
+
+## Exercises
+
+1. Build the basal-area raster at 20-metre resolution instead of 10. How do the mean cell value and the number of cells change, and why does total basal area stay the same?
+2. Reclassify the basal-area surface into four stocking classes and report the area in hectares of each. Which class covers the most ground?
+3. Extract the basal-area value at the location of every stem with `extract()`. Why is the extracted value not the same as the stem's own basal area?
+4. *(Applied.)* Change the forest threshold on the synthetic index from 0.5 to 0.45 and recompute forest area. By how many hectares does the estimate move, and what does that sensitivity imply for defining a class boundary in a real LULC map?
