@@ -1,6 +1,11 @@
 # History files
 .Rhistory
 .Rapp.history
+.Rproj.user
+.RData
+.Ruserdata
+.Rprofile
+.Rproj
 
 # Session Data files
 .RData
@@ -54,3 +59,14 @@ rsconnect/
 # macOS
 .DS_Store
 ._*
+
+CLAUDE.md
+INDEX.md
+SPEC.md
+_quarto_book.yml.disabled
+_staging/
+_site/
+_backups/
+.claude/
+.claudeprism/
+tasks/
