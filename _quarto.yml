@@ -1,5 +1,11 @@
 project:
   type: book
+  resources:
+    # Standalone training deliverables. Listed here so every render copies them
+    # into _book and `quarto publish` keeps them at their original URLs instead
+    # of wiping them from the branch.
+    - TUVSUD_Training_R-Spatial-for-Forest-Carbon-Verifier_07172026.pdf
+    - TUVSUD_Training_R-Spatial-for-Forest-Carbon-Verifier_07172026.docx
 
 book:
   title: "Spatial Analysis in R for Forest Carbon Verification"
