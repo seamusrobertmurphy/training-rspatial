@@ -2,10 +2,10 @@ project:
   type: book
 
 book:
-  title: "Spatial Data Analysis in R for Forest Carbon"
-  subtitle: "A Practical GIS and Remote Sensing Course for Forest, Carbon, and Agriculture Auditors"
+  title: "Spatial Analysis in R for Forest Carbon Verification"
+  subtitle: "A Practical Training in GIS"
   author:
-    - name: Dr Seamus Murphy
+    - name: Murphy, S
       url: https://scholar.google.com/citations?hl=en&user=jDGq9I4AAAAJ
       orcid: 0000-0002-1792-0351
       email: seamusrobertmurphy@gmail.com

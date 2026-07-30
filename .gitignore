@@ -56,9 +56,22 @@ rsconnect/
 /_freeze/
 *_files/
 
-# macOS
+# macOS. The AppleDouble sidecars appear because this repo lives on an exFAT
+# volume, which has no native support for extended attributes. Sweep them with
+# `dot_clean -m .` before committing.
 .DS_Store
 ._*
+.AppleDouble
+.AppleDB
+.AppleDesktop
+.LSOverride
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
 
 CLAUDE.md
 INDEX.md
