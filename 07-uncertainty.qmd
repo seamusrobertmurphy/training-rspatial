@@ -62,6 +62,144 @@ round(c(mean = m, se = se, lower = ci[1], upper = ci[2]), 1)
 
 The half-width relative to the mean is the number the standards care about: the wider it is, the deeper the deduction.
 
+## Measuring error
+
+Sampling error assumed the per-tree biomass was right and asked only how well the plot represents the stand. The other half of the problem is the model itself, and to quantify that you need trees whose biomass was actually measured rather than predicted. The `tree_measurements` file holds 6,681 harvested trees across six coastal species, each with diameter, height and observed aboveground biomass, so predictions can be checked against truth.
+
+No single number describes an error well, and the common metrics answer genuinely different questions. Written on the residual $e_i = \hat{y}_i - y_i$:
+
+$$\text{bias} = \frac{1}{n}\sum e_i \qquad \text{MAE} = \frac{1}{n}\sum |e_i| \qquad \text{MSE} = \frac{1}{n}\sum e_i^2 \qquad \text{RMSE} = \sqrt{\text{MSE}}$$
+
+$$\text{MAPE} = \frac{100}{n}\sum \left|\frac{e_i}{y_i}\right| \qquad R^2 = 1 - \frac{\sum e_i^2}{\sum (y_i - \bar{y})^2}$$
+
+Bias is signed and measures systematic error: it can be near zero while every individual prediction is badly wrong, because overestimates cancel underestimates. MAE is the typical error magnitude in the units of the data. MSE squares the residuals, so it is dominated by the largest ones, and RMSE is its square root, returned to the original units and therefore directly readable. Whether you prefer MAE or RMSE is a statement about how much you care about occasional large errors relative to many small ones, and in biomass work you should care a great deal, because a handful of large trees carry most of the carbon. Relative RMSE, the RMSE as a percentage of the observed mean, is what makes results comparable across species and datasets, and it is the quantity the crediting standards consume.
+
+Two definitions of $R^2$ circulate. The one above, one minus the residual sum of squares over the total, is the proportion of variance explained and can go negative for a bad model. The alternative, the squared correlation between observed and predicted, cannot go negative and will flatter a model with a systematic offset. This book uses the first throughout.
+
+```{r}
+tm <- read.csv("data/tree_measurements.csv")
+
+metrics <- function(obs, prd) {
+  e <- prd - obs
+  c(bias     = mean(e),
+    rel_bias = 100 * mean(e) / mean(obs),
+    mae      = mean(abs(e)),
+    rmse     = sqrt(mean(e^2)),
+    rel_rmse = 100 * sqrt(mean(e^2)) / mean(obs),
+    mape     = 100 * mean(abs(e / obs)),
+    r2       = 1 - sum(e^2) / sum((obs - mean(obs))^2))
+}
+```
+
+Fit the standard log-log allometry. Fitting on logs stabilises the variance, but exponentiating the prediction returns the median rather than the mean and biases the result low, so the fit carries the Baskerville correction factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972]:
+
+```{r}
+fit <- lm(log(agb_kg) ~ log(dbh_cm), data = tm)
+cf  <- exp(sigma(fit)^2 / 2)                     # Baskerville correction
+pred <- exp(predict(fit, tm)) * cf
+
+round(metrics(tm$agb_kg, pred), 3)
+round(metrics(tm$agb_kg, exp(predict(fit, tm))), 3)   # uncorrected
+```
+
+The correction moves the relative bias from about $-0.5$ per cent to $+0.3$ per cent. That is small here and much larger in datasets with more residual scatter, and it is free, so there is no reason to omit it.
+
+Now the reason to compute more than one metric. Split the same predictions by diameter class:
+
+```{r}
+tm$cls <- cut(tm$dbh_cm, c(0, 20, 40, Inf), labels = c("<20", "20-40", ">40"))
+round(t(sapply(split(seq_len(nrow(tm)), tm$cls),
+               function(i) metrics(tm$agb_kg[i], pred[i]))), 2)
+```
+
+MAPE is almost flat across the three classes, near ten per cent everywhere, while RMSE climbs from about 23 kg to over 400. Both are correct. The model is proportionally about as good on a large tree as on a small one, and in absolute terms it is eighteen times worse, which is what matters when those large trees hold most of the stand's carbon. A report quoting only the percentage error conceals where the tonnes actually go.
+
+MAPE carries a specific hazard worth stating plainly: it divides by the observation, so it explodes as $y_i$ approaches zero and is undefined at zero. It is safe here because every harvested tree has substantial biomass. Applied to a variable that legitimately reaches zero, such as annual forest loss in a quiet year, it is meaningless, and that is the usual reason it is absent from carbon work.
+
+Finally, the single most effective way to reduce model error is usually not a cleverer equation but a narrower one:
+
+```{r}
+pred_sp <- numeric(nrow(tm))
+for (s in unique(tm$species)) {
+  i <- tm$species == s
+  m <- lm(log(agb_kg) ~ log(dbh_cm), data = tm[i, ])
+  pred_sp[i] <- exp(predict(m, tm[i, ])) * exp(sigma(m)^2 / 2)
+}
+round(metrics(tm$agb_kg, pred_sp), 3)
+```
+
+Fitting one equation per species halves the relative RMSE, from about 22 per cent to about 11. Under the crediting arithmetic below, that difference is worth real money, and it required no new field data, only refusing to pool species that scale differently.
+
+## Cross-validation
+
+Every number in the previous section is optimistic, because the model was scored on the same trees that determined its coefficients. Out-of-sample error is what a prediction on a new tree will actually cost, and cross-validation estimates it by repeatedly holding data back [@hastie2009esl].
+
+The standard device is $k$-fold: split the data into $k$ parts, fit on $k-1$ and predict the one held out, rotating until every observation has been predicted by a model that never saw it.
+
+```{r}
+set.seed(1)
+k <- 10
+fold <- sample(rep(1:k, length.out = nrow(tm)))
+p_cv <- numeric(nrow(tm))
+for (i in 1:k) {
+  m <- lm(log(agb_kg) ~ log(dbh_cm), data = tm[fold != i, ])
+  p_cv[fold == i] <- exp(predict(m, tm[fold == i, ])) * exp(sigma(m)^2 / 2)
+}
+round(metrics(tm$agb_kg, p_cv), 3)
+round(metrics(tm$agb_kg, pred)["rmse"] / metrics(tm$agb_kg, p_cv)["rmse"], 4)
+```
+
+The cross-validated error is essentially identical to the in-sample error, a ratio of 0.995. This is the honest result and it is worth dwelling on, because the reflex that cross-validation always exposes a worse number is wrong. Two parameters fitted to 6,681 observations cannot overfit; there is nothing to discover. Optimism is a function of model flexibility relative to sample size, not a tax on having been evaluated.
+
+Where it does bite is where forest data usually sits: a small sample and a model free enough to chase it. Take twenty-five trees and fit polynomials of rising degree, scoring each both in-sample and by leave-one-out:
+
+```{r}
+set.seed(7)
+s <- tm[sample(nrow(tm), 25), ]
+rmse <- function(a, b) sqrt(mean((a - b)^2))
+
+cv_poly <- t(sapply(1:8, function(d) {
+  f   <- lm(log(agb_kg) ~ poly(log(dbh_cm), d), data = s)
+  loo <- sapply(seq_len(nrow(s)), function(i) {
+    m <- lm(log(agb_kg) ~ poly(log(dbh_cm), d), data = s[-i, ])
+    exp(predict(m, s[i, ]))
+  })
+  c(degree = d, in_sample = rmse(s$agb_kg, exp(fitted(f))),
+    loocv = rmse(s$agb_kg, loo))
+}))
+round(cv_poly, 1)
+```
+
+The two columns move in opposite directions. In-sample RMSE falls as the curve bends to meet the points; leave-one-out RMSE rises, and by degree eight it is more than three times the honest error of a straight line. Chosen on fit alone, the worst model looks the best. This is the entire argument for validating out of sample, and it is why the straight log-log line has survived a century of allometry.
+
+Which regime to use is a real choice. Leave-one-out fits $n$ models, is nearly unbiased, but has high variance and costs $n$ fits, which is fine at 25 trees and absurd at 6,681. Ten-fold costs ten fits and trades a little bias for much lower variance, and is the usual default. Monte Carlo cross-validation, also called repeated leave-group-out, draws a fresh random split many times, which decouples the number of repetitions from the sample size and, because every repetition gives a complete error estimate, yields a distribution rather than a point. For biomass work the split should be stratified by size class, so that a random draw cannot under-represent the large trees that dominate the total:
+
+```{r}
+set.seed(8787)
+mc <- t(replicate(100, {
+  tr <- unlist(lapply(split(seq_len(nrow(tm)), tm$cls),
+                      function(i) sample(i, round(0.8 * length(i)))))
+  m  <- lm(log(agb_kg) ~ log(dbh_cm), data = tm[tr, ])
+  te <- setdiff(seq_len(nrow(tm)), tr)
+  metrics(tm$agb_kg[te], exp(predict(m, tm[te, ])) * exp(sigma(m)^2 / 2))
+}))
+round(rbind(mean = colMeans(mc), sd = apply(mc, 2, sd)), 3)
+round(quantile(mc[, "rel_rmse"], c(0.025, 0.975)), 2)
+```
+
+The mean relative RMSE agrees with the ten-fold figure, but the spread across repetitions is the extra information: the estimate is itself uncertain, and quoting it to three significant figures from a single split would overstate what is known. That distribution is the honest input to a deduction, and it is what the standards are asking for when they require an uncertainty estimate rather than a residual statistic.
+
+```{r}
+art_deduction <- function(rel_rmse_pct) {
+  100 * 0.524417 * (rel_rmse_pct / 100) / 1.645006
+}
+round(c(in_sample = art_deduction(metrics(tm$agb_kg, pred)["rel_rmse"]),
+        cross_val = art_deduction(mean(mc[, "rel_rmse"])),
+        species   = art_deduction(metrics(tm$agb_kg, pred_sp)["rel_rmse"])), 2)
+```
+
+The deduction is roughly proportional to the relative RMSE, so halving the error by fitting per species roughly halves the credits forgone. That is the loop this chapter has been building: a metric, estimated honestly out of sample, converted into a quantity of carbon that the project does not get paid for.
+
 ## Monte Carlo propagation
 
 Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl].
