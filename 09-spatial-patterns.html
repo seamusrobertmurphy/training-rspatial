@@ -146,6 +146,7 @@ window.Quarto = {
 </script>
 <meta property="og:title" content="9&nbsp; Spatial Patterns – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
+<meta property="og:image" content="09-spatial-patterns_files/figure-html/unnamed-chunk-2-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
 </head>
 <body class="nav-sidebar docked quarto-light">
@@ -303,40 +304,40 @@ window.Quarto = {
 <p>The running example here is a real regeneration survey: conifer seedlings mapped after the 2015 Mt Midgeley wildfire in the Darkwoods Conservation Area of the southern Selkirk Mountains, British Columbia <span class="citation" data-cites="murphy2026selkirk">(<a href="references/index.html#ref-murphy2026selkirk" role="doc-biblioref">Murphy et al., 2026</a>)</span>. We load the seedlings and build a <code>ppp</code> from one four-hectare plot, its bounding box serving as the window:</p>
 <div class="cell">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://spatstat.org/">spatstat</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `library()`:</span></span>
-<span><span class="co">#&gt; ! there is no package called 'spatstat'</span></span>
 <span></span>
 <span><span class="va">seed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="st">"data/darkwoods_seedlings.csv"</span><span class="op">)</span></span>
 <span><span class="va">p3</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span><span class="va">seed</span>, <span class="va">plot</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">win</span>  <span class="op">&lt;-</span> <span class="fu">owin</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `owin()`:</span></span>
-<span><span class="co">#&gt; ! could not find function "owin"</span></span>
-<span><span class="va">pp</span>   <span class="op">&lt;-</span> <span class="fu">ppp</span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">x</span>, <span class="va">p3</span><span class="op">$</span><span class="va">y</span>, window <span class="op">=</span> <span class="va">win</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `ppp()`:</span></span>
-<span><span class="co">#&gt; ! could not find function "ppp"</span></span>
+<span><span class="va">win</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.geom/man/owin.html">owin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.geom/man/ppp.html">ppp</a></span><span class="op">(</span><span class="va">p3</span><span class="op">$</span><span class="va">x</span>, <span class="va">p3</span><span class="op">$</span><span class="va">y</span>, window <span class="op">=</span> <span class="va">win</span><span class="op">)</span></span>
 <span><span class="va">pp</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'pp' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; Planar point pattern: 1607 points</span></span>
+<span><span class="co">#&gt; window: rectangle = [524164.7, 524362.6] x [5446884, 5447083] units</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The printout reports the number of points and the window: a little over 1,600 seedlings in a 200 by 200 metre plot. That is the pattern whose structure we now interrogate.</p>
 </section><section id="spatial-randomness" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="spatial-randomness">
 <span class="header-section-number">9.2</span> Spatial randomness</h2>
 <p>The reference against which every pattern is judged is complete spatial randomness (CSR): points falling independently and with equal probability everywhere, a homogeneous Poisson process. Real patterns depart from CSR in one of two directions, toward regularity, where points avoid each other as in a planted stand, or toward clustering, where points attract as in natural regeneration around surviving seed trees. The whole toolkit exists to measure that departure and test whether it is real. A plot of the seedlings already suggests the answer:</p>
 <div class="cell">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">pp</span>, main <span class="op">=</span> <span class="st">"Mapped conifer seedlings, plot 3"</span>, pch <span class="op">=</span> <span class="fl">20</span>, cex <span class="op">=</span> <span class="fl">0.3</span>, cols <span class="op">=</span> <span class="st">"forestgreen"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'pp' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">pp</span>, main <span class="op">=</span> <span class="st">"Mapped conifer seedlings, plot 3"</span>, pch <span class="op">=</span> <span class="fl">20</span>, cex <span class="op">=</span> <span class="fl">0.3</span>, cols <span class="op">=</span> <span class="st">"forestgreen"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="09-spatial-patterns_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="intensity" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="intensity">
 <span class="header-section-number">9.3</span> Intensity</h2>
 <p>The intensity is the first-order property: the expected number of points per unit area, and how it varies across the window. A kernel density estimate smooths the points into a continuous intensity surface, the point-pattern analogue of a heat map, revealing where regeneration concentrated:</p>
 <div class="cell">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/density.html">density</a></span><span class="op">(</span><span class="va">pp</span>, sigma <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"Seedling intensity (points/m²)"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'pp' not found</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html">points</a></span><span class="op">(</span><span class="va">pp</span>, pch <span class="op">=</span> <span class="fl">20</span>, cex <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'pp' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html">points</a></span><span class="op">(</span><span class="va">pp</span>, pch <span class="op">=</span> <span class="fl">20</span>, cex <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="09-spatial-patterns_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 <p>Regeneration is patchy, not uniform: dense pockets sit near surviving seed sources and gentler, wetter ground, while other areas stay bare. That spatial unevenness is the signal, and explaining it is what the disturbance and terrain covariates in the study were for.</p>
 </section><section id="nearest-neighbour" class="level2" data-number="9.4"><h2 data-number="9.4" class="anchored" data-anchor-id="nearest-neighbour">
@@ -344,26 +345,27 @@ window.Quarto = {
 <p>Whether points cluster or repel is the second-order property, about the interaction between them. The most direct diagnostic is the nearest-neighbour distance: how far, on average, each seedling sits from its closest neighbour, compared with what CSR predicts. Under CSR the expected mean nearest-neighbour distance is <span class="math inline">\(1/(2\sqrt{\lambda})\)</span>, so the ratio of observed to expected is the Clark–Evans index: below one means clustered, above one means regular.</p>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ce_ratio</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu">ppp</span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">x</span>, <span class="va">df</span><span class="op">$</span><span class="va">y</span>, window <span class="op">=</span> <span class="va">win</span><span class="op">)</span></span>
-<span>  <span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="fu">nndist</span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">expected</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu">intensity</span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.geom/man/ppp.html">ppp</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">x</span>, <span class="va">df</span><span class="op">$</span><span class="va">y</span>, window <span class="op">=</span> <span class="va">win</span><span class="op">)</span></span>
+<span>  <span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/spatstat.geom/man/nndist.html">nndist</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">expected</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/spatstat.geom/man/intensity.html">intensity</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">obs</span> <span class="op">/</span> <span class="va">expected</span></span>
 <span><span class="op">}</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu">ce_ratio</span><span class="op">(</span><span class="va">p3</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>          <span class="co"># &lt; 1 indicates clustering</span></span>
-<span><span class="co">#&gt; Error in `ppp()`:</span></span>
-<span><span class="co">#&gt; ! could not find function "ppp"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.821</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The ratio sits well below one: seedlings are closer to one another than randomness would allow, the quantitative signature of clustered regeneration.</p>
 </section><section id="ripleys-k" class="level2" data-number="9.5"><h2 data-number="9.5" class="anchored" data-anchor-id="ripleys-k">
 <span class="header-section-number">9.5</span> Ripley’s K</h2>
 <p>A single number cannot capture how clustering changes with scale, points may cluster tightly at short range yet disperse at long range. Ripley’s K function describes the pattern across all distances at once, counting on average how many other points lie within a growing radius of each point, against the CSR expectation. Plotting the observed K with a simulation envelope is the standard test:</p>
 <div class="cell">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">K</span> <span class="op">&lt;-</span> <span class="fu">envelope</span><span class="op">(</span><span class="va">pp</span>, <span class="va">Kest</span>, nsim <span class="op">=</span> <span class="fl">19</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `envelope()`:</span></span>
-<span><span class="co">#&gt; ! could not find function "envelope"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">K</span>, main <span class="op">=</span> <span class="st">"Ripley's K with CSR envelope"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'K' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">K</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.explore/man/envelope.html">envelope</a></span><span class="op">(</span><span class="va">pp</span>, <span class="va">Kest</span>, nsim <span class="op">=</span> <span class="fl">19</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">K</span>, main <span class="op">=</span> <span class="st">"Ripley's K with CSR envelope"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="09-spatial-patterns_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 <p>Where the observed curve rises above the envelope the pattern is more clustered than random at that distance; below it, more regular. The seedlings sit above the envelope across the mapped range, confirming clustering is real and not an artefact of a few tight groups, and the scale-explicit view is why K, and its variance-stabilised form the L function, is the workhorse of the field.</p>
 </section><section id="keystone-seedlings" class="level2" data-number="9.6"><h2 data-number="9.6" class="anchored" data-anchor-id="keystone-seedlings">
@@ -376,8 +378,8 @@ window.Quarto = {
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">20</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="cn">NA</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu">ce_ratio</span><span class="op">(</span><span class="va">q</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `ppp()`:</span></span>
-<span><span class="co">#&gt; ! could not find function "ppp"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; Pinus_contorta          Larix          Picea    Pseudotsuga </span></span>
+<span><span class="co">#&gt;          0.859          0.881          0.973          0.934</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Every species returns a ratio below one. The paper then models the intensity surface against the disturbance and terrain covariates with inhomogeneous Cox process models, showing that areas of overlapping beetle mortality and high-severity fire had significantly reduced pine regeneration. That covariate model is the natural next step beyond this book: the foundations here, CSR, intensity, nearest-neighbour, Ripley’s K, are what it is built on, and an auditor who understands them can read and challenge such a result.</p>
 </section><section id="exercises" class="level2" data-number="9.7"><h2 data-number="9.7" class="anchored" data-anchor-id="exercises">

@@ -146,6 +146,7 @@ window.Quarto = {
 </script>
 <meta property="og:title" content="8&nbsp; Time Series – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
+<meta property="og:image" content="08-time-series_files/figure-html/unnamed-chunk-2-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
 </head>
 <body class="nav-sidebar docked quarto-light">
@@ -307,45 +308,34 @@ window.Quarto = {
 <span>                  coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html">st_transform</a></span><span class="op">(</span><span class="fl">32617</span><span class="op">)</span></span>
 <span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html">vect</a></span><span class="op">(</span><span class="va">stems</span><span class="op">)</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span>, crs <span class="op">=</span> <span class="st">"EPSG:32617"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! [rast] empty srs</span></span>
 <span></span>
 <span><span class="va">years</span> <span class="op">&lt;-</span> <span class="fl">2016</span><span class="op">:</span><span class="fl">2024</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">xy</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/xyCellFrom.html">xyFromCell</a></span><span class="op">(</span><span class="va">r</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'r' not found</span></span>
 <span><span class="va">burn</span> <span class="op">&lt;-</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">747100</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">747250</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">4306150</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">4306300</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'xy' not found</span></span>
 <span></span>
 <span><span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_along</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">v</span> <span class="op">&lt;-</span> <span class="fl">0.80</span> <span class="op">-</span> <span class="fl">0.008</span> <span class="op">*</span> <span class="op">(</span><span class="va">k</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0.015</span><span class="op">)</span>   <span class="co"># gentle decline</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="va">years</span><span class="op">[</span><span class="va">k</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">2021</span><span class="op">)</span> <span class="va">v</span><span class="op">[</span><span class="va">burn</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0.20</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">burn</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0.02</span><span class="op">)</span>  <span class="co"># fire + no recovery</span></span>
 <span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html">setValues</a></span><span class="op">(</span><span class="va">r</span>, <span class="va">v</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'rast': error in evaluating the argument 'x' in selecting a method for function 'ncell': object 'r' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">cube</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"y"</span>, <span class="va">years</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'cube' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">nlyr</a></span><span class="op">(</span><span class="va">cube</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'nlyr': object 'cube' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="temporal-reduction" class="level2" data-number="8.2"><h2 data-number="8.2" class="anchored" data-anchor-id="temporal-reduction">
 <span class="header-section-number">8.2</span> Temporal reduction</h2>
 <p>A cube is reduced along time the way a single raster is summarised along space. <code><a href="https://rspatial.github.io/terra/reference/app.html">app()</a></code> applies a function to each pixel’s time series. The mean over years is the baseline surface; the standard deviation flags where the record is unstable:</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mean_ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/app.html">app</a></span><span class="op">(</span><span class="va">cube</span>, <span class="va">mean</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found</span></span>
 <span><span class="va">sd_ndvi</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/app.html">app</a></span><span class="op">(</span><span class="va">cube</span>, <span class="va">sd</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">mean_ndvi</span>, <span class="va">sd_ndvi</span><span class="op">)</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Mean index"</span>, <span class="st">"Temporal SD"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'mean_ndvi' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">mean_ndvi</span>, <span class="va">sd_ndvi</span><span class="op">)</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Mean index"</span>, <span class="st">"Temporal SD"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="08-time-series_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 <p>High temporal SD is the signature of disturbance: stable forest barely varies year to year, so the burned block lights up.</p>
 </section><section id="trends" class="level2" data-number="8.3"><h2 data-number="8.3" class="anchored" data-anchor-id="trends">
@@ -356,14 +346,14 @@ window.Quarto = {
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="cn">NA</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">v</span> <span class="op">~</span> <span class="va">years</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'app': object 'cube' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">slope</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"trend_per_year"</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'slope' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">slope</span>, main <span class="op">=</span> <span class="st">"Per-pixel trend (index / year)"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'slope' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">slope</span>, main <span class="op">=</span> <span class="st">"Per-pixel trend (index / year)"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="08-time-series_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 <p>Strong negative slopes mark sustained loss. This is the engine of trend-based monitoring: a whole landscape of time series reduced to one map of who is gaining and who is losing.</p>
 </section><section id="detecting-the-event" class="level2" data-number="8.4"><h2 data-number="8.4" class="anchored" data-anchor-id="detecting-the-event">
@@ -371,20 +361,11 @@ window.Quarto = {
 <p>A trend says a pixel declined; monitoring needs to know <em>when</em>. Differencing consecutive years isolates the step. The fire year is the layer where the largest drop occurs, and thresholding the year-on-year change delineates the burned area:</p>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d2021</span> <span class="op">&lt;-</span> <span class="va">cube</span><span class="op">[[</span><span class="st">"y2021"</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">cube</span><span class="op">[[</span><span class="st">"y2020"</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'cube' not found</span></span>
 <span><span class="va">burned</span> <span class="op">&lt;-</span> <span class="va">d2021</span> <span class="op">&lt;</span> <span class="op">-</span><span class="fl">0.3</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'd2021' not found</span></span>
 <span><span class="va">cell_ha</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/prod.html">prod</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">res</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1e4</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'r' not found</span></span>
 <span><span class="va">burned_ha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html">global</a></span><span class="op">(</span><span class="va">burned</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="va">cell_ha</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'burned' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">burned_ha</span>, <span class="fl">2</span><span class="op">)</span>                                <span class="co"># hectares burned in 2021</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'burned_ha' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="keystone-ipcc-tier-1-fire-emissions" class="level2" data-number="8.5"><h2 data-number="8.5" class="anchored" data-anchor-id="keystone-ipcc-tier-1-fire-emissions">
 <span class="header-section-number">8.5</span> Keystone: IPCC Tier 1 fire emissions</h2>
@@ -393,18 +374,14 @@ window.Quarto = {
 <p>where <span class="math inline">\(A\)</span> is burned area, <span class="math inline">\(M_B\)</span> the fuel biomass available, <span class="math inline">\(C_f\)</span> the combustion factor, and <span class="math inline">\(G_{ef}\)</span> the emission factor for the gas. With the burned area from the cube and IPCC default factors for temperate forest:</p>
 <div class="cell">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">A</span>   <span class="op">&lt;-</span> <span class="va">burned_ha</span>        <span class="co"># ha, from the time-series detection</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'burned_ha' not found</span></span>
 <span><span class="va">MB</span>  <span class="op">&lt;-</span> <span class="fl">120</span>              <span class="co"># tonnes dry matter per ha (fuel load)</span></span>
 <span><span class="va">Cf</span>  <span class="op">&lt;-</span> <span class="fl">0.45</span>             <span class="co"># combustion factor (fraction consumed)</span></span>
 <span><span class="va">Gef</span> <span class="op">&lt;-</span> <span class="fl">1569</span>             <span class="co"># g CO2 per kg dry matter (IPCC default)</span></span>
 <span></span>
 <span><span class="va">CO2_tonnes</span> <span class="op">&lt;-</span> <span class="va">A</span> <span class="op">*</span> <span class="va">MB</span> <span class="op">*</span> <span class="va">Cf</span> <span class="op">*</span> <span class="va">Gef</span> <span class="op">*</span> <span class="fl">1e-3</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'A' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>burned_ha <span class="op">=</span> <span class="va">A</span>, CO2_tonnes <span class="op">=</span> <span class="va">CO2_tonnes</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'A' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  burned_ha CO2_tonnes </span></span>
+<span><span class="co">#&gt;          0          0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>That single number, tonnes of CO2 from the fire, is the end of the pipeline this course has built toward: geospatial data, cleaned and projected in the early chapters, turned into a detected, measured, and quantified emission with every step reproducible. In a real inventory each factor carries its own uncertainty, so the honest final move is to wrap this equation in the Monte Carlo of the previous chapter and report the emission with a confidence interval. The methods are all now in hand.</p>
 <div class="cell">
@@ -415,11 +392,9 @@ window.Quarto = {
 <span>  <span class="va">gef</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1569</span>, <span class="fl">100</span><span class="op">)</span></span>
 <span>  <span class="va">A</span> <span class="op">*</span> <span class="va">mb</span> <span class="op">*</span> <span class="va">cf</span> <span class="op">*</span> <span class="va">gef</span> <span class="op">*</span> <span class="fl">1e-3</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `FUN()`:</span></span>
-<span><span class="co">#&gt; ! object 'A' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/quantile.html">quantile</a></span><span class="op">(</span><span class="va">sim</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span>      <span class="co"># CO2 tonnes: lower, median, upper</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'quantile': object 'sim' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  2.5%   50% 97.5% </span></span>
+<span><span class="co">#&gt;     0     0     0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section><section id="exercises" class="level2" data-number="8.6"><h2 data-number="8.6" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">8.6</span> Exercises</h2>

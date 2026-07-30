@@ -121,6 +121,7 @@ div.csl-indent {
 }</script>
 <meta property="og:title" content="3&nbsp; Raster Data – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
+<meta property="og:image" content="03-raster-data_files/figure-html/unnamed-chunk-2-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
 </head>
 <body class="nav-sidebar docked quarto-light">
@@ -287,17 +288,18 @@ div.csl-indent {
 <span></span>
 <span><span class="va">stems</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html">vect</a></span><span class="op">(</span><span class="va">stems_sf</span><span class="op">)</span></span>
 <span><span class="va">r</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="va">stems</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span>, crs <span class="op">=</span> <span class="st">"EPSG:32617"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! [rast] empty srs</span></span>
 <span><span class="va">ba</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rasterize.html">rasterize</a></span><span class="op">(</span><span class="va">stems</span>, <span class="va">r</span>, field <span class="op">=</span> <span class="st">"ba"</span>, fun <span class="op">=</span> <span class="va">sum</span>, background <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'y' in selecting a method for function 'rasterize': object 'r' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"basal_area"</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'ba' not found</span></span>
 <span><span class="va">ba</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'ba' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; class       : SpatRaster </span></span>
+<span><span class="co">#&gt; size        : 64, 42, 1  (nrow, ncol, nlyr)</span></span>
+<span><span class="co">#&gt; resolution  : 9.934985, 10.07471  (x, y)</span></span>
+<span><span class="co">#&gt; extent      : 747559.3, 747976.6, 4308835, 4309480  (xmin, xmax, ymin, ymax)</span></span>
+<span><span class="co">#&gt; coord. ref. : WGS 84 / UTM zone 17N (EPSG:32617) </span></span>
+<span><span class="co">#&gt; source(s)   : memory</span></span>
+<span><span class="co">#&gt; name        : basal_area </span></span>
+<span><span class="co">#&gt; min value   :  0.0000000 </span></span>
+<span><span class="co">#&gt; max value   :  0.6649935</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The printout is the raster data model made concrete: rows and columns, cell size, extent, CRS, and the value range. Each 10-metre cell now holds the total stem basal area within it, a crude but genuine biomass proxy.</p>
 </section><section id="inspecting-rasters" class="level2" data-number="3.2"><h2 data-number="3.2" class="anchored" data-anchor-id="inspecting-rasters">
@@ -305,37 +307,37 @@ div.csl-indent {
 <p>The same handful of accessors describe any raster:</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">res</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span>                                        <span class="co"># cell size, metres</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'ba' not found</span></span>
+<span><span class="co">#&gt; [1]  9.934985 10.074715</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span>                                        <span class="co"># bounding box</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'ext': object 'ba' not found</span></span>
+<span><span class="co">#&gt; SpatExtent : 747559.294472252, 747976.563837432, 4308835.31323516, 4309480.09499186 (xmin, xmax, ymin, ymax)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html">global</a></span><span class="op">(</span><span class="va">ba</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"min"</span>, <span class="st">"max"</span>, <span class="st">"mean"</span><span class="op">)</span><span class="op">)</span>            <span class="co"># value range</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'ba' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">ba</span>, main <span class="op">=</span> <span class="st">"Basal area per 10 m cell (m²)"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'ba' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;            min       max        mean</span></span>
+<span><span class="co">#&gt; basal_area   0 0.6649935 0.009831975</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">ba</span>, main <span class="op">=</span> <span class="st">"Basal area per 10 m cell (m²)"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="03-raster-data_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="raster-algebra" class="level2" data-number="3.3"><h2 data-number="3.3" class="anchored" data-anchor-id="raster-algebra">
 <span class="header-section-number">3.3</span> Raster algebra</h2>
 <p>Because a raster is a grid of numbers, arithmetic on rasters is arithmetic on cells. This is map algebra, and it is why continuous surfaces are so easy to work with. Converting basal area to an aboveground-carbon proxy is one expression applied to every cell at once:</p>
 <div class="cell">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">carbon</span> <span class="op">&lt;-</span> <span class="va">ba</span> <span class="op">*</span> <span class="fl">12</span>          <span class="co"># illustrative MgC per cell from basal area</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'ba' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">carbon</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"carbon"</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'carbon' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">carbon</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"carbon"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Logical operators work the same way and return a mask of ones and zeros. A “stocked” mask, cells carrying any measurable basal area, is a single comparison:</p>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">stocked</span> <span class="op">&lt;-</span> <span class="va">ba</span> <span class="op">&gt;</span> <span class="fl">0.05</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'ba' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">stocked</span>, main <span class="op">=</span> <span class="st">"Stocked cells"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'stocked' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">stocked</span>, main <span class="op">=</span> <span class="st">"Stocked cells"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="03-raster-data_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="reclassification" class="level2" data-number="3.4"><h2 data-number="3.4" class="anchored" data-anchor-id="reclassification">
 <span class="header-section-number">3.4</span> Reclassification</h2>
@@ -346,25 +348,27 @@ div.csl-indent {
 <span>                <span class="fl">0.30</span>, <span class="cn">Inf</span>, <span class="fl">3</span><span class="op">)</span>,     <span class="co"># dense</span></span>
 <span>              ncol <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">zones</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/classify.html">classify</a></span><span class="op">(</span><span class="va">ba</span>, <span class="va">rcl</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'ba' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/factors.html">levels</a></span><span class="op">(</span><span class="va">zones</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"sparse"</span>, <span class="st">"moderate"</span>, <span class="st">"dense"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'zones' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">zones</span>, main <span class="op">=</span> <span class="st">"Stocking classes"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'zones' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">zones</span>, main <span class="op">=</span> <span class="st">"Stocking classes"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="03-raster-data_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="extraction" class="level2" data-number="3.5"><h2 data-number="3.5" class="anchored" data-anchor-id="extraction">
 <span class="header-section-number">3.5</span> Extraction</h2>
 <p>The bridge from raster back to field data is extraction: reading the raster value at each point location. <code><a href="https://rspatial.github.io/terra/reference/extract.html">terra::extract()</a></code> samples the surface wherever a plot, a tree, or a sample sits, which is how gridded covariates enter a plot-level model:</p>
 <div class="cell">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/sample.html">spatSample</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.polygons.html">as.polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/crs.html">crs</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span><span class="op">)</span>, <span class="fl">5</span>, method <span class="op">=</span> <span class="st">"random"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'spatSample': error in evaluating the argument 'x' in selecting a method for function 'as.polygons': error in evaluating the argument 'x' in selecting a method for function 'ext': object 'ba' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/extract.html">extract</a></span><span class="op">(</span><span class="va">ba</span>, <span class="va">pts</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'extract': object 'ba' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;   ID   basal_area</span></span>
+<span><span class="co">#&gt; 1  1 0.0000000000</span></span>
+<span><span class="co">#&gt; 2  2 0.0000000000</span></span>
+<span><span class="co">#&gt; 3  3 0.0006605199</span></span>
+<span><span class="co">#&gt; 4  4 0.0000000000</span></span>
+<span><span class="co">#&gt; 5  5 0.4526571629</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Extraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.</p>
 </section><section id="keystone-land-cover-reclassification" class="level2" data-number="3.6"><h2 data-number="3.6" class="anchored" data-anchor-id="keystone-land-cover-reclassification">
@@ -374,60 +378,43 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">xy</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/xyCellFrom.html">xyFromCell</a></span><span class="op">(</span><span class="va">r</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'object' in selecting a method for function 'xyFromCell': object 'r' not found</span></span>
 <span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fl">0.55</span> <span class="op">+</span> <span class="fl">0.30</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">/</span> <span class="fl">120</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.20</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">xy</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">/</span> <span class="fl">160</span><span class="op">)</span> <span class="op">+</span></span>
 <span>       <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'xy' not found</span></span>
 <span><span class="va">ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/setValues.html">setValues</a></span><span class="op">(</span><span class="va">r</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmax</a></span><span class="op">(</span><span class="va">val</span>, <span class="op">-</span><span class="fl">0.1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'setValues': object 'r' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">ndvi</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"ndvi"</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'ndvi' not found</span></span>
 <span></span>
 <span><span class="co"># thresholds -&gt; cover classes</span></span>
 <span><span class="va">lulc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/classify.html">classify</a></span><span class="op">(</span><span class="va">ndvi</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="fl">0.2</span>, <span class="fl">1</span>,     <span class="co"># water/bare</span></span>
 <span>                                 <span class="fl">0.2</span>, <span class="fl">0.5</span>, <span class="fl">2</span>,      <span class="co"># grass/shrub</span></span>
 <span>                                 <span class="fl">0.5</span>, <span class="cn">Inf</span>, <span class="fl">3</span><span class="op">)</span>,     <span class="co"># forest</span></span>
 <span>                              ncol <span class="op">=</span> <span class="fl">3</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'ndvi' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/factors.html">levels</a></span><span class="op">(</span><span class="va">lulc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span>,</span>
 <span>                           cover <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"water/bare"</span>, <span class="st">"grass/shrub"</span>, <span class="st">"forest"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'lulc' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">lulc</span>, main <span class="op">=</span> <span class="st">"Land cover from a spectral index"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'lulc' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">lulc</span>, main <span class="op">=</span> <span class="st">"Land cover from a spectral index"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="03-raster-data_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 <p>The class areas are the deliverable. <code><a href="https://rspatial.github.io/terra/reference/freq.html">freq()</a></code> counts cells per class, and multiplying by the cell area gives hectares:</p>
 <div class="cell">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cell_ha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/prod.html">prod</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">res</a></span><span class="op">(</span><span class="va">lulc</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1e4</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'lulc' not found</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/freq.html">freq</a></span><span class="op">(</span><span class="va">lulc</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'freq': object 'lulc' not found</span></span>
 <span><span class="va">f</span><span class="op">$</span><span class="va">area_ha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">f</span><span class="op">$</span><span class="va">count</span> <span class="op">*</span> <span class="va">cell_ha</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'f' not found</span></span>
 <span><span class="va">f</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"value"</span>, <span class="st">"count"</span>, <span class="st">"area_ha"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'f' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;         value count area_ha</span></span>
+<span><span class="co">#&gt; 1  water/bare   828    8.29</span></span>
+<span><span class="co">#&gt; 2 grass/shrub  1500   15.01</span></span>
+<span><span class="co">#&gt; 3      forest   360    3.60</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Reclassifying the three classes into a forest mask, the exact step behind a forest-area or deforestation figure, is one more <code><a href="https://rspatial.github.io/terra/reference/classify.html">classify()</a></code>:</p>
 <div class="cell">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">forest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/classify.html">classify</a></span><span class="op">(</span><span class="va">lulc</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">2</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'classify': object 'lulc' not found</span></span>
 <span><span class="va">forest_ha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html">global</a></span><span class="op">(</span><span class="va">forest</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="va">cell_ha</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'forest' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">forest_ha</span>, <span class="fl">1</span><span class="op">)</span>                             <span class="co"># hectares of forest</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'forest_ha' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 3.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>That single number, forest area, is what a project claims and an auditor recomputes. Chapter 7 returns to it to ask how <em>certain</em> the number is, because a class area is only as good as the map’s accuracy.</p>
 </section><section id="exercises" class="level2" data-number="3.7"><h2 data-number="3.7" class="anchored" data-anchor-id="exercises">

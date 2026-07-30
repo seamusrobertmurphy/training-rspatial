@@ -319,45 +319,36 @@ window.Quarto = {
 <span></span>
 <span><span class="va">v</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html">vect</a></span><span class="op">(</span><span class="va">stems</span><span class="op">)</span></span>
 <span><span class="va">r</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">5</span>, crs <span class="op">=</span> <span class="st">"EPSG:32617"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! [rast] empty srs</span></span>
 <span><span class="va">chm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rasterize.html">rasterize</a></span><span class="op">(</span><span class="va">v</span>, <span class="va">r</span>, field <span class="op">=</span> <span class="st">"height"</span>, fun <span class="op">=</span> <span class="va">max</span>, background <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'y' in selecting a method for function 'rasterize': object 'r' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">chm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"canopy_height"</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'chm' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">chm</span>, main <span class="op">=</span> <span class="st">"Canopy height model (m)"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'chm' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">chm</span>, main <span class="op">=</span> <span class="st">"Canopy height model (m)"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="05-lidar-point-clouds_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="tree-detection" class="level2" data-number="5.4"><h2 data-number="5.4" class="anchored" data-anchor-id="tree-detection">
 <span class="header-section-number">5.4</span> Tree detection</h2>
 <p>A CHM lets you find individual trees: each treetop is a local maximum, a cell higher than its neighbours. This is the basis of individual-tree detection, and the crown-radius-varying window in <code>ForestTools</code> refines it. We do the core operation directly, flagging cells that equal the maximum in a moving window and clear a minimum height:</p>
 <div class="cell">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">win</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/focal.html">focal</a></span><span class="op">(</span><span class="va">chm</span>, w <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span>, fun <span class="op">=</span> <span class="va">max</span>, na.policy <span class="op">=</span> <span class="st">"omit"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'focal': object 'chm' not found</span></span>
 <span><span class="va">tops</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">chm</span> <span class="op">==</span> <span class="va">win</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">(</span><span class="va">chm</span> <span class="op">&gt;</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'chm' not found</span></span>
 <span><span class="va">tops</span><span class="op">[</span><span class="va">tops</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'tops' not found</span></span>
 <span><span class="va">top_pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/as.points.html">as.points</a></span><span class="op">(</span><span class="va">tops</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'as.points': object 'tops' not found</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">nrow</a></span><span class="op">(</span><span class="va">top_pts</span><span class="op">)</span>                              <span class="co"># detected treetops</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'nrow': object 'top_pts' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 269</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">chm</span>, main <span class="op">=</span> <span class="st">"Detected treetops"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'chm' not found</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">top_pts</span>, add <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">3</span>, cex <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'plot': object 'top_pts' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">top_pts</span>, add <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">3</span>, cex <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="05-lidar-point-clouds_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
 </div>
 </section><section id="keystone-lidar-forestry" class="level2" data-number="5.5"><h2 data-number="5.5" class="anchored" data-anchor-id="keystone-lidar-forestry">
 <span class="header-section-number">5.5</span> Keystone: lidar-forestry</h2>
@@ -365,18 +356,14 @@ window.Quarto = {
 <p>The bridge to biomass is a canopy metric summarised per unit area and regressed on plot biomass. Mean canopy height is the simplest such metric:</p>
 <div class="cell">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cell_ha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/prod.html">prod</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">res</a></span><span class="op">(</span><span class="va">chm</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1e4</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'res': object 'chm' not found</span></span>
 <span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span></span>
 <span>  mean_canopy_height <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html">global</a></span><span class="op">(</span><span class="va">chm</span>, <span class="st">"mean"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  p95_height         <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/quantile.html">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">chm</span><span class="op">)</span>, <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  detected_trees     <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">nrow</a></span><span class="op">(</span><span class="va">top_pts</span><span class="op">)</span>,</span>
 <span>  area_ha            <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">chm</span><span class="op">)</span> <span class="op">*</span> <span class="va">cell_ha</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in `h()`:</span></span>
-<span><span class="co">#&gt; ! error in evaluating the argument 'x' in selecting a method for function 'global': object 'chm' not found</span></span>
 <span><span class="va">metrics</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! object 'metrics' not found</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;     mean_canopy_height p95_height detected_trees area_ha</span></span>
+<span><span class="co">#&gt; 95%                  1        4.5            269    26.9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Detected trees will fall short of the true stem count, because the understory hides beneath the canopy and only dominant trees form local maxima. That gap is the central caution of LiDAR inventory: it sees the canopy, not the stand, and the correction comes from calibrating against field plots that <em>do</em> count every stem. The height metrics, by contrast, are robust and are what a LiDAR biomass model is built on. The full project fits that model and maps predicted biomass with its prediction error, the subject of the uncertainty chapter.</p>
 </section><section id="exercises" class="level2" data-number="5.6"><h2 data-number="5.6" class="anchored" data-anchor-id="exercises">
