@@ -65,18 +65,19 @@ A cube can only be looked at one slice at a time, and there are two ways to cut 
 
 ```{r}
 #| echo: false
-#| fig-cap: "Schematic of a space-time cube. Each horizontal sheet is one date. Cutting horizontally gives the spatial plane, a map; cutting vertically through a single pixel gives the temporal plane, a profile."
+#| fig-cap: "Geometry of a space-time cube. Each horizontal sheet is one date. Cutting horizontally gives the spatial plane, a map; cutting vertically through a single pixel gives the temporal plane, a profile. The detail at right shows the fourth axis: every date is itself a stack of spectral bands."
 op <- par(mar = c(0, 0, 0, 0))
 w <- 10; d <- 6; sh <- 4.2; gap <- 2.3; n <- 5
+sheet <- function(x0, y0, ww, dd, ss, col, lwd = 1.4) {
+  polygon(c(x0, x0 + ww, x0 + ww + ss, x0 + ss),
+          c(y0, y0, y0 + dd, y0 + dd), col = col, border = "grey25", lwd = lwd)
+}
 plot.new()
-plot.window(xlim = c(-3.4, w + sh + 5.2),
-            ylim = c(-1.6, (n - 1) * gap + d + 4.4), asp = 1)
+plot.window(xlim = c(-3.4, 30), ylim = c(-1.6, (n - 1) * gap + d + 4.6), asp = 1)
+
 cols <- c("#4d7f6e", "#6f9e86", "#9dbfa8", "#c9d9c4", "#eef1e6")
 for (k in seq_len(n) - 1) {
-  yb <- k * gap
-  polygon(c(0, w, w + sh, sh), c(yb, yb, yb + d, yb + d),
-          col = adjustcolor(cols[k + 1], alpha.f = 0.92),
-          border = "grey25", lwd = 1.4)
+  sheet(0, k * gap, w, d, sh, adjustcolor(cols[k + 1], alpha.f = 0.92))
 }
 yb <- (n - 1) * gap
 for (i in 1:4) {
@@ -99,13 +100,34 @@ text(w + sh / 2 + 1.7, d / 2 - 0.4, "y", cex = 0.9, font = 3)
 for (k in seq_len(n) - 1) {
   text(-0.9, k * gap + 0.3, paste0("t", k + 1), cex = 0.78, col = "grey30")
 }
-text(w + sh + 1.2, (n - 1) * gap + d - 0.2, "spatial plane\none date, all pixels",
+
+# exploded detail: the spectral axis inside a single date
+bx <- 18.6; by <- 1.3; bw <- 5.2; bd <- 3.1; bs <- 2.2; bgap <- 1.65
+bandcol <- c("#c0504d", "#77a86b", "#4a7fb5")
+bandlab <- c("red", "green", "blue")
+for (j in 0:2) {
+  sheet(bx, by + j * bgap, bw, bd, bs,
+        adjustcolor(bandcol[j + 1], alpha.f = 0.55), lwd = 1.2)
+  text(bx - 0.5, by + j * bgap + 0.35, bandlab[j + 1], adj = 1, cex = 0.72,
+       col = "grey25")
+}
+arrows(bx + bw + bs + 1.0, by, bx + bw + bs + 1.0, by + 2 * bgap + bd * 0.4,
+       length = 0.07, lwd = 1.5, col = "grey20")
+text(bx + bw + bs + 1.9, by + bgap + 0.6, "band", srt = 90, cex = 0.8,
+     font = 3, col = "grey20")
+segments(w + sh - 0.6, 2 * gap + d - 0.9, bx + 0.6, by + 2 * bgap + bd - 0.2,
+         col = "grey45", lwd = 1.1, lty = 2)
+text(bx + bw / 2 + 0.4, by + 2 * bgap + bd + 1.5,
+     "spectral bands\none date is many layers", cex = 0.82, font = 2,
+     col = "#3a5f80")
+
+text(w + sh - 3.0, (n - 1) * gap + d + 1.6, "spatial plane\none date, all pixels",
      adj = 0, cex = 0.84, font = 2, col = "#2f5d4e")
-segments(w + sh * 0.75, (n - 1) * gap + d * 0.75, w + sh + 1.0,
-         (n - 1) * gap + d - 0.5, col = "#2f5d4e", lwd = 1.2)
-text(cx - 1.1, (n - 1) * gap + cy + 2.4, "temporal plane\none pixel, all dates",
+segments(w + sh - 2.0, (n - 1) * gap + d + 1.2, w + sh * 0.8,
+         (n - 1) * gap + d * 0.82, col = "#2f5d4e", lwd = 1.2)
+text(cx - 1.4, (n - 1) * gap + cy + 2.6, "temporal plane\none pixel, all dates",
      adj = 1, cex = 0.84, font = 2, col = "#b5342e")
-segments(cx - 0.9, (n - 1) * gap + cy + 2.0, cx - 0.15,
+segments(cx - 1.2, (n - 1) * gap + cy + 2.2, cx - 0.15,
          (n - 1) * gap + cy + 1.35, col = "#b5342e", lwd = 1.2)
 par(op)
 ```

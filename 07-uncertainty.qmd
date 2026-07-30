@@ -126,6 +126,67 @@ round(c(mapped_forest_ha  = A["forest"],
 
 The adjusted area differs from the mapped area because the map commits and omits forest at rates the reference sample reveals, and the confidence interval is the honest precision of the figure. A project that reports only the mapped area, with no adjustment and no interval, has reported a number no auditor can accept. The full Bolivia workflow applies this class by class across the national legend; the estimator is the one above.
 
+## Reported against adjusted
+
+One year in isolation understates what this correction does. A crediting period runs for a decade, the adjustment is applied every year, and the interesting quantity is the gap between what a project reports and what it can defend. We run the same estimator across an eight-year record of mapped forest loss. Each year has its own reference sample and its own error rates, and both degrade towards the present, because recent imagery has had less interpretation effort and the map is harder to validate close to the reporting date.
+
+```{r}
+years  <- 2017:2024
+Atot   <- 250000                              # ha in the accounting area
+mapped <- c(1200, 2400, 4100, 3300, 3500, 3700, 6900, 9200)   # ha mapped as loss
+
+# reference sample sizes thin out in recent years
+n_chg  <- c(150, 150, 150, 150, 140, 130,  90,  60)
+n_stab <- c(900, 900, 880, 880, 850, 800, 520, 340)
+# user's accuracy of the loss class, and omission from the stable stratum
+ua_chg  <- c(0.79, 0.80, 0.78, 0.80, 0.79, 0.77, 0.72, 0.68)
+om_stab <- c(0.0022, 0.0022, 0.0026, 0.0022, 0.0026, 0.0026, 0.0030, 0.0034)
+
+est <- t(sapply(seq_along(years), function(k) {
+  W <- unname(c(mapped[k], Atot - mapped[k]) / Atot)
+  p <- W[1] * ua_chg[k] + W[2] * om_stab[k]
+  se <- sqrt(W[1]^2 * ua_chg[k]  * (1 - ua_chg[k])  / (n_chg[k]  - 1) +
+             W[2]^2 * om_stab[k] * (1 - om_stab[k]) / (n_stab[k] - 1))
+  c(adjusted = Atot * p, ci = 1.96 * Atot * se)
+}))
+
+adj <- est[, "adjusted"]; ci <- est[, "ci"]
+data.frame(year = years, mapped = mapped, adjusted = round(adj),
+           lower = round(adj - ci), upper = round(adj + ci),
+           bias_pct = round(100 * (mapped - adj) / adj, 1))
+```
+
+Plotting the two series together with the interval around the adjusted estimate is the single most useful figure a monitoring report can carry:
+
+```{r}
+plot(years, mapped, type = "n", ylim = c(0, max(adj + ci) * 1.05),
+     xlab = "", ylab = "forest loss (ha)",
+     main = "Mapped against area-adjusted loss")
+polygon(c(years, rev(years)), c(adj - ci, rev(adj + ci)),
+        col = adjustcolor("#c4703f", alpha.f = 0.28), border = NA)
+lines(years, adj, col = "#a8481f", lwd = 2.2, lty = 2)
+lines(years, mapped, col = "#2f5d4e", lwd = 2.2)
+legend("topleft", c("mapped (reported)", "area-adjusted", "95% interval"),
+       col = c("#2f5d4e", "#a8481f", adjustcolor("#c4703f", alpha.f = 0.5)),
+       lwd = c(2.2, 2.2, 8), lty = c(1, 2, 1), bty = "n", cex = 0.85)
+```
+
+Read the two lines against each other. Early in the record the adjustment pushes the estimate *up*: the mapped loss area is small, so omitted change scattered through the vast stable stratum outweighs anything the map over-called, and the defensible figure exceeds the reported one. Late in the record the sign reverses. As the map's user accuracy falls from 0.79 to 0.68, commission error dominates, and the reported figure overstates what the reference data support by thirty per cent in the final year.
+
+The direction of the correction is therefore not something you can guess, and the common assumption that adjustment always shrinks a claim is wrong. It depends on the balance between what the map missed and what it invented, weighted by stratum area, and only a reference sample can tell you which way it falls.
+
+```{r}
+round(c(mapped_total   = sum(mapped),
+        adjusted_total = sum(adj),
+        overstatement_pct = 100 * (sum(mapped) - sum(adj)) / sum(adj),
+        conservative_total = sum(adj - ci),
+        forgone_pct = 100 * sum(ci) / sum(adj)), 1)
+```
+
+Over the whole period the reported total overstates the defensible total by around twelve per cent. That gap is the project's exposure: it is the portion of the claim that would not survive a reference-based check. The conservative basis, summing the lower bounds, is lower again by about a quarter, and that second gap is the price of imprecision rather than of bias.
+
+Notice which of the two is easier to fix. The bias is corrected by the estimator itself, at the cost of running a reference sample, and once corrected it is gone. The interval width is set by how many reference points sit in each stratum, and it narrows only as the square root of that effort. The widening band in the last two years is not a modelling failure; it is a direct readout of thin reference data, and the only remedy is more interpretation. This is the whole argument of the chapter in one picture. Uncertainty is not a statistical afterthought appended to a result. It is a budget, it has line items, and each line has a known price.
+
 ## Exercises
 
 1. Recompute the sampling confidence interval using a 4-by-6 quadrat grid instead of 8-by-12. Does the mean change? Does the standard error? Explain the difference.
