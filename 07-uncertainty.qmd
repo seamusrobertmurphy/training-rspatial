@@ -189,6 +189,12 @@ round(quantile(mc[, "rel_rmse"], c(0.025, 0.975)), 2)
 
 The mean relative RMSE agrees with the ten-fold figure, but the spread across repetitions is the extra information: the estimate is itself uncertain, and quoting it to three significant figures from a single split would overstate what is known. That distribution is the honest input to a deduction, and it is what the standards are asking for when they require an uncertainty estimate rather than a residual statistic.
 
+::: {.verification}
+#### Turning the metric into a deduction {.unnumbered .unlisted}
+
+The crediting standards each convert a relative error into forgone credits, and
+they do it differently. ART-TREES scales the half-width of a 90 per cent interval:
+
 ```{r}
 art_deduction <- function(rel_rmse_pct) {
   100 * 0.524417 * (rel_rmse_pct / 100) / 1.645006
@@ -198,7 +204,14 @@ round(c(in_sample = art_deduction(metrics(tm$agb_kg, pred)["rel_rmse"]),
         species   = art_deduction(metrics(tm$agb_kg, pred_sp)["rel_rmse"])), 2)
 ```
 
-The deduction is roughly proportional to the relative RMSE, so halving the error by fitting per species roughly halves the credits forgone. That is the loop this chapter has been building: a metric, estimated honestly out of sample, converted into a quantity of carbon that the project does not get paid for.
+The deduction is roughly proportional to the relative RMSE, so halving the error
+by fitting per species roughly halves the credits forgone. Note also that the
+in-sample and cross-validated figures barely differ here, for the reason given
+above, and that a project quoting the in-sample number on a small dataset would
+be understating its own deduction.
+:::
+
+That is the loop this chapter has been building: a metric, estimated honestly out of sample, converted into a quantity of carbon that the project does not get paid for. The arithmetic differs between registries but the logic does not, and the comparison is drawn out at the end of the chapter.
 
 ## Monte Carlo propagation
 

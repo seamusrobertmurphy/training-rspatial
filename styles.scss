@@ -134,6 +134,55 @@ pre code {
 
 
 /* =================================== */
+/* VERIFICATION TRACK                  */
+/* =================================== */
+
+/* Registry-specific material: rules, deduction arithmetic, operational
+   tooling. A reader who skips every one of these must still get a complete
+   book, so nothing in the main narrative may depend on what is inside. */
+
+.verification {
+  border-left: 3px solid $brand-slate;
+  background: rgba(100, 116, 139, 0.055);
+  padding: 0.9rem 1.1rem 0.35rem 1.1rem;
+  margin: 1.6rem 0;
+  border-radius: 0 3px 3px 0;
+}
+
+.verification::before {
+  content: "Verification track";
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: $brand-slate;
+  margin-bottom: 0.55rem;
+}
+
+.verification > h4,
+.verification > h5 {
+  color: $brand-slate !important;
+  font-size: 1.02rem !important;
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.6rem !important;
+}
+
+.verification p:last-child {
+  margin-bottom: 0.65rem;
+}
+
+.verification pre code {
+  font-size: calc(#{$code-font-size} - 0.5px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .verification {
+    background: rgba(148, 163, 184, 0.09);
+  }
+}
+
+/* =================================== */
 /* LISTING COMPONENTS                  */
 /* =================================== */
 

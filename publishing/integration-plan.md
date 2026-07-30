@@ -64,10 +64,18 @@ carry no signal.
 
 ```markdown
 ::: {.verification}
-#### Under VM0048
+#### Under VM0048 {.unnumbered .unlisted}
 Registry-specific rule, citation, deduction arithmetic.
 :::
 ```
+
+**The `{.unnumbered .unlisted}` on the heading is required, not optional.**
+Without it Quarto folds the div into a numbered `<section>`, so the track picks up
+a section number (7.5.0.1) and appears in the table of contents, which defeats the
+point of a skippable aside. Verified on the Chapter 11 retrofit.
+
+In Word the div passes through unstyled: the content is present and readable but
+carries no box. Acceptable, since HTML is the primary format.
 
 Styled in `styles.scss` against the existing `$brand-slate`: left rule, tinted
 ground, small-caps label. Collapsible in HTML, retained inline in Word.
