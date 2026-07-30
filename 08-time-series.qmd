@@ -20,7 +20,11 @@ csl: ./references/apa.csl
 
 ## Data cubes
 
-Everything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering. We build a nine-year annual index cube over the plot, with a slow decline and a fire in 2021 that clears a block and holds it low.
+Everything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering.
+
+The word cube is meant literally. The data have three axes and you must hold all three in mind at once. Two are spatial, $x$ and $y$, the familiar grid of the earlier chapters. The third is time, $t$, and it is the one that changes how everything must be handled, because unlike $x$ and $y$ it is not sampled on a regular grid unless you force it to be. A satellite revisits on a fixed cycle but returns a usable observation only when the sky is clear, so the raw time axis is ragged. Operational cubes carry a fourth axis as well, the spectral band, which is why real archives are four-dimensional arrays and why the software built for them, `gdalcubes` and `sits` in R, is organised around regularising all four at once [@appel2019gdalcubes; @simoes2021sits].
+
+We build a monthly index cube over the plot spanning nine years. It carries three things a real optical record carries: a slow downward trend, an annual seasonal swing from leaf-on to leaf-off, and observation noise. A fire clears a block in mid-2021 and holds it low.
 
 ```{r}
 library(terra)
@@ -31,15 +35,174 @@ stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
   st_transform(32617)
 r <- rast(ext(vect(stems)), resolution = 10, crs = "EPSG:32617")
 
-years <- 2016:2024
+dates <- seq(as.Date("2016-01-15"), as.Date("2024-12-15"), by = "month")
+doy   <- as.numeric(format(dates, "%j"))
+yfrac <- as.numeric(format(dates, "%Y")) + (doy - 1) / 365
+
 set.seed(3)
 xy   <- xyFromCell(r, 1:ncell(r))
-burn <- xy[, 1] > 747100 & xy[, 1] < 747250 & xy[, 2] > 4306150 & xy[, 2] < 4306300
+burn <- xy[, 1] > 747700 & xy[, 1] < 747850 &
+        xy[, 2] > 4309000 & xy[, 2] < 4309150
 
-cube <- rast(lapply(seq_along(years), function(k) {
-  v <- 0.80 - 0.008 * (k - 1) + rnorm(ncell(r), 0, 0.015)   # gentle decline
-  if (years[k] >= 2021) v[burn] <- 0.20 + rnorm(sum(burn), 0, 0.02)  # fire + no recovery
+# simulated: trend + seasonal cycle + noise, with a 2021 fire in the burn box
+mcube <- rast(lapply(seq_along(dates), function(k) {
+  seas <- 0.25 * sin(2 * pi * (doy[k] - 100) / 365)
+  v <- 0.62 - 0.008 * (yfrac[k] - 2016) + seas + rnorm(ncell(r), 0, 0.02)
+  if (yfrac[k] >= 2021.5) {
+    v[burn] <- 0.20 + 0.06 * sin(2 * pi * (doy[k] - 100) / 365) +
+               rnorm(sum(burn), 0, 0.02)
+  }
   setValues(r, v)
+}))
+names(mcube) <- format(dates, "%Y-%m")
+terra::time(mcube) <- dates
+c(layers = nlyr(mcube), cells = ncell(mcube))
+```
+
+## The two planes
+
+A cube can only be looked at one slice at a time, and there are two ways to cut it. Fix a date and you get the spatial plane: a map, every pixel at one instant, the view every earlier chapter of this book has used. Fix a pixel and you get the temporal plane: a profile, one location across every date, the view that makes change visible. Neither is complete. A map cannot tell you whether a low value is a burn scar or simply February, and a profile cannot tell you whether a decline is one pixel or the whole stand.
+
+```{r}
+#| echo: false
+#| fig-cap: "Schematic of a space-time cube. Each horizontal sheet is one date. Cutting horizontally gives the spatial plane, a map; cutting vertically through a single pixel gives the temporal plane, a profile."
+op <- par(mar = c(0, 0, 0, 0))
+w <- 10; d <- 6; sh <- 4.2; gap <- 2.3; n <- 5
+plot.new()
+plot.window(xlim = c(-3.4, w + sh + 5.2),
+            ylim = c(-1.6, (n - 1) * gap + d + 4.4), asp = 1)
+cols <- c("#4d7f6e", "#6f9e86", "#9dbfa8", "#c9d9c4", "#eef1e6")
+for (k in seq_len(n) - 1) {
+  yb <- k * gap
+  polygon(c(0, w, w + sh, sh), c(yb, yb, yb + d, yb + d),
+          col = adjustcolor(cols[k + 1], alpha.f = 0.92),
+          border = "grey25", lwd = 1.4)
+}
+yb <- (n - 1) * gap
+for (i in 1:4) {
+  f <- i / 5
+  lines(c(w * f, w * f + sh), c(yb, yb + d), col = "grey45", lwd = 0.6)
+  lines(c(sh * f, w + sh * f), c(yb + d * f, yb + d * f), col = "grey45", lwd = 0.6)
+}
+cx <- w * 0.62 + sh * 0.45; cy <- d * 0.45
+for (k in seq_len(n) - 1) {
+  points(cx, cy + k * gap, pch = 22, bg = "#b5342e", col = "white", cex = 1.15)
+}
+arrows(cx, cy - 1.1, cx, (n - 1) * gap + cy + 1.5, length = 0.09, lwd = 2.1,
+       col = "#b5342e")
+arrows(-2.0, 0, -2.0, (n - 1) * gap + d * 0.35, length = 0.1, lwd = 2)
+text(-2.55, (n - 1) * gap / 2 + 1, "time", srt = 90, cex = 0.92, font = 2)
+arrows(0, -0.75, w, -0.75, length = 0.08, lwd = 1.6, col = "grey20")
+text(w / 2, -1.35, "x", cex = 0.9, font = 3)
+arrows(w + 0.7, 0.25, w + sh + 0.7, d + 0.25, length = 0.08, lwd = 1.6, col = "grey20")
+text(w + sh / 2 + 1.7, d / 2 - 0.4, "y", cex = 0.9, font = 3)
+for (k in seq_len(n) - 1) {
+  text(-0.9, k * gap + 0.3, paste0("t", k + 1), cex = 0.78, col = "grey30")
+}
+text(w + sh + 1.2, (n - 1) * gap + d - 0.2, "spatial plane\none date, all pixels",
+     adj = 0, cex = 0.84, font = 2, col = "#2f5d4e")
+segments(w + sh * 0.75, (n - 1) * gap + d * 0.75, w + sh + 1.0,
+         (n - 1) * gap + d - 0.5, col = "#2f5d4e", lwd = 1.2)
+text(cx - 1.1, (n - 1) * gap + cy + 2.4, "temporal plane\none pixel, all dates",
+     adj = 1, cex = 0.84, font = 2, col = "#b5342e")
+segments(cx - 0.9, (n - 1) * gap + cy + 2.0, cx - 0.15,
+         (n - 1) * gap + cy + 1.35, col = "#b5342e", lwd = 1.2)
+par(op)
+```
+
+Cut the cube both ways on the same data. Three dates from 2019, an undisturbed year, show the spatial plane swinging with the season while the map itself barely changes:
+
+```{r}
+plot(mcube[[c("2019-02", "2019-07", "2019-11")]],
+     range = c(0.2, 0.95),
+     main = c("February 2019", "July 2019", "November 2019"))
+```
+
+The same three maps differ by more than half an index unit, and nothing on the ground has changed. Now the temporal plane, two pixels drawn across all 108 dates, one inside the burn box and one outside it:
+
+```{r}
+inside  <- cellFromXY(r, cbind(747775, 4309075))   # in the 2021 burn
+outside <- cellFromXY(r, cbind(747600, 4309300))   # undisturbed
+
+p_in  <- as.numeric(mcube[inside])
+p_out <- as.numeric(mcube[outside])
+
+plot(dates, p_out, type = "l", col = "#2f5d4e", lwd = 1.6,
+     ylim = c(0.1, 1.0), xlab = "", ylab = "index",
+     main = "Temporal plane: two pixels")
+lines(dates, p_in, col = "#b5342e", lwd = 1.6)
+legend("bottomleft", c("undisturbed", "burned 2021"),
+       col = c("#2f5d4e", "#b5342e"), lwd = 1.6, bty = "n", cex = 0.85)
+```
+
+The saw-tooth is the seasonal cycle, present in both pixels throughout. The step down in the red line during 2021 is the fire. Note how much larger the annual swing is than the trend it rides on: the disturbance is obvious because it is abrupt, but the slow decline underneath is nearly invisible against the seasonality.
+
+## Seasonality and randomness
+
+That last observation is the central problem of the temporal plane, and it is worth quantifying rather than asserting. A time series of this shape is conventionally treated as three additive parts: a trend, the slow directional movement; a seasonal component, the oscillation that repeats each year; and a remainder, what is left when both have been removed. Seasonal-trend decomposition by loess separates them without assuming the seasonal shape is a fixed sine [@cleveland1990stl]. Base R implements it in `stl()`, which needs the profile declared as a regular series with twelve observations per cycle:
+
+```{r}
+s   <- ts(p_out, start = c(2016, 1), frequency = 12)
+dec <- stl(s, s.window = "periodic")
+plot(dec, main = "Seasonal-trend decomposition, undisturbed pixel")
+```
+
+The three panels beneath the data are the decomposition. Partitioning the variance among them says which one governs what an analyst sees:
+
+```{r}
+v <- apply(dec$time.series, 2, var)
+round(100 * v / sum(v), 1)                 # per cent of variance
+round(c(remainder_sd = sd(dec$time.series[, "remainder"])), 4)
+```
+
+Seasonality accounts for almost all of the variance in the record. The trend, the thing carbon monitoring exists to measure, is a percent or two. The remainder is smaller still, and its standard deviation recovers the observation noise that was put into the simulation, which is the check that the decomposition is doing what it claims.
+
+This is the distinction the whole chapter turns on. The seasonal component is nature's oscillation: deterministic, repeating, and therefore removable, either by decomposition or simply by always comparing like with like. The remainder is nature's randomness together with sensor error: irreducible, and the honest floor on how precisely any single observation can be known. Confusing the two is expensive. Seasonality mistaken for randomness inflates the error bars you report and costs credits to the uncertainty deduction. Seasonality mistaken for trend invents change that never happened.
+
+## Sampling and aliasing
+
+The practical consequence appears the moment you reduce a monthly record to an annual one, which every monitoring programme does. If each year is represented by an observation taken at the same point in the season, the seasonal component is a constant offset and cancels out of the comparison. If the dates drift, the seasonal component leaks into the difference between years and is indistinguishable from real change. Signal processing calls this aliasing. In forest monitoring it is the reason cloud cover biases change estimates, because the dates you can see are not a random sample of the dates you wanted [@hansen2013forest].
+
+Estimate the trend both ways on the same pixel. First from a consistent July observation each year, then from one observation per year taken at whatever month happened to be clear:
+
+```{r}
+yrs   <- 2016:2024
+julys <- which(as.numeric(format(dates, "%m")) == 7)
+fixed_slope <- unname(coef(lm(p_out[julys] ~ yrs))[2])
+
+set.seed(11)
+drift_slope <- replicate(2000, {
+  idx <- sapply(yrs, function(y) sample(which(format(dates, "%Y") == as.character(y)), 1))
+  coef(lm(p_out[idx] ~ yrs))[2]
+})
+
+round(c(true          = -0.008,
+        fixed_july    = fixed_slope,
+        drift_mean    = mean(drift_slope),
+        drift_sd      = sd(drift_slope)), 5)
+round(quantile(drift_slope, c(0.025, 0.975)), 4)
+```
+
+Consistent sampling recovers the true rate of decline closely. Drifting sampling recovers it on average, because the seasonal error is centred rather than systematic, but the spread around that average is several times the size of the trend being measured. The interval spans zero comfortably in both directions:
+
+```{r}
+round(100 * mean(drift_slope > 0), 1)      # per cent of draws with the wrong sign
+```
+
+More than a third of the time, an analyst sampling this way would report a pixel as greening when it is in fact declining. Nothing is wrong with the sensor, the algorithm, or the arithmetic. The error is entirely a consequence of sampling a periodic signal at inconsistent phase, and no amount of downstream statistics recovers what the sampling design threw away.
+
+This is where the chapter connects back to the previous one. Chapter 7 propagated uncertainty through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.
+
+## Compositing to an annual cube
+
+So we reduce the monthly cube to one layer per year, taking a consistent mid-summer window rather than an annual mean, which would average leaf-on against leaf-off and discard the contrast that makes disturbance visible. This is the temporal normalisation step that operational cube software performs with cloud-ranked compositing:
+
+```{r}
+years <- 2016:2024
+cube <- rast(lapply(years, function(y) {
+  sel <- which(format(dates, "%Y") == as.character(y) &
+               as.numeric(format(dates, "%m")) %in% 6:8)
+  app(mcube[[sel]], median)
 }))
 names(cube) <- paste0("y", years)
 nlyr(cube)
@@ -55,7 +218,7 @@ sd_ndvi   <- app(cube, sd)
 plot(c(mean_ndvi, sd_ndvi), main = c("Mean index", "Temporal SD"))
 ```
 
-High temporal SD is the signature of disturbance: stable forest barely varies year to year, so the burned block lights up.
+High temporal SD is the signature of disturbance: stable forest barely varies year to year once the season is controlled, so the burned block lights up.
 
 ## Trends
 
@@ -115,9 +278,14 @@ sim <- replicate(2000, {
 round(quantile(sim, c(0.025, 0.5, 0.975)), 0)      # CO2 tonnes: lower, median, upper
 ```
 
+Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area $A$ as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of Chapter 7 is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.
+
 ## Exercises
 
 1. Reduce the cube with `app()` to the maximum index per pixel instead of the mean. Where does the maximum surface differ most from the mean, and why there?
 2. Fit the per-pixel trend on the pre-fire years only (2016–2020). How does the burned block's slope compare with the full-record slope, and what does that say about mixing a step change into a linear trend?
 3. Recompute burned area with a −0.2 threshold on the 2021 difference. How does the emission estimate move, and which term in the IPCC equation is it multiplying?
-4. *(Applied.)* Using the Monte Carlo output, report the median CO2 and its 95% interval, then state which of the three factors (fuel load, combustion factor, emission factor) you would most want to measure locally to narrow the interval.
+4. Run `stl()` on the burned pixel `p_in` rather than the undisturbed one. Which component absorbs the 2021 step, and what does that tell you about applying seasonal decomposition across a disturbance?
+5. Rebuild the annual cube using an annual mean over all twelve months instead of a summer median. How do the temporal SD map and the detected burned area change, and why does averaging across the season blur the event?
+6. Repeat the drifting-date experiment restricting the sampled months to June through September, as a cloud-screened archive in a seasonal climate might allow. How much of the variance inflation survives, and what does that imply about how tight a compositing window needs to be?
+7. *(Applied.)* Using the Monte Carlo output, report the median CO2 and its 95% interval, then state which of the three factors (fuel load, combustion factor, emission factor) you would most want to measure locally to narrow the interval.
