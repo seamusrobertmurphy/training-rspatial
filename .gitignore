@@ -56,6 +56,13 @@ rsconnect/
 /_freeze/
 *_files/
 
+# Reference library of third-party standards (ACR, ART, Verra, IPCC, FCPF,
+# GOFC-GOLD). Roughly 900 MB including geodatabases, with single files well
+# over GitHub's 100 MB hard limit, and redistributing other organisations'
+# methodology documents from a public repo is a separate question from citing
+# them. Kept locally as the source for the registry sections.
+references/standards/
+
 # macOS. The AppleDouble sidecars appear because this repo lives on an exFAT
 # volume, which has no native support for extended attributes. Sweep them with
 # `dot_clean -m .` before committing.

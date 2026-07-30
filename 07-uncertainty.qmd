@@ -213,6 +213,66 @@ be understating its own deduction.
 
 That is the loop this chapter has been building: a metric, estimated honestly out of sample, converted into a quantity of carbon that the project does not get paid for. The arithmetic differs between registries but the logic does not, and the comparison is drawn out at the end of the chapter.
 
+::: {.verification}
+#### When a model is eligible at all {.unnumbered .unlisted}
+
+Where a carbon estimate comes from a remotely sensed model rather than a field
+tally, ACR's Framework for Remotely Sensed Quantification of Forest Carbon
+(v1.0, 2026) gates the model before any credit is calculated. Validation plots
+are installed independently of the calibration data, and the model must clear two
+tests: uncertainty computed from RMSE below 20 per cent, and uncertainty at the
+90 per cent confidence interval at or below 10 per cent.
+
+```{r}
+acr_eligibility <- function(obs, prd) {
+  n    <- length(obs); cbar <- mean(obs)
+  rmse <- sqrt(mean((obs - prd)^2))
+  ci90 <- rmse / sqrt(n) * 1.645
+  c(n = n, rmse = rmse,
+    unc_rmse = 100 * rmse / cbar,      # threshold < 20
+    unc_ci   = 100 * ci90 / cbar)      # threshold <= 10
+}
+
+fp <- read.csv("data/forest_plots.csv")
+set.seed(12)
+fp$C_pred <- fp$carbon * exp(rnorm(nrow(fp), 0, 0.17))   # a model with real error
+round(acr_eligibility(fp$carbon, fp$C_pred), 2)
+```
+
+The two tests are not independent, and seeing why matters more than running
+them. Since the confidence interval is the RMSE divided by the root of the plot
+count, the second statistic is the first one rescaled:
+
+$$\text{UNC}_{CI} = \text{UNC}_{RMSE}\times\frac{1.645}{\sqrt{N}}$$
+
+The thresholds therefore bind equally when $1.645/\sqrt{N} = 10/20$, which is
+$N \approx 11$ plots. Above about eleven validation plots the confidence-interval
+test is satisfied automatically whenever the RMSE test passes, so only one test
+is doing any work.
+
+```{r}
+n_needed <- function(unc_rmse) ceiling((unc_rmse * 1.645 / 10)^2)
+sapply(c(10, 14, 18, 20, 22), n_needed)   # plots needed to clear the CI test
+```
+
+There is a second, less comfortable property. Run the same model through
+different draws of validation plots and eligibility itself moves:
+
+```{r}
+sizes <- c(10, 15, 20, 30)
+t(sapply(sizes, function(n) {
+  set.seed(n); i <- sample(nrow(fp), n)
+  a <- acr_eligibility(fp$carbon[i], fp$C_pred[i])
+  c(N = n, unc_rmse = round(unname(a["unc_rmse"]), 1),
+    eligible = unname(a["unc_rmse"] < 20 & a["unc_ci"] <= 10))
+}))
+```
+
+At fifteen plots this model fails and at twenty it passes, on nothing but which
+plots were drawn. Eligibility is a random variable, and a project that installs
+the minimum viable number of plots is buying a coin toss.
+:::
+
 ## Monte Carlo propagation
 
 Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl].
@@ -337,6 +397,110 @@ round(c(mapped_total   = sum(mapped),
 Over the whole period the reported total overstates the defensible total by around twelve per cent. That gap is the project's exposure: it is the portion of the claim that would not survive a reference-based check. The conservative basis, summing the lower bounds, is lower again by about a quarter, and that second gap is the price of imprecision rather than of bias.
 
 Notice which of the two is easier to fix. The bias is corrected by the estimator itself, at the cost of running a reference sample, and once corrected it is gone. The interval width is set by how many reference points sit in each stratum, and it narrows only as the square root of that effort. The widening band in the last two years is not a modelling failure; it is a direct readout of thin reference data, and the only remedy is more interpretation. This is the whole argument of the chapter in one picture. Uncertainty is not a statistical afterthought appended to a result. It is a budget, it has line items, and each line has a known price.
+
+## What the registries do with the number
+
+You now have an uncertainty percentage estimated honestly. What it costs depends entirely on which registry the project is going to, and the differences are larger than most practitioners expect. Three rules cover most of the market.
+
+```{r}
+acr_ifm   <- function(u) pmax(0, u - 10)                    # excess over threshold
+art_trees <- function(u) u * (0.524417 / 1.645006)          # risk-tolerance discount
+vm0048    <- function(u) ifelse(u <= 10, 0, u * (0.4307 / 1.6449))
+
+u <- c(5, 10, 15, 20, 30, 50)
+data.frame(uncertainty_pct = u,
+           ACR_IFM   = round(acr_ifm(u), 2),
+           ART_TREES = round(art_trees(u), 2),
+           VM0048    = round(vm0048(u), 2))
+```
+
+Read the 30 per cent row. The same nominal statistic, at the same nominal 90 per cent confidence, costs a project twenty per cent of its credits under ACR and under eight per cent under VM0048. "Ninety per cent confidence" is not a comparable unit across registries, and a number lifted from one project's report into another's is close to meaningless.
+
+```{r}
+uu <- seq(0, 50, 0.5)
+plot(uu, acr_ifm(uu), type = "l", lwd = 2.2, col = "#b5342e",
+     xlab = "uncertainty (%)", ylab = "credits forgone (%)",
+     main = "Three registries, one statistic")
+lines(uu, art_trees(uu), lwd = 2.2, col = "#2f5d4e")
+lines(uu, vm0048(uu),    lwd = 2.2, col = "#4a7fb5", lty = 2)
+abline(v = 10, col = "grey60", lty = 3)
+legend("topleft", c("ACR IFM", "ART-TREES", "Verra VM0048"),
+       col = c("#b5342e", "#2f5d4e", "#4a7fb5"),
+       lwd = 2.2, lty = c(1, 1, 2), bty = "n", cex = 0.85)
+```
+
+The shapes differ because the designs differ, and the split is not the one the market talk suggests. ART-TREES and modern Verra share a paradigm: multiply the uncertainty by a fixed discount that encodes how much risk of over-crediting the standard will tolerate, an approach traceable to @neeff2021. Both compute the same thing, a one-sided over a two-sided *t* value, and differ only in where they set the tolerance. ART is the stricter of the two and, unusually, has no threshold at all: a project with five per cent uncertainty still forfeits 1.6 per cent of its credits.
+
+ACR belongs to an older design, in which nothing is deducted below a threshold and the excess above it is forfeited one for one. That produces the crossing you can see in the figure:
+
+```{r}
+uu <- seq(10, 40, 0.01)
+round(uu[which(acr_ifm(uu) > art_trees(uu))[1]], 2)   # where ACR becomes the harsher rule
+```
+
+Below about fifteen per cent uncertainty ACR is the most forgiving of the three and ART the least; above it the ordering reverses and ACR becomes much the harshest. A project choosing a registry on the strength of its uncertainty deduction needs to know which side of that line it sits on, and a verifier reading a comparison written by a project developer should check which side the developer assumed.
+
+::: {.verification}
+#### Where these rules are written {.unnumbered .unlisted}
+
+Check the version before relying on any of this. Registry documents move, and
+several of these were revised in the last two years.
+
+| | ACR | ART-TREES | Verra |
+|---|---|---|---|
+| Document | IFM on Non-Federal U.S. Forestlands v2.1, s.7.5 | TREES Standard, s.8 | VMD0055 v1.1, s.5.3.2.3 Step 4 |
+| Equations | 22 (total uncertainty), 23 (deduction) | 11 (uncertainty adjustment factor) | 10 and 11 (discount factor) |
+| Quantity | Magnitude-weighted quadratic mean of baseline and project uncertainty | Half-width of 90% CI as % of the mean | Half-width of two-sided 90% CI as % of the estimate |
+| Threshold | 10% | none | 10% |
+| Deduction | excess over 10%, one for one | $0.524417 \times \text{CI}_{90}/1.645006$ | $U\% \times t_{66.67\%}/(100 \times t_{10\%})$ |
+| *t* values | precision requirement is ±10% at 90% | 0.524417 and 1.645006 | 0.4307 and 1.6449 |
+| Cap | none stated in the methodology | none | uncertainty must stay below 100%; beyond that, resample |
+
+ACR's Equation 22 is worth reading closely, because it is not simple quadrature.
+Each term is a carbon stock change multiplied by its own percentage uncertainty,
+the squares of those products are summed under a root, and the whole is divided
+by the sum of the unweighted magnitudes. A pool that barely moves contributes
+almost nothing however uncertain it is. Note also that the equation includes
+harvested wood products terms alongside the stock changes, which an
+implementation that only carries baseline and project stock change will omit.
+
+The ART constants are unchanged between Standard 2.0 (August 2021) and 3.0
+(July 2025), so the arithmetic here is stable across that revision even though
+much else in TREES is not.
+
+Two things that catch people out. Verra's uncertainty rules are not in VM0048
+itself, which is a short framework document; they are in module VMD0055. And
+VM0007 has not been superseded by VM0048, so two different uncertainty regimes
+remain live inside Verra at the same time.
+:::
+
+::: {.verification}
+#### Why VM0048 samples rather than counts pixels {.unnumbered .unlisted}
+
+VM0048 sets a resolution rule that looks odd until you see the reasoning. The
+wall-to-wall forest cover benchmark map must be at 30 m or finer and *must not
+exceed* 30 m, with the minimum mapping unit set equal to the minimum area in the
+forest definition, while imagery inside sample plots must be 10 m or finer.
+
+The split exists because the map is not the estimator. VM0048 derives activity
+data from a probability sample; the map only stratifies that sample. This is the
+same argument the area-adjusted accuracy section above makes from the other
+direction, and it is the cleanest statement in any standard of why counting
+classified pixels is a biased way to estimate area.
+
+The accuracy requirements follow from that: over the historical reference period,
+deforestation needs user's and producer's accuracy at 70 per cent or better, and
+forest at the end of the period better than 90 per cent, with at least 100 sample
+observations per class and 200 per estimate. Open-canopy jurisdictions, where at
+least half the forest carries under 50 per cent canopy cover, may use 60 and 80
+per cent instead.
+
+ACR's Improved Forest Management methodology, by contrast, sets no minimum
+mapping unit and requires no accuracy assessment at all, because its uncertainty
+is field-inventory sampling error rather than map classification error. The two
+standards are not measuring the same thing, which is worth remembering before
+comparing their uncertainty figures.
+:::
 
 ## Exercises
 
