@@ -81,7 +81,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./07-uncertainty.html" rel="next">
+<link href="./emission-factors.html" rel="next">
 <link href="./06-disturbance-risk.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -230,20 +230,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./emission-factors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -316,7 +322,7 @@ window.Quarto = {
 <p><span class="math display">\[AGB = a \, D^{\,b}\]</span></p>
 <p>with <span class="math inline">\(D\)</span> the diameter at breast height and <span class="math inline">\(b\)</span> typically between 2.3 and 2.6. Taking logarithms makes it linear and, more importantly, stabilises the variance, because absolute scatter grows with tree size while proportional scatter stays roughly constant:</p>
 <p><span class="math display">\[\ln(AGB) = \ln(a) + b\,\ln(D) + \varepsilon\]</span></p>
-<p>Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor <span class="math inline">\(\exp(\hat{\sigma}^2/2)\)</span> <span class="citation" data-cites="baskerville1972">(<a href="references/index.html#ref-baskerville1972" role="doc-biblioref">Baskerville, 1972</a>)</span>, and it is used throughout this book. Chapter 11 shows what it does to the error statistics.</p>
+<p>Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor <span class="math inline">\(\exp(\hat{\sigma}^2/2)\)</span> <span class="citation" data-cites="baskerville1972">(<a href="references/index.html#ref-baskerville1972" role="doc-biblioref">Baskerville, 1972</a>)</span>, and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics.</p>
 </section><section id="choosing-an-equation" class="level2" data-number="7.3"><h2 data-number="7.3" class="anchored" data-anchor-id="choosing-an-equation">
 <span class="header-section-number">7.3</span> Choosing an equation</h2>
 <p>There are thousands of published equations. Choosing among them is the analyst’s judgement, and the metadata that governs the choice is more informative than the coefficients. The <code>eq_tab_acer</code> table holds published equations for maples, with the fields a careful selection actually needs:</p>
@@ -525,11 +531,11 @@ window.Quarto = {
 <span><span class="co">#&gt;      stems      agb_t MgC_per_ha </span></span>
 <span><span class="co">#&gt;    2287.00     175.14       3.22</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. Chapter 11 propagates that.</p>
+<p>The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. The uncertainty chapter propagates that.</p>
 <section id="what-the-registries-ask-of-an-equation" class="level4 unnumbered unlisted verification"><h4 class="unnumbered unlisted anchored" data-anchor-id="what-the-registries-ask-of-an-equation">What the registries ask of an equation</h4>
 <p>Standards do not usually mandate a particular equation. They constrain how you justify one and what you must report about it, which is a more demanding requirement than it first appears.</p>
 <p>Expect to have to document, for each equation used: the source publication, the taxa and geography it was fitted on, its sample size, its diameter range, and an argument that the project’s trees fall inside that range. Where they do not, the extrapolation must be acknowledged and its effect on uncertainty carried through.</p>
-<p>The uncertainty attached to the equation then enters the deduction arithmetic set out at the end of Chapter 11. Under ART-TREES the allometric contribution feeds the half-width of the 90 per cent interval; under ACR’s Improved Forest Management methodology it is one component of the total uncertainty combined in Equation 22 and compared against the ten per cent precision requirement. In both cases the practical consequence is the same, and it is the argument this chapter has been making with numbers: a better-matched equation is worth more than a larger field campaign, because it reduces a term that no amount of extra plot measurement will touch.</p>
+<p>The uncertainty attached to the equation then enters the deduction arithmetic set out at the end of the uncertainty chapter. Under ART-TREES the allometric contribution feeds the half-width of the 90 per cent interval; under ACR’s Improved Forest Management methodology it is one component of the total uncertainty combined in Equation 22 and compared against the ten per cent precision requirement. In both cases the practical consequence is the same, and it is the argument this chapter has been making with numbers: a better-matched equation is worth more than a larger field campaign, because it reduces a term that no amount of extra plot measurement will touch.</p>
 </section></section><section id="exercises" class="level2" data-number="7.8"><h2 data-number="7.8" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">7.8</span> Exercises</h2>
 <ol type="1">
@@ -1007,8 +1013,8 @@ Chave, J., Réjou-Méchain, M., Búrquez, A., Chidumayo, E., Colgan, M. S., Deli
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./07-uncertainty.html" class="pagination-link" aria-label="Uncertainty">
-        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Uncertainty</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./emission-factors.html" class="pagination-link" aria-label="Emission Factors">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
@@ -1050,7 +1056,7 @@ Chave, J., Réjou-Méchain, M., Búrquez, A., Chidumayo, E., Colgan, M. S., Deli
 <span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>$$\ln(AGB) = \ln(a) + b\,\ln(D) + \varepsilon$$</span>
 <span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ <span class="co">[</span><span class="ot">@baskerville1972</span><span class="co">]</span>, and it is used throughout this book. Chapter 11 shows what it does to the error statistics.</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ <span class="co">[</span><span class="ot">@baskerville1972</span><span class="co">]</span>, and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics.</span>
 <span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing an equation</span></span>
 <span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a></span>
@@ -1172,7 +1178,7 @@ Chave, J., Réjou-Méchain, M., Búrquez, A., Chidumayo, E., Colgan, M. S., Deli
 <span id="cb12-180"><a href="#cb12-180" aria-hidden="true" tabindex="-1"></a>        <span class="at">MgC_per_ha =</span> carbon_density), <span class="dv">2</span>)</span>
 <span id="cb12-181"><a href="#cb12-181" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb12-182"><a href="#cb12-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-183"><a href="#cb12-183" aria-hidden="true" tabindex="-1"></a>The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. Chapter 11 propagates that.</span>
+<span id="cb12-183"><a href="#cb12-183" aria-hidden="true" tabindex="-1"></a>The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. The uncertainty chapter propagates that.</span>
 <span id="cb12-184"><a href="#cb12-184" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-185"><a href="#cb12-185" aria-hidden="true" tabindex="-1"></a>::: {.verification}</span>
 <span id="cb12-186"><a href="#cb12-186" aria-hidden="true" tabindex="-1"></a><span class="fu">#### What the registries ask of an equation {.unnumbered .unlisted}</span></span>
@@ -1187,7 +1193,7 @@ Chave, J., Réjou-Méchain, M., Búrquez, A., Chidumayo, E., Colgan, M. S., Deli
 <span id="cb12-195"><a href="#cb12-195" aria-hidden="true" tabindex="-1"></a>extrapolation must be acknowledged and its effect on uncertainty carried through.</span>
 <span id="cb12-196"><a href="#cb12-196" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-197"><a href="#cb12-197" aria-hidden="true" tabindex="-1"></a>The uncertainty attached to the equation then enters the deduction arithmetic set</span>
-<span id="cb12-198"><a href="#cb12-198" aria-hidden="true" tabindex="-1"></a>out at the end of Chapter 11. Under ART-TREES the allometric contribution feeds</span>
+<span id="cb12-198"><a href="#cb12-198" aria-hidden="true" tabindex="-1"></a>out at the end of the uncertainty chapter. Under ART-TREES the allometric contribution feeds</span>
 <span id="cb12-199"><a href="#cb12-199" aria-hidden="true" tabindex="-1"></a>the half-width of the 90 per cent interval; under ACR's Improved Forest</span>
 <span id="cb12-200"><a href="#cb12-200" aria-hidden="true" tabindex="-1"></a>Management methodology it is one component of the total uncertainty combined in</span>
 <span id="cb12-201"><a href="#cb12-201" aria-hidden="true" tabindex="-1"></a>Equation 22 and compared against the ten per cent precision requirement. In both</span>

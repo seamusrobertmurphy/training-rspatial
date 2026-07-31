@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.7.33">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>10&nbsp; Spatial Patterns – Spatial Analysis in R for Forest Carbon Verification</title>
+<title>11&nbsp; Spatial Patterns – Spatial Analysis in R for Forest Carbon Verification</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,7 +144,7 @@ window.Quarto = {
   typesetMath
 };
 </script>
-<meta property="og:title" content="10&nbsp; Spatial Patterns – Spatial Analysis in R for Forest Carbon Verification">
+<meta property="og:title" content="11&nbsp; Spatial Patterns – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
 <meta property="og:image" content="09-spatial-patterns_files/figure-html/unnamed-chunk-2-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
@@ -156,7 +156,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./09-spatial-patterns.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./09-spatial-patterns.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -230,20 +230,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./emission-factors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -277,19 +283,19 @@ window.Quarto = {
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title"><strong>On this page</strong></h2>
    
   <ul>
-<li><a href="#point-patterns" id="toc-point-patterns" class="nav-link active" data-scroll-target="#point-patterns"><span class="header-section-number">10.1</span> Point patterns</a></li>
-  <li><a href="#spatial-randomness" id="toc-spatial-randomness" class="nav-link" data-scroll-target="#spatial-randomness"><span class="header-section-number">10.2</span> Spatial randomness</a></li>
-  <li><a href="#intensity" id="toc-intensity" class="nav-link" data-scroll-target="#intensity"><span class="header-section-number">10.3</span> Intensity</a></li>
-  <li><a href="#nearest-neighbour" id="toc-nearest-neighbour" class="nav-link" data-scroll-target="#nearest-neighbour"><span class="header-section-number">10.4</span> Nearest neighbour</a></li>
-  <li><a href="#ripleys-k" id="toc-ripleys-k" class="nav-link" data-scroll-target="#ripleys-k"><span class="header-section-number">10.5</span> Ripley’s K</a></li>
-  <li><a href="#keystone-seedlings" id="toc-keystone-seedlings" class="nav-link" data-scroll-target="#keystone-seedlings"><span class="header-section-number">10.6</span> Keystone: seedlings</a></li>
-  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">10.7</span> Exercises</a></li>
+<li><a href="#point-patterns" id="toc-point-patterns" class="nav-link active" data-scroll-target="#point-patterns"><span class="header-section-number">11.1</span> Point patterns</a></li>
+  <li><a href="#spatial-randomness" id="toc-spatial-randomness" class="nav-link" data-scroll-target="#spatial-randomness"><span class="header-section-number">11.2</span> Spatial randomness</a></li>
+  <li><a href="#intensity" id="toc-intensity" class="nav-link" data-scroll-target="#intensity"><span class="header-section-number">11.3</span> Intensity</a></li>
+  <li><a href="#nearest-neighbour" id="toc-nearest-neighbour" class="nav-link" data-scroll-target="#nearest-neighbour"><span class="header-section-number">11.4</span> Nearest neighbour</a></li>
+  <li><a href="#ripleys-k" id="toc-ripleys-k" class="nav-link" data-scroll-target="#ripleys-k"><span class="header-section-number">11.5</span> Ripley’s K</a></li>
+  <li><a href="#keystone-seedlings" id="toc-keystone-seedlings" class="nav-link" data-scroll-target="#keystone-seedlings"><span class="header-section-number">11.6</span> Keystone: seedlings</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">11.7</span> Exercises</a></li>
   </ul><div class="toc-actions"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/09-spatial-patterns.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title">
-<span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span>
+<span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span>
 </h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
@@ -304,8 +310,8 @@ window.Quarto = {
   
 
 
-</header><section id="point-patterns" class="level2" data-number="10.1"><h2 data-number="10.1" class="anchored" data-anchor-id="point-patterns">
-<span class="header-section-number">10.1</span> Point patterns</h2>
+</header><section id="point-patterns" class="level2" data-number="11.1"><h2 data-number="11.1" class="anchored" data-anchor-id="point-patterns">
+<span class="header-section-number">11.1</span> Point patterns</h2>
 <p>Every earlier chapter analysed values measured at locations: carbon at a plot, elevation at a pixel, an index through time. Point-pattern analysis asks a different question, about the locations themselves. Are the events, tree stems, seedlings, detected clearings, spread evenly, scattered at random, or clustered together? The answer characterises the process that generated them, and it is the second capstone of this course: a whole branch of spatial statistics with its own tools. We use <code>spatstat</code>, whose <code>ppp</code> object holds a point pattern inside an observation window.</p>
 <p>The running example here is a real regeneration survey: conifer seedlings mapped after the 2015 Mt Midgeley wildfire in the Darkwoods Conservation Area of the southern Selkirk Mountains, British Columbia <span class="citation" data-cites="murphy2026selkirk">(<a href="references/index.html#ref-murphy2026selkirk" role="doc-biblioref">Murphy et al., 2026</a>)</span>. We load the seedlings and build a <code>ppp</code> from one four-hectare plot, its bounding box serving as the window:</p>
 <div class="cell">
@@ -320,8 +326,8 @@ window.Quarto = {
 <span><span class="co">#&gt; window: rectangle = [524164.7, 524362.6] x [5446884, 5447083] units</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The printout reports the number of points and the window: a little over 1,600 seedlings in a 200 by 200 metre plot. That is the pattern whose structure we now interrogate.</p>
-</section><section id="spatial-randomness" class="level2" data-number="10.2"><h2 data-number="10.2" class="anchored" data-anchor-id="spatial-randomness">
-<span class="header-section-number">10.2</span> Spatial randomness</h2>
+</section><section id="spatial-randomness" class="level2" data-number="11.2"><h2 data-number="11.2" class="anchored" data-anchor-id="spatial-randomness">
+<span class="header-section-number">11.2</span> Spatial randomness</h2>
 <p>The reference against which every pattern is judged is complete spatial randomness (CSR): points falling independently and with equal probability everywhere, a homogeneous Poisson process. Real patterns depart from CSR in one of two directions, toward regularity, where points avoid each other as in a planted stand, or toward clustering, where points attract as in natural regeneration around surviving seed trees. The whole toolkit exists to measure that departure and test whether it is real. A plot of the seedlings already suggests the answer:</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">pp</span>, main <span class="op">=</span> <span class="st">"Mapped conifer seedlings, plot 3"</span>, pch <span class="op">=</span> <span class="fl">20</span>, cex <span class="op">=</span> <span class="fl">0.3</span>, cols <span class="op">=</span> <span class="st">"forestgreen"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -332,8 +338,8 @@ window.Quarto = {
 </div>
 </div>
 </div>
-</section><section id="intensity" class="level2" data-number="10.3"><h2 data-number="10.3" class="anchored" data-anchor-id="intensity">
-<span class="header-section-number">10.3</span> Intensity</h2>
+</section><section id="intensity" class="level2" data-number="11.3"><h2 data-number="11.3" class="anchored" data-anchor-id="intensity">
+<span class="header-section-number">11.3</span> Intensity</h2>
 <p>The intensity is the first-order property: the expected number of points per unit area, and how it varies across the window. A kernel density estimate smooths the points into a continuous intensity surface, the point-pattern analogue of a heat map, revealing where regeneration concentrated:</p>
 <div class="cell">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/density.html">density</a></span><span class="op">(</span><span class="va">pp</span>, sigma <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"Seedling intensity (points/m²)"</span><span class="op">)</span></span>
@@ -346,8 +352,8 @@ window.Quarto = {
 </div>
 </div>
 <p>Regeneration is patchy, not uniform: dense pockets sit near surviving seed sources and gentler, wetter ground, while other areas stay bare. That spatial unevenness is the signal, and explaining it is what the disturbance and terrain covariates in the study were for.</p>
-</section><section id="nearest-neighbour" class="level2" data-number="10.4"><h2 data-number="10.4" class="anchored" data-anchor-id="nearest-neighbour">
-<span class="header-section-number">10.4</span> Nearest neighbour</h2>
+</section><section id="nearest-neighbour" class="level2" data-number="11.4"><h2 data-number="11.4" class="anchored" data-anchor-id="nearest-neighbour">
+<span class="header-section-number">11.4</span> Nearest neighbour</h2>
 <p>Whether points cluster or repel is the second-order property, about the interaction between them. The most direct diagnostic is the nearest-neighbour distance: how far, on average, each seedling sits from its closest neighbour, compared with what CSR predicts. Under CSR the expected mean nearest-neighbour distance is <span class="math inline">\(1/(2\sqrt{\lambda})\)</span>, so the ratio of observed to expected is the Clark–Evans index: below one means clustered, above one means regular.</p>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ce_ratio</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">{</span></span>
@@ -360,8 +366,8 @@ window.Quarto = {
 <span><span class="co">#&gt; [1] 0.821</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The ratio sits well below one: seedlings are closer to one another than randomness would allow, the quantitative signature of clustered regeneration.</p>
-</section><section id="ripleys-k" class="level2" data-number="10.5"><h2 data-number="10.5" class="anchored" data-anchor-id="ripleys-k">
-<span class="header-section-number">10.5</span> Ripley’s K</h2>
+</section><section id="ripleys-k" class="level2" data-number="11.5"><h2 data-number="11.5" class="anchored" data-anchor-id="ripleys-k">
+<span class="header-section-number">11.5</span> Ripley’s K</h2>
 <p>A single number cannot capture how clustering changes with scale, points may cluster tightly at short range yet disperse at long range. Ripley’s K function describes the pattern across all distances at once, counting on average how many other points lie within a growing radius of each point, against the CSR expectation. Plotting the observed K with a simulation envelope is the standard test:</p>
 <div class="cell">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">K</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.explore/man/envelope.html">envelope</a></span><span class="op">(</span><span class="va">pp</span>, <span class="va">Kest</span>, nsim <span class="op">=</span> <span class="fl">19</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -374,8 +380,8 @@ window.Quarto = {
 </div>
 </div>
 <p>Where the observed curve rises above the envelope the pattern is more clustered than random at that distance; below it, more regular. The seedlings sit above the envelope across the mapped range, confirming clustering is real and not an artefact of a few tight groups, and the scale-explicit view is why K, and its variance-stabilised form the L function, is the workhorse of the field.</p>
-</section><section id="keystone-seedlings" class="level2" data-number="10.6"><h2 data-number="10.6" class="anchored" data-anchor-id="keystone-seedlings">
-<span class="header-section-number">10.6</span> Keystone: seedlings</h2>
+</section><section id="keystone-seedlings" class="level2" data-number="11.6"><h2 data-number="11.6" class="anchored" data-anchor-id="keystone-seedlings">
+<span class="header-section-number">11.6</span> Keystone: seedlings</h2>
 <p>The published study runs exactly this arc, then goes one step further <span class="citation" data-cites="murphy2026selkirk">(<a href="references/index.html#ref-murphy2026selkirk" role="doc-biblioref">Murphy et al., 2026</a>)</span>. Across 3,886 mapped seedlings on three four-hectare plots, point-pattern analysis found significant clustering for all seven conifer species, with intensity governed by fire severity, distance to seed source, topography, and wind. The lean diagnostics above reproduce its core finding on one plot: clustered regeneration, quantified by the Clark–Evans ratio and confirmed by Ripley’s K. Repeating the Clark–Evans ratio species by species shows the clustering is not confined to the dominant lodgepole pine but holds across the community:</p>
 <div class="cell">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">spp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Pinus_contorta"</span>, <span class="st">"Larix"</span>, <span class="st">"Picea"</span>, <span class="st">"Pseudotsuga"</span><span class="op">)</span></span>
@@ -388,8 +394,8 @@ window.Quarto = {
 <span><span class="co">#&gt;          0.859          0.881          0.973          0.934</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Every species returns a ratio below one. The paper then models the intensity surface against the disturbance and terrain covariates with inhomogeneous Cox process models, showing that areas of overlapping beetle mortality and high-severity fire had significantly reduced pine regeneration. That covariate model is the natural next step beyond this book: the foundations here, CSR, intensity, nearest-neighbour, Ripley’s K, are what it is built on, and an auditor who understands them can read and challenge such a result.</p>
-</section><section id="exercises" class="level2" data-number="10.7"><h2 data-number="10.7" class="anchored" data-anchor-id="exercises">
-<span class="header-section-number">10.7</span> Exercises</h2>
+</section><section id="exercises" class="level2" data-number="11.7"><h2 data-number="11.7" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">11.7</span> Exercises</h2>
 <ol type="1">
 <li>Build the <code>ppp</code> for plot 1 instead of plot 3 and compute its Clark–Evans ratio. Is the regeneration there clustered, random, or regular, and how does it compare with plot 3?</li>
 <li>Map the intensity surface with a larger smoothing bandwidth (<code>sigma = 20</code>) and a smaller one (<code>sigma = 4</code>). How does the choice change what you see, and what does that imply about reporting a single heat map?</li>
@@ -857,7 +863,7 @@ Murphy, S., Leslie, A., Wilson, J., &amp; Banks, L. K. (2026). Spatial patterns 
   });
   </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
       <a href="./08-time-series.html" class="pagination-link" aria-label="Time Series">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

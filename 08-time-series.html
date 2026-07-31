@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.7.33">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>9&nbsp; Time Series – Spatial Analysis in R for Forest Carbon Verification</title>
+<title>10&nbsp; Time Series – Spatial Analysis in R for Forest Carbon Verification</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -144,7 +144,7 @@ window.Quarto = {
   typesetMath
 };
 </script>
-<meta property="og:title" content="9&nbsp; Time Series – Spatial Analysis in R for Forest Carbon Verification">
+<meta property="og:title" content="10&nbsp; Time Series – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
 <meta property="og:image" content="08-time-series_files/figure-html/unnamed-chunk-2-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
@@ -156,7 +156,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08-time-series.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./08-time-series.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -230,20 +230,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./emission-factors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./08-time-series.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -277,22 +283,22 @@ window.Quarto = {
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title"><strong>On this page</strong></h2>
    
   <ul>
-<li><a href="#data-cubes" id="toc-data-cubes" class="nav-link active" data-scroll-target="#data-cubes"><span class="header-section-number">9.1</span> Data cubes</a></li>
-  <li><a href="#the-two-planes" id="toc-the-two-planes" class="nav-link" data-scroll-target="#the-two-planes"><span class="header-section-number">9.2</span> The two planes</a></li>
-  <li><a href="#seasonality-and-randomness" id="toc-seasonality-and-randomness" class="nav-link" data-scroll-target="#seasonality-and-randomness"><span class="header-section-number">9.3</span> Seasonality and randomness</a></li>
-  <li><a href="#sampling-and-aliasing" id="toc-sampling-and-aliasing" class="nav-link" data-scroll-target="#sampling-and-aliasing"><span class="header-section-number">9.4</span> Sampling and aliasing</a></li>
-  <li><a href="#compositing-to-an-annual-cube" id="toc-compositing-to-an-annual-cube" class="nav-link" data-scroll-target="#compositing-to-an-annual-cube"><span class="header-section-number">9.5</span> Compositing to an annual cube</a></li>
-  <li><a href="#temporal-reduction" id="toc-temporal-reduction" class="nav-link" data-scroll-target="#temporal-reduction"><span class="header-section-number">9.6</span> Temporal reduction</a></li>
-  <li><a href="#trends" id="toc-trends" class="nav-link" data-scroll-target="#trends"><span class="header-section-number">9.7</span> Trends</a></li>
-  <li><a href="#detecting-the-event" id="toc-detecting-the-event" class="nav-link" data-scroll-target="#detecting-the-event"><span class="header-section-number">9.8</span> Detecting the event</a></li>
-  <li><a href="#keystone-ipcc-tier-1-fire-emissions" id="toc-keystone-ipcc-tier-1-fire-emissions" class="nav-link" data-scroll-target="#keystone-ipcc-tier-1-fire-emissions"><span class="header-section-number">9.9</span> Keystone: IPCC Tier 1 fire emissions</a></li>
-  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9.10</span> Exercises</a></li>
+<li><a href="#data-cubes" id="toc-data-cubes" class="nav-link active" data-scroll-target="#data-cubes"><span class="header-section-number">10.1</span> Data cubes</a></li>
+  <li><a href="#the-two-planes" id="toc-the-two-planes" class="nav-link" data-scroll-target="#the-two-planes"><span class="header-section-number">10.2</span> The two planes</a></li>
+  <li><a href="#seasonality-and-randomness" id="toc-seasonality-and-randomness" class="nav-link" data-scroll-target="#seasonality-and-randomness"><span class="header-section-number">10.3</span> Seasonality and randomness</a></li>
+  <li><a href="#sampling-and-aliasing" id="toc-sampling-and-aliasing" class="nav-link" data-scroll-target="#sampling-and-aliasing"><span class="header-section-number">10.4</span> Sampling and aliasing</a></li>
+  <li><a href="#compositing-to-an-annual-cube" id="toc-compositing-to-an-annual-cube" class="nav-link" data-scroll-target="#compositing-to-an-annual-cube"><span class="header-section-number">10.5</span> Compositing to an annual cube</a></li>
+  <li><a href="#temporal-reduction" id="toc-temporal-reduction" class="nav-link" data-scroll-target="#temporal-reduction"><span class="header-section-number">10.6</span> Temporal reduction</a></li>
+  <li><a href="#trends" id="toc-trends" class="nav-link" data-scroll-target="#trends"><span class="header-section-number">10.7</span> Trends</a></li>
+  <li><a href="#detecting-the-event" id="toc-detecting-the-event" class="nav-link" data-scroll-target="#detecting-the-event"><span class="header-section-number">10.8</span> Detecting the event</a></li>
+  <li><a href="#keystone-ipcc-tier-1-fire-emissions" id="toc-keystone-ipcc-tier-1-fire-emissions" class="nav-link" data-scroll-target="#keystone-ipcc-tier-1-fire-emissions"><span class="header-section-number">10.9</span> Keystone: IPCC Tier 1 fire emissions</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">10.10</span> Exercises</a></li>
   </ul><div class="toc-actions"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/08-time-series.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title">
-<span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Time Series</span>
+<span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span>
 </h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
@@ -307,8 +313,8 @@ window.Quarto = {
   
 
 
-</header><section id="data-cubes" class="level2" data-number="9.1"><h2 data-number="9.1" class="anchored" data-anchor-id="data-cubes">
-<span class="header-section-number">9.1</span> Data cubes</h2>
+</header><section id="data-cubes" class="level2" data-number="10.1"><h2 data-number="10.1" class="anchored" data-anchor-id="data-cubes">
+<span class="header-section-number">10.1</span> Data cubes</h2>
 <p>Everything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering.</p>
 <p>The word cube is meant literally. The data have three axes and you must hold all three in mind at once. Two are spatial, <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>, the familiar grid of the earlier chapters. The third is time, <span class="math inline">\(t\)</span>, and it is the one that changes how everything must be handled, because unlike <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> it is not sampled on a regular grid unless you force it to be. A satellite revisits on a fixed cycle but returns a usable observation only when the sky is clear, so the raw time axis is ragged. Operational cubes carry a fourth axis as well, the spectral band, which is why real archives are four-dimensional arrays and why the software built for them, <code>gdalcubes</code> and <code>sits</code> in R, is organised around regularising all four at once <span class="citation" data-cites="appel2019gdalcubes simoes2021sits">(<a href="references/index.html#ref-appel2019gdalcubes" role="doc-biblioref">Appel &amp; Pebesma, 2019</a>; <a href="references/index.html#ref-simoes2021sits" role="doc-biblioref">Simões et al., 2021</a>)</span>.</p>
 <p>We build a monthly index cube over the plot spanning nine years. It carries three things a real optical record carries: a slow downward trend, an annual seasonal swing from leaf-on to leaf-off, and observation noise. A fire clears a block in mid-2021 and holds it low.</p>
@@ -346,8 +352,8 @@ window.Quarto = {
 <span><span class="co">#&gt; layers  cells </span></span>
 <span><span class="co">#&gt;    108   2688</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section><section id="the-two-planes" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="the-two-planes">
-<span class="header-section-number">9.2</span> The two planes</h2>
+</section><section id="the-two-planes" class="level2" data-number="10.2"><h2 data-number="10.2" class="anchored" data-anchor-id="the-two-planes">
+<span class="header-section-number">10.2</span> The two planes</h2>
 <p>A cube can only be looked at one slice at a time, and there are two ways to cut it. Fix a date and you get the spatial plane: a map, every pixel at one instant, the view every earlier chapter of this book has used. Fix a pixel and you get the temporal plane: a profile, one location across every date, the view that makes change visible. Neither is complete. A map cannot tell you whether a low value is a burn scar or simply February, and a profile cannot tell you whether a decline is one pixel or the whole stand.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -391,8 +397,8 @@ window.Quarto = {
 </div>
 </div>
 <p>The saw-tooth is the seasonal cycle, present in both pixels throughout. The step down in the red line during 2021 is the fire. Note how much larger the annual swing is than the trend it rides on: the disturbance is obvious because it is abrupt, but the slow decline underneath is nearly invisible against the seasonality.</p>
-</section><section id="seasonality-and-randomness" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="seasonality-and-randomness">
-<span class="header-section-number">9.3</span> Seasonality and randomness</h2>
+</section><section id="seasonality-and-randomness" class="level2" data-number="10.3"><h2 data-number="10.3" class="anchored" data-anchor-id="seasonality-and-randomness">
+<span class="header-section-number">10.3</span> Seasonality and randomness</h2>
 <p>That last observation is the central problem of the temporal plane, and it is worth quantifying rather than asserting. A time series of this shape is conventionally treated as three additive parts: a trend, the slow directional movement; a seasonal component, the oscillation that repeats each year; and a remainder, what is left when both have been removed. Seasonal-trend decomposition by loess separates them without assuming the seasonal shape is a fixed sine <span class="citation" data-cites="cleveland1990stl">(<a href="references/index.html#ref-cleveland1990stl" role="doc-biblioref">Cleveland et al., 1990</a>)</span>. Base R implements it in <code><a href="https://rdrr.io/r/stats/stl.html">stl()</a></code>, which needs the profile declared as a regular series with twelve observations per cycle:</p>
 <div class="cell">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">s</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ts.html">ts</a></span><span class="op">(</span><span class="va">p_out</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2016</span>, <span class="fl">1</span><span class="op">)</span>, frequency <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
@@ -417,8 +423,8 @@ window.Quarto = {
 </div>
 <p>Seasonality accounts for almost all of the variance in the record. The trend, the thing carbon monitoring exists to measure, is a percent or two. The remainder is smaller still, and its standard deviation recovers the observation noise that was put into the simulation, which is the check that the decomposition is doing what it claims.</p>
 <p>This is the distinction the whole chapter turns on. The seasonal component is nature’s oscillation: deterministic, repeating, and therefore removable, either by decomposition or simply by always comparing like with like. The remainder is nature’s randomness together with sensor error: irreducible, and the honest floor on how precisely any single observation can be known. Confusing the two is expensive. Seasonality mistaken for randomness inflates the error bars you report and costs credits to the uncertainty deduction. Seasonality mistaken for trend invents change that never happened.</p>
-</section><section id="sampling-and-aliasing" class="level2" data-number="9.4"><h2 data-number="9.4" class="anchored" data-anchor-id="sampling-and-aliasing">
-<span class="header-section-number">9.4</span> Sampling and aliasing</h2>
+</section><section id="sampling-and-aliasing" class="level2" data-number="10.4"><h2 data-number="10.4" class="anchored" data-anchor-id="sampling-and-aliasing">
+<span class="header-section-number">10.4</span> Sampling and aliasing</h2>
 <p>The practical consequence appears the moment you reduce a monthly record to an annual one, which every monitoring programme does. If each year is represented by an observation taken at the same point in the season, the seasonal component is a constant offset and cancels out of the comparison. If the dates drift, the seasonal component leaks into the difference between years and is indistinguishable from real change. Signal processing calls this aliasing. In forest monitoring it is the reason cloud cover biases change estimates, because the dates you can see are not a random sample of the dates you wanted <span class="citation" data-cites="hansen2013forest">(<a href="references/index.html#ref-hansen2013forest" role="doc-biblioref">Hansen et al., 2013</a>)</span>.</p>
 <p>Estimate the trend both ways on the same pixel. First from a consistent July observation each year, then from one observation per year taken at whatever month happened to be clear:</p>
 <div class="cell">
@@ -448,9 +454,9 @@ window.Quarto = {
 <span><span class="co">#&gt; [1] 37.9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>More than a third of the time, an analyst sampling this way would report a pixel as greening when it is in fact declining. Nothing is wrong with the sensor, the algorithm, or the arithmetic. The error is entirely a consequence of sampling a periodic signal at inconsistent phase, and no amount of downstream statistics recovers what the sampling design threw away.</p>
-<p>This is where the chapter connects back to the previous one. Chapter 7 propagated uncertainty through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.</p>
-</section><section id="compositing-to-an-annual-cube" class="level2" data-number="9.5"><h2 data-number="9.5" class="anchored" data-anchor-id="compositing-to-an-annual-cube">
-<span class="header-section-number">9.5</span> Compositing to an annual cube</h2>
+<p>This is where the chapter connects back to the previous one. The uncertainty chapter propagated error through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.</p>
+</section><section id="compositing-to-an-annual-cube" class="level2" data-number="10.5"><h2 data-number="10.5" class="anchored" data-anchor-id="compositing-to-an-annual-cube">
+<span class="header-section-number">10.5</span> Compositing to an annual cube</h2>
 <p>So we reduce the monthly cube to one layer per year, taking a consistent mid-summer window rather than an annual mean, which would average leaf-on against leaf-off and discard the contrast that makes disturbance visible. This is the temporal normalisation step that operational cube software performs with cloud-ranked compositing:</p>
 <div class="cell">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">years</span> <span class="op">&lt;-</span> <span class="fl">2016</span><span class="op">:</span><span class="fl">2024</span></span>
@@ -463,8 +469,8 @@ window.Quarto = {
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">nlyr</a></span><span class="op">(</span><span class="va">cube</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section><section id="temporal-reduction" class="level2" data-number="9.6"><h2 data-number="9.6" class="anchored" data-anchor-id="temporal-reduction">
-<span class="header-section-number">9.6</span> Temporal reduction</h2>
+</section><section id="temporal-reduction" class="level2" data-number="10.6"><h2 data-number="10.6" class="anchored" data-anchor-id="temporal-reduction">
+<span class="header-section-number">10.6</span> Temporal reduction</h2>
 <p>A cube is reduced along time the way a single raster is summarised along space. <code><a href="https://rspatial.github.io/terra/reference/app.html">app()</a></code> applies a function to each pixel’s time series. The mean over years is the baseline surface; the standard deviation flags where the record is unstable:</p>
 <div class="cell">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mean_ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/app.html">app</a></span><span class="op">(</span><span class="va">cube</span>, <span class="va">mean</span><span class="op">)</span></span>
@@ -478,8 +484,8 @@ window.Quarto = {
 </div>
 </div>
 <p>High temporal SD is the signature of disturbance: stable forest barely varies year to year once the season is controlled, so the burned block lights up.</p>
-</section><section id="trends" class="level2" data-number="9.7"><h2 data-number="9.7" class="anchored" data-anchor-id="trends">
-<span class="header-section-number">9.7</span> Trends</h2>
+</section><section id="trends" class="level2" data-number="10.7"><h2 data-number="10.7" class="anchored" data-anchor-id="trends">
+<span class="header-section-number">10.7</span> Trends</h2>
 <p>The direction and rate of change per pixel is the slope of index against year, a linear trend fitted independently at every location. <code><a href="https://rspatial.github.io/terra/reference/app.html">app()</a></code> carries the regression across the cube:</p>
 <div class="cell">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">slope</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/app.html">app</a></span><span class="op">(</span><span class="va">cube</span>, <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="op">{</span></span>
@@ -496,8 +502,8 @@ window.Quarto = {
 </div>
 </div>
 <p>Strong negative slopes mark sustained loss. This is the engine of trend-based monitoring: a whole landscape of time series reduced to one map of who is gaining and who is losing.</p>
-</section><section id="detecting-the-event" class="level2" data-number="9.8"><h2 data-number="9.8" class="anchored" data-anchor-id="detecting-the-event">
-<span class="header-section-number">9.8</span> Detecting the event</h2>
+</section><section id="detecting-the-event" class="level2" data-number="10.8"><h2 data-number="10.8" class="anchored" data-anchor-id="detecting-the-event">
+<span class="header-section-number">10.8</span> Detecting the event</h2>
 <p>A trend says a pixel declined; monitoring needs to know <em>when</em>. Differencing consecutive years isolates the step. The fire year is the layer where the largest drop occurs, and thresholding the year-on-year change delineates the burned area:</p>
 <div class="cell">
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d2021</span> <span class="op">&lt;-</span> <span class="va">cube</span><span class="op">[[</span><span class="st">"y2021"</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">cube</span><span class="op">[[</span><span class="st">"y2020"</span><span class="op">]</span><span class="op">]</span></span>
@@ -507,8 +513,8 @@ window.Quarto = {
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">burned_ha</span>, <span class="fl">2</span><span class="op">)</span>                                <span class="co"># hectares burned in 2021</span></span>
 <span><span class="co">#&gt; [1] 2.25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section><section id="keystone-ipcc-tier-1-fire-emissions" class="level2" data-number="9.9"><h2 data-number="9.9" class="anchored" data-anchor-id="keystone-ipcc-tier-1-fire-emissions">
-<span class="header-section-number">9.9</span> Keystone: IPCC Tier 1 fire emissions</h2>
+</section><section id="keystone-ipcc-tier-1-fire-emissions" class="level2" data-number="10.9"><h2 data-number="10.9" class="anchored" data-anchor-id="keystone-ipcc-tier-1-fire-emissions">
+<span class="header-section-number">10.9</span> Keystone: IPCC Tier 1 fire emissions</h2>
 <p>The capstone joins the whole book: a time series detects a fire, the burned area is measured, and IPCC Tier 1 methods turn that area into an emission. The IPCC-wildfire-emissions workflow runs this chain from burn-area mapping through to emission factors, and the governing equation is the same one every fire inventory uses <span class="citation" data-cites="ipcc2006gl">(<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">IPCC, 2006</a>)</span>:</p>
 <p><span class="math display">\[L_{fire} = A \times M_B \times C_f \times G_{ef} \times 10^{-3}\]</span></p>
 <p>where <span class="math inline">\(A\)</span> is burned area, <span class="math inline">\(M_B\)</span> the fuel biomass available, <span class="math inline">\(C_f\)</span> the combustion factor, and <span class="math inline">\(G_{ef}\)</span> the emission factor for the gas. With the burned area from the cube and IPCC default factors for temperate forest:</p>
@@ -536,9 +542,9 @@ window.Quarto = {
 <span><span class="co">#&gt;  2.5%   50% 97.5% </span></span>
 <span><span class="co">#&gt;   105   190   292</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area <span class="math inline">\(A\)</span> as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of Chapter 7 is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.</p>
-</section><section id="exercises" class="level2" data-number="9.10"><h2 data-number="9.10" class="anchored" data-anchor-id="exercises">
-<span class="header-section-number">9.10</span> Exercises</h2>
+<p>Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area <span class="math inline">\(A\)</span> as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of the uncertainty chapter is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.</p>
+</section><section id="exercises" class="level2" data-number="10.10"><h2 data-number="10.10" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">10.10</span> Exercises</h2>
 <ol type="1">
 <li>Reduce the cube with <code><a href="https://rspatial.github.io/terra/reference/app.html">app()</a></code> to the maximum index per pixel instead of the mean. Where does the maximum surface differ most from the mean, and why there?</li>
 <li>Fit the per-pixel trend on the pre-fire years only (2016–2020). How does the burned block’s slope compare with the full-record slope, and what does that say about mixing a step change into a linear trend?</li>
@@ -1021,12 +1027,12 @@ Simões, R., Camara, G., Queiroz, G., Souza, F., Andrade, P. R., Santos, L., Car
   });
   </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
       <a href="./07-uncertainty.html" class="pagination-link" aria-label="Uncertainty">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Uncertainty</span></span>
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="./09-spatial-patterns.html" class="pagination-link" aria-label="Spatial Patterns">
-        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
@@ -1245,7 +1251,7 @@ Simões, R., Camara, G., Queiroz, G., Souza, F., Andrade, P. R., Santos, L., Car
 <span id="cb14-229"><a href="#cb14-229" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-230"><a href="#cb14-230" aria-hidden="true" tabindex="-1"></a>More than a third of the time, an analyst sampling this way would report a pixel as greening when it is in fact declining. Nothing is wrong with the sensor, the algorithm, or the arithmetic. The error is entirely a consequence of sampling a periodic signal at inconsistent phase, and no amount of downstream statistics recovers what the sampling design threw away.</span>
 <span id="cb14-231"><a href="#cb14-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-232"><a href="#cb14-232" aria-hidden="true" tabindex="-1"></a>This is where the chapter connects back to the previous one. Chapter 7 propagated uncertainty through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.</span>
+<span id="cb14-232"><a href="#cb14-232" aria-hidden="true" tabindex="-1"></a>This is where the chapter connects back to the previous one. The uncertainty chapter propagated error through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.</span>
 <span id="cb14-233"><a href="#cb14-233" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-234"><a href="#cb14-234" aria-hidden="true" tabindex="-1"></a><span class="fu">## Compositing to an annual cube</span></span>
 <span id="cb14-235"><a href="#cb14-235" aria-hidden="true" tabindex="-1"></a></span>
@@ -1332,7 +1338,7 @@ Simões, R., Camara, G., Queiroz, G., Souza, F., Andrade, P. R., Santos, L., Car
 <span id="cb14-328"><a href="#cb14-328" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">quantile</span>(sim, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>)), <span class="dv">0</span>)      <span class="co"># CO2 tonnes: lower, median, upper</span></span>
 <span id="cb14-329"><a href="#cb14-329" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb14-330"><a href="#cb14-330" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-331"><a href="#cb14-331" aria-hidden="true" tabindex="-1"></a>Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area $A$ as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of Chapter 7 is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.</span>
+<span id="cb14-331"><a href="#cb14-331" aria-hidden="true" tabindex="-1"></a>Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area $A$ as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of the uncertainty chapter is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.</span>
 <span id="cb14-332"><a href="#cb14-332" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-333"><a href="#cb14-333" aria-hidden="true" tabindex="-1"></a><span class="fu">## Exercises</span></span>
 <span id="cb14-334"><a href="#cb14-334" aria-hidden="true" tabindex="-1"></a></span>
