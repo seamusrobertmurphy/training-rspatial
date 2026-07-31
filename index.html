@@ -289,8 +289,9 @@ div.csl-indent {
   <ul>
   <li><a href="#preface" id="toc-preface" class="nav-link active" data-scroll-target="#preface">Preface</a>
   <ul class="collapse">
+  <li><a href="#two-readers" id="toc-two-readers" class="nav-link" data-scroll-target="#two-readers">Two readers</a></li>
   <li><a href="#the-chapters" id="toc-the-chapters" class="nav-link" data-scroll-target="#the-chapters">The chapters</a></li>
-  <li><a href="#the-running-dataset" id="toc-the-running-dataset" class="nav-link" data-scroll-target="#the-running-dataset">The running dataset</a></li>
+  <li><a href="#the-data" id="toc-the-data" class="nav-link" data-scroll-target="#the-data">The data</a></li>
   <li><a href="#using-this-book" id="toc-using-this-book" class="nav-link" data-scroll-target="#using-this-book">Using this book</a></li>
   </ul></li>
   </ul>
@@ -333,26 +334,45 @@ div.csl-indent {
 
 <section id="preface" class="level1 unnumbered">
 <h1 class="unnumbered">Preface</h1>
-<p>This is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.</p>
-<p>The course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.</p>
+<p>Carbon projects are audited on numbers that come out of a geographic information system, and very few of the people who produce or check those numbers were trained to build one. The methods literature stops at the discipline boundary: it will teach you to project a raster and never mention what a verifier does with the result. The standards documents start on the far side of it: they will tell you an uncertainty deduction is required and never show you how to compute one. Practitioners reconcile the two in undocumented spreadsheets.</p>
+<p>This book is written to close that gap. It teaches the spatial and statistical methods that forest carbon measurement and verification actually rests on, from reading a shapefile to reporting an area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly. It assumes an introductory course in statistics and no prior GIS.</p>
+<section id="two-readers" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="two-readers">Two readers</h2>
+<p>The book is written for two audiences at once, and it is honest about which parts belong to whom.</p>
+<p>The main text is for anyone who needs the method: graduate students in forestry, environmental science and remote sensing, and analysts moving into carbon work from an adjacent field. It teaches spatial analysis and applied statistics, and it can be read straight through without reference to any crediting standard.</p>
+<p>Interleaved with it are <strong>verification tracks</strong>, set off in tinted boxes. These carry the registry-specific material that only practitioners need: what ART-TREES, Verra and the American Carbon Registry require, where their equations are written down, and how each converts a statistic into forgone credits. They are written for analysts and technical staff at project developers and verification bodies, and for national forest monitoring teams.</p>
+<p>A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.</p>
+</section>
 <section id="the-chapters" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="the-chapters">The chapters</h2>
+<p>The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.</p>
 <ol type="1">
-<li>Getting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.</li>
+<li>Getting Started — reproducible projects, the spatial stack, vector versus raster, a first map and coordinate check.</li>
 <li>Vector Data — geometries, attributes and support, spatial joins; closing on an area check.</li>
 <li>Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.</li>
 <li>Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.</li>
 <li>LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.</li>
 <li>Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.</li>
-<li>Uncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.</li>
-<li>Time Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.</li>
-<li>Spatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley’s K; closing on post-fire conifer regeneration.</li>
 </ol>
-<p>An appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.</p>
+<p>The next four turn that toolkit on the accounting problem, and are where the book departs from every other R-spatial text.</p>
+<ol start="7" type="1">
+<li>Allometry and Biomass — equation form and selection, extrapolation, wood density, scaling to the stand.</li>
+<li>Emission Factors — tiers, the stock-difference method, factor selection, propagation in quadrature.</li>
+<li>Activity Data and Classification — IPCC approaches, training design, probability surfaces, active learning.</li>
+<li>Baseline Modelling — counterfactuals, reference periods, the ratchet, risk-weighted allocation.</li>
+</ol>
+<p>The last three quantify and close.</p>
+<ol start="11" type="1">
+<li>Uncertainty — sampling error, accuracy metrics, cross-validation, Monte Carlo propagation, area-adjusted accuracy, and how three registries turn one statistic into three different deductions.</li>
+<li>Time Series — space-time cubes, seasonality and randomness, sampling and aliasing; closing on IPCC Tier 1 fire emissions.</li>
+<li>Spatial Patterns — point patterns, intensity, nearest-neighbour, Ripley’s K; closing on post-fire conifer regeneration.</li>
+</ol>
+<p>An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.</p>
 </section>
-<section id="the-running-dataset" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="the-running-dataset">The running dataset</h2>
-<p>Every chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.</p>
+<section id="the-data" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="the-data">The data</h2>
+<p>One plot runs through the book: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 2,287 stems in a 400 by 640 metre footprint, each identified to species and measured for diameter. Terrain, imagery, LiDAR and time-series layers are simulated over that same footprint, so a single geography carries from raw coordinates through to a quantified emission.</p>
+<p>Four smaller datasets join it where the plot cannot answer the question. Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations. A file of harvested trees with measured biomass supports the error metrics, because model error cannot be estimated without observations to compare against. A set of forest inventory plots supports the eligibility and baseline work.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -363,13 +383,16 @@ About the data
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone, Spatial Patterns,, which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia <span class="citation" data-cites="murphy2026selkirk">(<a href="references/index.html#ref-murphy2026selkirk" role="doc-biblioref">Murphy et al., 2026</a>)</span>.</p>
+<p>The stem list follows the published ForestGEO census. Within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data.</p>
+<p>One chapter is different. Spatial Patterns runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia <span class="citation" data-cites="murphy2026selkirk">(<a href="references/index.html#ref-murphy2026selkirk" role="doc-biblioref">Murphy et al., 2026</a>)</span>.</p>
 </div>
 </div>
 </section>
 <section id="using-this-book" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="using-this-book">Using this book</h2>
-<p>Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field <span class="citation" data-cites="pebesma2023sds lovelace2019geocomputation bivand2013asdar">(<a href="references/index.html#ref-bivand2013asdar" role="doc-biblioref">Bivand et al., 2013</a>; <a href="references/index.html#ref-lovelace2019geocomputation" role="doc-biblioref">Lovelace et al., 2019</a>; <a href="references/index.html#ref-pebesma2023sds" role="doc-biblioref">Pebesma &amp; Bivand, 2023</a>)</span>, and the <code>sf</code> and <code>terra</code> packages that underpin the modern R-spatial stack are described by <span class="citation" data-cites="pebesma2018sf">Pebesma (<a href="references/index.html#ref-pebesma2018sf" role="doc-biblioref">2018</a>)</span> and <span class="citation" data-cites="hijmans2024terra">Hijmans (<a href="references/index.html#ref-hijmans2024terra" role="doc-biblioref">2024</a>)</span>. Where the applied material touches forest-carbon conventions it follows <span class="citation" data-cites="ipcc2006gl">IPCC (<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">2006</a>)</span>.</p>
+<p>Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises.</p>
+<p>Every figure and every number in the text is generated by code that ships with the book and runs offline. Nothing is quoted from a source that cannot be re-executed, and where a registry document is cited the citation is to the equation and section, so a reader can check it against the original. Any package the book uses can be installed from CRAN in one command.</p>
+<p>Readers who want a deeper or more general treatment of the spatial methods are well served by the canonical texts in the field <span class="citation" data-cites="pebesma2023sds lovelace2019geocomputation bivand2013asdar">(<a href="references/index.html#ref-bivand2013asdar" role="doc-biblioref">Bivand et al., 2013</a>; <a href="references/index.html#ref-lovelace2019geocomputation" role="doc-biblioref">Lovelace et al., 2019</a>; <a href="references/index.html#ref-pebesma2023sds" role="doc-biblioref">Pebesma &amp; Bivand, 2023</a>)</span>, and the <code>sf</code> and <code>terra</code> packages that underpin the modern R-spatial stack are described by <span class="citation" data-cites="pebesma2018sf">Pebesma (<a href="references/index.html#ref-pebesma2018sf" role="doc-biblioref">2018</a>)</span> and <span class="citation" data-cites="hijmans2024terra">Hijmans (<a href="references/index.html#ref-hijmans2024terra" role="doc-biblioref">2024</a>)</span>. Where the applied material touches forest-carbon conventions it follows <span class="citation" data-cites="ipcc2006gl">IPCC (<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">2006</a>)</span> and the 2019 Refinement <span class="citation" data-cites="ipcc2019refinement">(<a href="references/index.html#ref-ipcc2019refinement" role="doc-biblioref">IPCC, 2019</a>)</span>.</p>
 
 
 <!-- -->
@@ -383,6 +406,9 @@ Hijmans, R. J. (2024). <em>Terra: Spatial data analysis</em>. <a href="https://C
 </div>
 <div id="ref-ipcc2006gl" class="csl-entry" role="listitem">
 IPCC. (2006). <em>2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use</em>. Institute for Global Environmental Strategies.
+</div>
+<div id="ref-ipcc2019refinement" class="csl-entry" role="listitem">
+IPCC. (2019). <em>2019 refinement to the 2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use</em> (E. Calvo Buendia, K. Tanabe, A. Kranjc, J. Baasansuren, M. Fukuda, S. Ngarize, A. Osako, Y. Pyrozhenko, P. Shermanau, &amp; S. Federici, Eds.). IPCC.
 </div>
 <div id="ref-lovelace2019geocomputation" class="csl-entry" role="listitem">
 Lovelace, R., Nowosad, J., &amp; Muenchow, J. (2019). <em>Geocomputation with r</em>. Chapman; Hall/CRC.
@@ -875,37 +901,67 @@ Pebesma, E., &amp; Bivand, R. (2023). <em>Spatial data science: With application
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu"># Preface {.unnumbered}</span></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>This is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>Carbon projects are audited on numbers that come out of a geographic information system, and very few of the people who produce or check those numbers were trained to build one. The methods literature stops at the discipline boundary: it will teach you to project a raster and never mention what a verifier does with the result. The standards documents start on the far side of it: they will tell you an uncertainty deduction is required and never show you how to compute one. Practitioners reconcile the two in undocumented spreadsheets.</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>The course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>This book is written to close that gap. It teaches the spatial and statistical methods that forest carbon measurement and verification actually rests on, from reading a shapefile to reporting an area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly. It assumes an introductory course in statistics and no prior GIS.</span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## The chapters {.unnumbered}</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## Two readers {.unnumbered}</span></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Getting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Vector Data — geometries, attributes and support, spatial joins; closing on an area check.</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span>Uncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">8. </span>Time Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="ss">9. </span>Spatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>The book is written for two audiences at once, and it is honest about which parts belong to whom.</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>The main text is for anyone who needs the method: graduate students in forestry, environmental science and remote sensing, and analysts moving into carbon work from an adjacent field. It teaches spatial analysis and applied statistics, and it can be read straight through without reference to any crediting standard.</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>Interleaved with it are **verification tracks**, set off in tinted boxes. These carry the registry-specific material that only practitioners need: what ART-TREES, Verra and the American Carbon Registry require, where their equations are written down, and how each converts a statistic into forgone credits. They are written for analysts and technical staff at project developers and verification bodies, and for national forest monitoring teams.</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">## The chapters {.unnumbered}</span></span>
 <span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>An appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.</span>
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">## The running dataset {.unnumbered}</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>Every chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">## About the data</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Getting Started — reproducible projects, the spatial stack, vector versus raster, a first map and coordinate check.</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Vector Data — geometries, attributes and support, spatial joins; closing on an area check.</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.</span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>The stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone, Spatial Patterns,, which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia <span class="co">[</span><span class="ot">@murphy2026selkirk</span><span class="co">]</span>.</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## Using this book {.unnumbered}</span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field <span class="co">[</span><span class="ot">@pebesma2023sds; @lovelace2019geocomputation; @bivand2013asdar</span><span class="co">]</span>, and the <span class="in">`sf`</span> and <span class="in">`terra`</span> packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied material touches forest-carbon conventions it follows @ipcc2006gl.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>The next four turn that toolkit on the accounting problem, and are where the book departs from every other R-spatial text.</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span>Allometry and Biomass — equation form and selection, extrapolation, wood density, scaling to the stand.</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="ss">8. </span>Emission Factors — tiers, the stock-difference method, factor selection, propagation in quadrature.</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="ss">9. </span>Activity Data and Classification — IPCC approaches, training design, probability surfaces, active learning.</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="ss">10. </span>Baseline Modelling — counterfactuals, reference periods, the ratchet, risk-weighted allocation.</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>The last three quantify and close.</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="ss">11. </span>Uncertainty — sampling error, accuracy metrics, cross-validation, Monte Carlo propagation, area-adjusted accuracy, and how three registries turn one statistic into three different deductions.</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="ss">12. </span>Time Series — space-time cubes, seasonality and randomness, sampling and aliasing; closing on IPCC Tier 1 fire emissions.</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="ss">13. </span>Spatial Patterns — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="fu">## The data {.unnumbered}</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>One plot runs through the book: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 2,287 stems in a 400 by 640 metre footprint, each identified to species and measured for diameter. Terrain, imagery, LiDAR and time-series layers are simulated over that same footprint, so a single geography carries from raw coordinates through to a quantified emission.</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>Four smaller datasets join it where the plot cannot answer the question. Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations. A file of harvested trees with measured biomass supports the error metrics, because model error cannot be estimated without observations to compare against. A set of forest inventory plots supports the eligibility and baseline work.</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="fu">## About the data</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>The stem list follows the published ForestGEO census. Within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data.</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>One chapter is different. Spatial Patterns runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia <span class="co">[</span><span class="ot">@murphy2026selkirk</span><span class="co">]</span>.</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="fu">## Using this book {.unnumbered}</span></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises.</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>Every figure and every number in the text is generated by code that ships with the book and runs offline. Nothing is quoted from a source that cannot be re-executed, and where a registry document is cited the citation is to the equation and section, so a reader can check it against the original. Any package the book uses can be installed from CRAN in one command.</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>Readers who want a deeper or more general treatment of the spatial methods are well served by the canonical texts in the field <span class="co">[</span><span class="ot">@pebesma2023sds; @lovelace2019geocomputation; @bivand2013asdar</span><span class="co">]</span>, and the <span class="in">`sf`</span> and <span class="in">`terra`</span> packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied material touches forest-carbon conventions it follows @ipcc2006gl and the 2019 Refinement <span class="co">[</span><span class="ot">@ipcc2019refinement</span><span class="co">]</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
