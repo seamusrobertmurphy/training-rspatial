@@ -13,34 +13,64 @@ csl: ./references/apa.csl
 
 # Preface {.unnumbered}
 
-This is a practical, comprehensive introduction to geospatial data science with R, built for scientists, analysts, and auditors who need to move confidently from a stack of shapefiles and satellite imagery to a defensible result. It teaches the foundations every analyst of spatial data must understand, how spatial data are represented, referenced, measured, combined, and monitored through time, using free and open tools, and it assumes some statistics but no prior GIS.
+Carbon projects are audited on numbers that come out of a geographic information system, and very few of the people who produce or check those numbers were trained to build one. The methods literature stops at the discipline boundary: it will teach you to project a raster and never mention what a verifier does with the result. The standards documents start on the far side of it: they will tell you an uncertainty deduction is required and never show you how to compute one. Practitioners reconcile the two in undocumented spreadsheets.
 
-The course is organised as nine short chapters that run from simple to complex. Each teaches a foundational concept on one running dataset, then closes with a worked example drawn from a real forest-carbon verification project, so the concept earns its example and the example proves the concept. By the end you will have carried a single forest plot from raw coordinates through vector and raster analysis, terrain, LiDAR, disturbance detection, and uncertainty, and worked two capstones: a time-series analysis that ends in a quantified emission, and a spatial-pattern analysis of forest regeneration.
+This book is written to close that gap. It teaches the spatial and statistical methods that forest carbon measurement and verification actually rests on, from reading a shapefile to reporting an area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly. It assumes an introductory course in statistics and no prior GIS.
+
+## Two readers {.unnumbered}
+
+The book is written for two audiences at once, and it is honest about which parts belong to whom.
+
+The main text is for anyone who needs the method: graduate students in forestry, environmental science and remote sensing, and analysts moving into carbon work from an adjacent field. It teaches spatial analysis and applied statistics, and it can be read straight through without reference to any crediting standard.
+
+Interleaved with it are **verification tracks**, set off in tinted boxes. These carry the registry-specific material that only practitioners need: what ART-TREES, Verra and the American Carbon Registry require, where their equations are written down, and how each converts a statistic into forgone credits. They are written for analysts and technical staff at project developers and verification bodies, and for national forest monitoring teams.
+
+A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.
 
 ## The chapters {.unnumbered}
 
-1. Getting Started — reproducible R projects, the spatial stack, vector versus raster, a first map and coordinate check.
+The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.
+
+1. Getting Started — reproducible projects, the spatial stack, vector versus raster, a first map and coordinate check.
 2. Vector Data — geometries, attributes and support, spatial joins; closing on an area check.
 3. Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.
 4. Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.
 5. LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.
 6. Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.
-7. Uncertainty — sampling error, Monte Carlo propagation, conservative estimates; closing on area-adjusted accuracy.
-8. Time Series (capstone I) — space-time cubes, trends, change to emissions; closing on IPCC Tier 1 fire emissions.
-9. Spatial Patterns (capstone II) — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.
 
-An appendix covers the surrounding discipline: automation, spatial-data protocols, and registry practice.
+The next four turn that toolkit on the accounting problem, and are where the book departs from every other R-spatial text.
 
-## The running dataset {.unnumbered}
+7. Allometry and Biomass — equation form and selection, extrapolation, wood density, scaling to the stand.
+8. Emission Factors — tiers, the stock-difference method, factor selection, propagation in quadrature.
+9. Activity Data and Classification — IPCC approaches, training design, probability surfaces, active learning.
+10. Baseline Modelling — counterfactuals, reference periods, the ratchet, risk-weighted allocation.
 
-Every chapter draws on one dataset: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia. It records 2,287 stems in a 400 by 640 metre plot, each identified to species and measured for diameter. A forestry dataset is incidental to the methods, which are general to all spatial data, but it gives the examples a consistent grounding and lets the applied exercises connect to real problems in inventory, carbon, and monitoring.
+The last three quantify and close.
+
+11. Uncertainty — sampling error, accuracy metrics, cross-validation, Monte Carlo propagation, area-adjusted accuracy, and how three registries turn one statistic into three different deductions.
+12. Time Series — space-time cubes, seasonality and randomness, sampling and aliasing; closing on IPCC Tier 1 fire emissions.
+13. Spatial Patterns — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.
+
+An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.
+
+## The data {.unnumbered}
+
+One plot runs through the book: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 2,287 stems in a 400 by 640 metre footprint, each identified to species and measured for diameter. Terrain, imagery, LiDAR and time-series layers are simulated over that same footprint, so a single geography carries from raw coordinates through to a quantified emission.
+
+Four smaller datasets join it where the plot cannot answer the question. Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations. A file of harvested trees with measured biomass supports the error metrics, because model error cannot be estimated without observations to compare against. A set of forest inventory plots supports the eligibility and baseline work.
 
 ::: callout-note
 ## About the data
 
-The stem list (species and diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR, and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data. The one exception is the second capstone, Spatial Patterns,, which runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia [@murphy2026selkirk].
+The stem list follows the published ForestGEO census. Within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data.
+
+One chapter is different. Spatial Patterns runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia [@murphy2026selkirk].
 :::
 
 ## Using this book {.unnumbered}
 
-Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises. Readers who want a deeper or more general treatment are well served by the canonical texts in the field [@pebesma2023sds; @lovelace2019geocomputation; @bivand2013asdar], and the `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied material touches forest-carbon conventions it follows @ipcc2006gl.
+Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises.
+
+Every figure and every number in the text is generated by code that ships with the book and runs offline. Nothing is quoted from a source that cannot be re-executed, and where a registry document is cited the citation is to the equation and section, so a reader can check it against the original. Any package the book uses can be installed from CRAN in one command.
+
+Readers who want a deeper or more general treatment of the spatial methods are well served by the canonical texts in the field [@pebesma2023sds; @lovelace2019geocomputation; @bivand2013asdar], and the `sf` and `terra` packages that underpin the modern R-spatial stack are described by @pebesma2018sf and @hijmans2024terra. Where the applied material touches forest-carbon conventions it follows @ipcc2006gl and the 2019 Refinement [@ipcc2019refinement].
