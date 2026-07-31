@@ -213,7 +213,7 @@ round(100 * mean(drift_slope > 0), 1)      # per cent of draws with the wrong si
 
 More than a third of the time, an analyst sampling this way would report a pixel as greening when it is in fact declining. Nothing is wrong with the sensor, the algorithm, or the arithmetic. The error is entirely a consequence of sampling a periodic signal at inconsistent phase, and no amount of downstream statistics recovers what the sampling design threw away.
 
-This is where the chapter connects back to the previous one. Chapter 7 propagated uncertainty through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.
+This is where the chapter connects back to the previous one. The uncertainty chapter propagated error through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.
 
 ## Compositing to an annual cube
 
@@ -300,7 +300,7 @@ sim <- replicate(2000, {
 round(quantile(sim, c(0.025, 0.5, 0.975)), 0)      # CO2 tonnes: lower, median, upper
 ```
 
-Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area $A$ as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of Chapter 7 is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.
+Note what that interval does and does not include. It propagates the uncertainty in the three emission factors while treating the burned area $A$ as known exactly, which it is not: it came from a threshold applied to a differenced cube, and both the threshold and the dates feeding it are choices. The area-adjusted accuracy of the uncertainty chapter is how that term is estimated properly, and a complete Tier 2 statement would carry it into this same simulation alongside the factors.
 
 ## Exercises
 

@@ -36,7 +36,7 @@ with $D$ the diameter at breast height and $b$ typically between 2.3 and 2.6. Ta
 
 $$\ln(AGB) = \ln(a) + b\,\ln(D) + \varepsilon$$
 
-Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972], and it is used throughout this book. Chapter 11 shows what it does to the error statistics.
+Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972], and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics.
 
 ## Choosing an equation
 
@@ -158,7 +158,7 @@ round(c(stems = length(agb_kg),
         MgC_per_ha = carbon_density), 2)
 ```
 
-The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. Chapter 11 propagates that.
+The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. The uncertainty chapter propagates that.
 
 ::: {.verification}
 #### What the registries ask of an equation {.unnumbered .unlisted}
@@ -173,7 +173,7 @@ argument that the project's trees fall inside that range. Where they do not, the
 extrapolation must be acknowledged and its effect on uncertainty carried through.
 
 The uncertainty attached to the equation then enters the deduction arithmetic set
-out at the end of Chapter 11. Under ART-TREES the allometric contribution feeds
+out at the end of the uncertainty chapter. Under ART-TREES the allometric contribution feeds
 the half-width of the 90 per cent interval; under ACR's Improved Forest
 Management methodology it is one component of the total uncertainty combined in
 Equation 22 and compared against the ten per cent precision requirement. In both

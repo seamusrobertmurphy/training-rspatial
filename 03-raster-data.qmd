@@ -135,7 +135,7 @@ forest_ha <- global(forest, "sum", na.rm = TRUE)[1, 1] * cell_ha
 round(forest_ha, 1)                             # hectares of forest
 ```
 
-That single number, forest area, is what a project claims and an auditor recomputes. Chapter 7 returns to it to ask how *certain* the number is, because a class area is only as good as the map's accuracy.
+That single number, forest area, is what a project claims and an auditor recomputes. The uncertainty chapter returns to it to ask how *certain* the number is, because a class area is only as good as the map's accuracy.
 
 ## Exercises
 

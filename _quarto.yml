@@ -32,6 +32,7 @@ book:
     - 05-lidar-point-clouds.qmd
     - 06-disturbance-risk.qmd
     - allometry.qmd
+    - emission-factors.qmd
     - 07-uncertainty.qmd
     - 08-time-series.qmd
     - 09-spatial-patterns.qmd
