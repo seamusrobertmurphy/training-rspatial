@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>10&nbsp; Baseline Modelling – Spatial Analysis in R for Forest Carbon Verification</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./07-uncertainty.html" rel="next">
+<link href="./activity-data.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-352c1c0ff19b8228249a899e5c7e3202.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<meta property="og:title" content="10&nbsp; Baseline Modelling – Spatial Analysis in R for Forest Carbon Verification">
+<meta property="og:description" content="">
+<meta property="og:image" content="baseline-modelling_files/figure-html/unnamed-chunk-1-1.png">
+<meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
+</head>
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./baseline-modelling.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Baseline Modelling</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Course Contents</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/seamusrobertmurphy/training-rspatial" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-getting-started.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Getting Started</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-vector-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Vector Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-raster-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Raster Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-terrain-hydrology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Terrain and Hydrology</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-lidar-point-clouds.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">LiDAR and Point Clouds</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-disturbance-risk.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Disturbance and Risk</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./allometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Allometry and Biomass</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emission-factors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./activity-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./baseline-modelling.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Baseline Modelling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A-automation-registries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Automation, Protocols and Registries</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">References</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title"><strong>On this page</strong></h2>
+   
+  <ul>
+<li><a href="#counting-what-did-not-happen" id="toc-counting-what-did-not-happen" class="nav-link active" data-scroll-target="#counting-what-did-not-happen"><span class="header-section-number">10.1</span> Counting what did not happen</a></li>
+  <li><a href="#a-baseline-is-not-a-forecast" id="toc-a-baseline-is-not-a-forecast" class="nav-link" data-scroll-target="#a-baseline-is-not-a-forecast"><span class="header-section-number">10.2</span> A baseline is not a forecast</a></li>
+  <li><a href="#what-the-standards-actually-specify" id="toc-what-the-standards-actually-specify" class="nav-link" data-scroll-target="#what-the-standards-actually-specify"><span class="header-section-number">10.3</span> What the standards actually specify</a></li>
+  <li><a href="#the-ratchet" id="toc-the-ratchet" class="nav-link" data-scroll-target="#the-ratchet"><span class="header-section-number">10.4</span> The ratchet</a></li>
+  <li><a href="#discounting-for-uncertainty" id="toc-discounting-for-uncertainty" class="nav-link" data-scroll-target="#discounting-for-uncertainty"><span class="header-section-number">10.5</span> Discounting for uncertainty</a></li>
+  <li><a href="#from-jurisdiction-to-project" id="toc-from-jurisdiction-to-project" class="nav-link" data-scroll-target="#from-jurisdiction-to-project"><span class="header-section-number">10.6</span> From jurisdiction to project</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">10.7</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/baseline-modelling.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">
+<span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Baseline Modelling</span>
+</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><section id="counting-what-did-not-happen" class="level2" data-number="10.1"><h2 data-number="10.1" class="anchored" data-anchor-id="counting-what-did-not-happen">
+<span class="header-section-number">10.1</span> Counting what did not happen</h2>
+<p>Every chapter so far has measured something. This one does not, and that is the difficulty. A carbon credit is issued for the difference between what happened and what would have happened otherwise, and the second term is a counterfactual: a quantity that by construction cannot be observed, and against which the project’s performance is scored.</p>
+<p>The baseline is that counterfactual, expressed as a rate. It is the single most consequential number in a carbon project, because it multiplies through everything: a baseline set ten per cent too high issues ten per cent more credits for the same forest, indefinitely. It is also the number most exposed to the proponent’s discretion, since the proponent usually proposes it.</p>
+<p>That combination, high leverage and unfalsifiability, explains almost every feature of how the standards handle baselines. Read the rules as a forecasting method and they look crude. Read them as anti-gaming devices and they are carefully built.</p>
+</section><section id="a-baseline-is-not-a-forecast" class="level2" data-number="10.2"><h2 data-number="10.2" class="anchored" data-anchor-id="a-baseline-is-not-a-forecast">
+<span class="header-section-number">10.2</span> A baseline is not a forecast</h2>
+<p>The temptation is to treat baseline construction as a prediction problem: model historical deforestation, extrapolate, and call the projection the baseline. Every major standard declines to do this, and the reason is worth demonstrating rather than asserting.</p>
+<p>Take a jurisdiction whose deforestation rate is genuinely flat at 4,200 hectares a year, observed for seventeen years with the year-to-year variability any real record has.</p>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span>
+<span><span class="va">years</span> <span class="op">&lt;-</span> <span class="fl">2008</span><span class="op">:</span><span class="fl">2024</span></span>
+<span><span class="va">true_rate</span> <span class="op">&lt;-</span> <span class="fl">4200</span>                        <span class="co"># ha/yr, genuinely constant</span></span>
+<span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span>, <span class="va">true_rate</span>, <span class="fl">1100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">obs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">years</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">years</span>, <span class="va">obs</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#2f5d4e"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7000</span><span class="op">)</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">"deforestation (ha/yr)"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Seventeen years, no underlying trend"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">true_rate</span>, lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"grey40"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="baseline-modelling_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>There is no trend here. Now build a baseline two ways from every possible five-year reference window: as the mean of the window, and as a fitted linear trend projected forward over a six-year validity period.</p>
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">wins</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">years</span><span class="op">)</span> <span class="op">-</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">wins</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">k</span> <span class="op">&lt;-</span> <span class="va">i</span><span class="op">:</span><span class="op">(</span><span class="va">i</span> <span class="op">+</span> <span class="fl">4</span><span class="op">)</span>; <span class="va">y</span> <span class="op">&lt;-</span> <span class="va">years</span><span class="op">[</span><span class="va">k</span><span class="op">]</span>; <span class="va">v</span> <span class="op">&lt;-</span> <span class="va">obs</span><span class="op">[</span><span class="va">k</span><span class="op">]</span></span>
+<span>  <span class="va">fit</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">v</span> <span class="op">~</span> <span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="va">proj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, mean_baseline <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span>, trend_baseline <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">proj</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">res</span>, <span class="fl">0</span><span class="op">)</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead><tr class="header">
+<th style="text-align: right;">start</th>
+<th style="text-align: right;">mean_baseline</th>
+<th style="text-align: right;">trend_baseline</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2008</td>
+<td style="text-align: right;">3702</td>
+<td style="text-align: right;">5002</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2009</td>
+<td style="text-align: right;">3626</td>
+<td style="text-align: right;">4094</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2010</td>
+<td style="text-align: right;">3911</td>
+<td style="text-align: right;">7607</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2011</td>
+<td style="text-align: right;">4382</td>
+<td style="text-align: right;">6875</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2012</td>
+<td style="text-align: right;">4672</td>
+<td style="text-align: right;">4135</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2013</td>
+<td style="text-align: right;">4192</td>
+<td style="text-align: right;">3279</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2014</td>
+<td style="text-align: right;">4215</td>
+<td style="text-align: right;">626</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2015</td>
+<td style="text-align: right;">3848</td>
+<td style="text-align: right;">2197</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">3372</td>
+<td style="text-align: right;">1963</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2017</td>
+<td style="text-align: right;">3326</td>
+<td style="text-align: right;">3802</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2018</td>
+<td style="text-align: right;">3294</td>
+<td style="text-align: right;">2960</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2019</td>
+<td style="text-align: right;">3479</td>
+<td style="text-align: right;">4150</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2020</td>
+<td style="text-align: right;">3506</td>
+<td style="text-align: right;">5260</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>mean_sd    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">mean_baseline</span><span class="op">)</span>,</span>
+<span>        trend_sd   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">trend_baseline</span><span class="op">)</span>,</span>
+<span>        mean_range  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">mean_baseline</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        trend_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">trend_baseline</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        ratio       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">trend_baseline</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span></span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">mean_baseline</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     mean_sd    trend_sd  mean_range trend_range       ratio </span></span>
+<span><span class="co">#&gt;       441.0      1922.2      1378.6      6980.8         5.1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The mean baseline moves by about 1,400 hectares a year across every choice of window. The trend baseline moves by nearly 7,000, from a low of about 600 to a high of over 7,600. That is a twelvefold spread in the crediting level, produced from a single dataset with no underlying trend at all, by nothing more than the choice of which five years to call the reference period.</p>
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">start</span>, <span class="va">res</span><span class="op">$</span><span class="va">trend_baseline</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#b5342e"</span>,</span>
+<span>     ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">8000</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"first year of reference window"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"projected baseline (ha/yr)"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"The same data, two baseline methods"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html">lines</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">start</span>, <span class="va">res</span><span class="op">$</span><span class="va">mean_baseline</span>, type <span class="op">=</span> <span class="st">"b"</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"#2f5d4e"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">true_rate</span>, lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"grey40"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"topright"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"fitted trend, projected"</span>, <span class="st">"reference-period mean"</span>, <span class="st">"truth"</span><span class="op">)</span>,</span>
+<span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#b5342e"</span>, <span class="st">"#2f5d4e"</span>, <span class="st">"grey40"</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>       lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">19</span>, <span class="fl">19</span>, <span class="cn">NA</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="baseline-modelling_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>A proponent free to fit a trend and choose the window has been handed a dial. Nothing in the fitted model is dishonest; each regression is a correct summary of its five years. The problem is that a short noisy series does not contain enough information to identify a trend, so the fit reports sampling noise as signal, and the proponent picks the noise they prefer.</p>
+<p>Mandating an average removes the dial. It is a worse forecast and a far better rule, and the distinction between those two things is the whole of baseline design.</p>
+</section><section id="what-the-standards-actually-specify" class="level2" data-number="10.3"><h2 data-number="10.3" class="anchored" data-anchor-id="what-the-standards-actually-specify">
+<span class="header-section-number">10.3</span> What the standards actually specify</h2>
+<p>Two of the major programmes, arrived at independently, converge on almost the same structure.</p>
+<p>Under ART-TREES, the crediting level is the mean of a five-year historical reference period, updated every five years, with the reference period barred from overlapping the crediting period <span class="citation" data-cites="art2021trees">(<a href="references/index.html#ref-art2021trees" role="doc-biblioref">Architecture for REDD+ Transactions, 2021</a>, Eq. 1)</span>. Under Verra’s jurisdictional module for unplanned deforestation, historical activity data over a historical reference period is discounted for uncertainty, annualised, and projected flat across a six-year validity period, after which it must be rebuilt <span class="citation" data-cites="verra2024jadb">(<a href="references/index.html#ref-verra2024jadb" role="doc-biblioref">Verra, 2024</a>)</span>.</p>
+<p>Neither fits a curve. Both fix the window length in advance so it cannot be chosen after the fact. Both require the reference period to end before crediting begins.</p>
+</section><section id="the-ratchet" class="level2" data-number="10.4"><h2 data-number="10.4" class="anchored" data-anchor-id="the-ratchet">
+<span class="header-section-number">10.4</span> The ratchet</h2>
+<p>ART adds a device that is easy to miss and does a great deal of work. An updated crediting level may not be higher than the one it replaces. If the recomputed five-year mean comes out above the previous level, the previous level stands.</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">crediting_levels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">p</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">k</span>   <span class="op">&lt;-</span> <span class="op">(</span><span class="va">p</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">5</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span></span>
+<span>  <span class="va">raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">obs</span><span class="op">[</span><span class="va">k</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="va">crediting_levels</span><span class="op">[</span><span class="va">p</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">p</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="va">raw</span> <span class="kw">else</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">raw</span>, <span class="va">crediting_levels</span><span class="op">[</span><span class="va">p</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"period %d (%d-%d): five-year mean %5.0f -&gt; crediting level %5.0f%s\n"</span>,</span>
+<span>              <span class="va">p</span>, <span class="va">years</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span><span class="op">]</span>, <span class="va">years</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span><span class="op">]</span>, <span class="va">raw</span>, <span class="va">crediting_levels</span><span class="op">[</span><span class="va">p</span><span class="op">]</span>,</span>
+<span>              <span class="kw">if</span> <span class="op">(</span><span class="va">p</span> <span class="op">&gt;</span> <span class="fl">1</span> <span class="op">&amp;&amp;</span> <span class="va">raw</span> <span class="op">&gt;</span> <span class="va">crediting_levels</span><span class="op">[</span><span class="va">p</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="st">"   capped"</span> <span class="kw">else</span> <span class="st">""</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; period 1 (2008-2012): five-year mean  3702 -&gt; crediting level  3702</span></span>
+<span><span class="co">#&gt; period 2 (2013-2017): five-year mean  4192 -&gt; crediting level  3702   capped</span></span>
+<span><span class="co">#&gt; period 3 (2018-2022): five-year mean  3294 -&gt; crediting level  3294</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the second period the recomputed mean rises to 4,192 and the ratchet holds the crediting level at 3,702. In the third it falls and the lower value is adopted. The baseline can therefore only ever decline, regardless of what the forest does.</p>
+<p>This is not a statistical adjustment and does not pretend to be. It is a one-way valve, and its purpose is to prevent a jurisdiction from being rewarded for a bad five years. Without it, a period of high deforestation raises the counterfactual and every subsequent year of ordinary performance looks like an achievement.</p>
+</section><section id="discounting-for-uncertainty" class="level2" data-number="10.5"><h2 data-number="10.5" class="anchored" data-anchor-id="discounting-for-uncertainty">
+<span class="header-section-number">10.5</span> Discounting for uncertainty</h2>
+<p>Verra’s module requires the historical estimate to be conservatively discounted for its own statistical uncertainty before it becomes a baseline. This is a different use of uncertainty from the crediting deduction of the uncertainty chapter, and it points the same way: the less precisely the historical rate is known, the lower the baseline a project may claim against.</p>
+<div class="cell">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ad_estimate</span> <span class="op">&lt;-</span> <span class="fl">4200</span></span>
+<span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.10</span>, <span class="fl">0.20</span>, <span class="fl">0.35</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>uncertainty_pct <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="va">u</span>,</span>
+<span>           discounted_baseline <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">ad_estimate</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">u</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>           pct_of_estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">u</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   uncertainty_pct discounted_baseline pct_of_estimate</span></span>
+<span><span class="co">#&gt; 1               5                3990              95</span></span>
+<span><span class="co">#&gt; 2              10                3780              90</span></span>
+<span><span class="co">#&gt; 3              20                3360              80</span></span>
+<span><span class="co">#&gt; 4              35                2730              65</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The incentive this creates runs the opposite way from the crediting deduction, and the two together are what make the system coherent. Sloppy historical work lowers the baseline, so it costs credits. Sloppy monitoring work raises the deduction, so it costs credits. There is no measurement corner a proponent can cut that pays.</p>
+<p>Note also which quantity is discounted. The uncertainty here is on the <em>activity data</em>, the hectares, which is the term the classification chapter was about. A jurisdiction whose historical map fails the accuracy thresholds does not merely have a caveat attached to its baseline; it has a materially lower one.</p>
+</section><section id="from-jurisdiction-to-project" class="level2" data-number="10.6"><h2 data-number="10.6" class="anchored" data-anchor-id="from-jurisdiction-to-project">
+<span class="header-section-number">10.6</span> From jurisdiction to project</h2>
+<p>A jurisdictional baseline is a rate for a whole territory, and a project occupies a fraction of it. Allocating the jurisdictional rate to project areas cannot be done by area alone, because deforestation is not spatially uniform: a project on a road frontage faces very different pressure from one in the interior.</p>
+<p>The standard device is a risk surface. Each pixel receives a share of the zonal rate proportional to its modelled risk, so the allocation sums back to the jurisdictional total by construction:</p>
+<p><span class="math display">\[\text{Allocated}_{pixel} = \frac{\text{risk}_{pixel}}{\sum_{zone} \text{risk}} \times \text{Rate}_{zone}\]</span></p>
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/">terra</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/">sf</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stems</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html">st_as_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="st">"data/scbi_stems.csv"</span><span class="op">)</span>,</span>
+<span>                  coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html">st_transform</a></span><span class="op">(</span><span class="fl">32617</span><span class="op">)</span></span>
+<span><span class="va">r</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html">vect</a></span><span class="op">(</span><span class="va">stems</span><span class="op">)</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span>, crs <span class="op">=</span> <span class="st">"EPSG:32617"</span><span class="op">)</span></span>
+<span><span class="va">xy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/xyCellFrom.html">xyFromCell</a></span><span class="op">(</span><span class="va">r</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># a risk surface: pressure decays with distance from the western edge</span></span>
+<span><span class="va">d_edge</span> <span class="op">&lt;-</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">risk</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">d_edge</span> <span class="op">/</span> <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="va">risk_r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>; <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">risk_r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">risk</span></span>
+<span></span>
+<span><span class="va">zone_rate</span> <span class="op">&lt;-</span> <span class="fl">40</span>                                    <span class="co"># ha/yr across the whole area</span></span>
+<span><span class="va">alloc</span>     <span class="op">&lt;-</span> <span class="va">risk</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">risk</span><span class="op">)</span> <span class="op">*</span> <span class="va">zone_rate</span></span>
+<span><span class="va">alloc_r</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>; <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">alloc_r</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">alloc</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">risk_r</span>, <span class="va">alloc_r</span><span class="op">)</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Modelled risk"</span>, <span class="st">"Allocated loss (ha/yr)"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="baseline-modelling_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>zone_rate <span class="op">=</span> <span class="va">zone_rate</span>, allocated_total <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">alloc</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       zone_rate allocated_total </span></span>
+<span><span class="co">#&gt;              40              40</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The allocation conserves the total, which is the property that makes it auditable: a verifier can sum the project allocations and check they do not exceed the jurisdictional rate. Without that constraint, projects in aggregate can be credited against more deforestation than the jurisdiction has.</p>
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">project</span> <span class="op">&lt;-</span> <span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/quantile.html">quantile</a></span><span class="op">(</span><span class="va">xy</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">0.25</span><span class="op">)</span>       <span class="co"># a project on the high-risk edge</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>project_share_of_area <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html">mean</a></span><span class="op">(</span><span class="va">project</span><span class="op">)</span>,</span>
+<span>        project_share_of_baseline <span class="op">=</span> <span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">alloc</span><span class="op">[</span><span class="va">project</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">alloc</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     project_share_of_area project_share_of_baseline </span></span>
+<span><span class="co">#&gt;                      23.8                      51.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The project occupies under a quarter of the area and carries just over half the baseline, because it sits where the pressure is. That asymmetry is the entire reason risk allocation exists, and it is also where the arguments happen: the risk model’s covariates and decay parameters are chosen by someone, and they determine how many credits the project may claim. A verifier who accepts a jurisdictional rate without interrogating the allocation has checked the easy half.</p>
+<section id="reference-periods-and-revalidation" class="level4 unnumbered unlisted verification"><h4 class="unnumbered unlisted anchored" data-anchor-id="reference-periods-and-revalidation">Reference periods and revalidation</h4>
+<p>The mechanics differ between programmes and the differences matter for anyone reproducing a baseline.</p>
+<p><strong>ART-TREES.</strong> The crediting level is the mean of a five-year reference period, recomputed every five calendar years starting with the first year of crediting. The reference period may not overlap the crediting period and there may be no gap between them. An updated crediting level may not exceed the previous one; the sole exception is where a new pool or activity is added, which requires the whole five-year reference to be recalculated with it included. Interpolation is allowed where data do not fall on the calendar years, provided no bias is introduced in selecting the data used.</p>
+<p><strong>Verra, jurisdictional unplanned deforestation.</strong> Historical activity data are estimated over a historical reference period, conservatively discounted for statistical uncertainty, annualised, and used to project forward. The validity period is six years and the baseline must be updated at the end of each one. Four activity data categories must be estimated in every application: historical deforestation, stable forest, stable non-forest and forest regrowth.</p>
+<p>One provision is worth emphasising because it contradicts a widespread assumption. Wall-to-wall mapping is <strong>not required</strong> to estimate the activity data. The estimate comes from a probability sample; maps may be used to stratify that sample and reduce the effort needed to hit precision targets, but the map is not the estimator. This is the same architecture the classification chapter described and the uncertainty chapter’s area adjustment implements.</p>
+<p>Source note: the jurisdictional module consulted here is issued as a draft for public consultation, so check its status before relying on the detail. The ART provisions are from the published Standard.</p>
+</section><section id="what-a-verifier-asks-about-a-baseline" class="level4 unnumbered unlisted verification"><h4 class="unnumbered unlisted anchored" data-anchor-id="what-a-verifier-asks-about-a-baseline">What a verifier asks about a baseline</h4>
+<p>Four questions, in the order they usually expose problems.</p>
+<p><em>Was the reference period fixed before the data were seen?</em> A window chosen after inspecting the series is a chosen result. Check the dates against the programme’s rules and against the project’s own earlier documents.</p>
+<p><em>Is the method the mandated one?</em> If a proponent has fitted a trend, modelled drivers, or applied a development adjustment, that is a departure requiring explicit permission, not an improvement.</p>
+<p><em>What uncertainty was carried, and which way did it push?</em> The historical estimate should be discounted, not merely reported with a caveat. Ask to see the sample design behind it.</p>
+<p><em>Does the allocation conserve the jurisdictional total?</em> Sum the allocations across all projects and leakage belts in the jurisdiction. If they exceed the jurisdictional rate, credits are being issued twice against the same deforestation.</p>
+<p>The recurring theme is that baseline review is mostly documentary rather than computational. The arithmetic is deliberately simple; what is under examination is whether the choices around it were constrained in advance.</p>
+</section></section><section id="exercises" class="level2" data-number="10.7"><h2 data-number="10.7" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">10.7</span> Exercises</h2>
+<ol type="1">
+<li>Rerun the window comparison with the observation noise halved (<code>sd = 550</code>). By how much does the range of trend baselines shrink, and does it become acceptable? State the sample size or precision at which you would be willing to fit a trend.</li>
+<li>Introduce a genuine downward trend of 100 ha/yr into the simulated series and repeat the comparison. Does the mean baseline now systematically over-credit the project, and by how much over a six-year validity period?</li>
+<li>Apply the ART ratchet to a series with a genuine downward trend. Does the ratchet ever bind, and what does that tell you about which kind of jurisdiction it is designed to constrain?</li>
+<li>Change the risk decay length from 150 m to 400 m and recompute the project’s share of the baseline. How sensitive is the project’s crediting entitlement to a parameter that no field measurement determines?</li>
+<li>A jurisdiction reports historical activity data with 30 per cent uncertainty. Compute the discounted baseline, then compute what the project would have claimed at 10 per cent uncertainty. Express the difference as credits over a six-year validity period at 4,200 ha/yr and a nominal 150 tCO2e per hectare.</li>
+<li>
+<em>(Applied.)</em> You are reviewing a project whose allocated baseline is 62 per cent of the jurisdictional rate on 25 per cent of the area. Write the paragraph you would send the proponent, naming the specific evidence you require to accept the allocation.</li>
+</ol>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-art2021trees" class="csl-entry" role="listitem">
+Architecture for REDD+ Transactions. (2021). <em>The <span>REDD+</span> environmental excellence standard (<span>TREES</span>), version 2.0</em>. ART Secretariat, Winrock International.
+</div>
+<div id="ref-verra2024jadb" class="csl-entry" role="listitem">
+Verra. (2024). <em>Module <span>J-ADB-UD</span>: Jurisdictional activity data baseline for unplanned deforestation, version 1.0</em>. Verra.
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./activity-data.html" class="pagination-link" aria-label="Activity Data and Classification">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./07-uncertainty.html" class="pagination-link" aria-label="Uncertainty">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Uncertainty</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb10" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Baseline Modelling"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">  docx:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">    reference-doc: ./references/style.docx</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">    highlight-style: github</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">  eval: true</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="an">knitr:</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">  opts_chunk:</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">    prefer-html: true</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">    dev: "png"</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">    dpi: 300</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> ./references/references.bib</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="an">csl:</span><span class="co"> ./references/apa.csl</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## Counting what did not happen</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>Every chapter so far has measured something. This one does not, and that is the difficulty. A carbon credit is issued for the difference between what happened and what would have happened otherwise, and the second term is a counterfactual: a quantity that by construction cannot be observed, and against which the project's performance is scored.</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>The baseline is that counterfactual, expressed as a rate. It is the single most consequential number in a carbon project, because it multiplies through everything: a baseline set ten per cent too high issues ten per cent more credits for the same forest, indefinitely. It is also the number most exposed to the proponent's discretion, since the proponent usually proposes it.</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>That combination, high leverage and unfalsifiability, explains almost every feature of how the standards handle baselines. Read the rules as a forecasting method and they look crude. Read them as anti-gaming devices and they are carefully built.</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="fu">## A baseline is not a forecast</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>The temptation is to treat baseline construction as a prediction problem: model historical deforestation, extrapolate, and call the projection the baseline. Every major standard declines to do this, and the reason is worth demonstrating rather than asserting.</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>Take a jurisdiction whose deforestation rate is genuinely flat at 4,200 hectares a year, observed for seventeen years with the year-to-year variability any real record has.</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">11</span>)</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> <span class="dv">2008</span><span class="sc">:</span><span class="dv">2024</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>true_rate <span class="ot">&lt;-</span> <span class="dv">4200</span>                        <span class="co"># ha/yr, genuinely constant</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>obs <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">rnorm</span>(<span class="fu">length</span>(years), true_rate, <span class="dv">1100</span>))</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(obs) <span class="ot">&lt;-</span> years</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(years, obs, <span class="at">type =</span> <span class="st">"b"</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">col =</span> <span class="st">"#2f5d4e"</span>, <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">7000</span>),</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">""</span>, <span class="at">ylab =</span> <span class="st">"deforestation (ha/yr)"</span>,</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"Seventeen years, no underlying trend"</span>)</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> true_rate, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"grey40"</span>)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>There is no trend here. Now build a baseline two ways from every possible five-year reference window: as the mean of the window, and as a fitted linear trend projected forward over a six-year validity period.</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>wins <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>(<span class="fu">length</span>(years) <span class="sc">-</span> <span class="dv">4</span>)</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">t</span>(<span class="fu">sapply</span>(wins, <span class="cf">function</span>(i) {</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  k <span class="ot">&lt;-</span> i<span class="sc">:</span>(i <span class="sc">+</span> <span class="dv">4</span>); y <span class="ot">&lt;-</span> years[k]; v <span class="ot">&lt;-</span> obs[k]</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  fit  <span class="ot">&lt;-</span> <span class="fu">lm</span>(v <span class="sc">~</span> y)</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>  proj <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit, <span class="fu">data.frame</span>(<span class="at">y =</span> <span class="fu">max</span>(y) <span class="sc">+</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>))</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">start =</span> <span class="fu">min</span>(y), <span class="at">mean_baseline =</span> <span class="fu">mean</span>(v), <span class="at">trend_baseline =</span> <span class="fu">mean</span>(proj))</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>})))</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="fu">round</span>(res, <span class="dv">0</span>), <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">mean_sd    =</span> <span class="fu">sd</span>(res<span class="sc">$</span>mean_baseline),</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>        <span class="at">trend_sd   =</span> <span class="fu">sd</span>(res<span class="sc">$</span>trend_baseline),</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>        <span class="at">mean_range  =</span> <span class="fu">diff</span>(<span class="fu">range</span>(res<span class="sc">$</span>mean_baseline)),</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>        <span class="at">trend_range =</span> <span class="fu">diff</span>(<span class="fu">range</span>(res<span class="sc">$</span>trend_baseline)),</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>        <span class="at">ratio       =</span> <span class="fu">diff</span>(<span class="fu">range</span>(res<span class="sc">$</span>trend_baseline)) <span class="sc">/</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">diff</span>(<span class="fu">range</span>(res<span class="sc">$</span>mean_baseline))), <span class="dv">1</span>)</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>The mean baseline moves by about 1,400 hectares a year across every choice of window. The trend baseline moves by nearly 7,000, from a low of about 600 to a high of over 7,600. That is a twelvefold spread in the crediting level, produced from a single dataset with no underlying trend at all, by nothing more than the choice of which five years to call the reference period.</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(res<span class="sc">$</span>start, res<span class="sc">$</span>trend_baseline, <span class="at">type =</span> <span class="st">"b"</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">col =</span> <span class="st">"#b5342e"</span>,</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">8000</span>), <span class="at">xlab =</span> <span class="st">"first year of reference window"</span>,</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab =</span> <span class="st">"projected baseline (ha/yr)"</span>,</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>     <span class="at">main =</span> <span class="st">"The same data, two baseline methods"</span>)</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(res<span class="sc">$</span>start, res<span class="sc">$</span>mean_baseline, <span class="at">type =</span> <span class="st">"b"</span>, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">col =</span> <span class="st">"#2f5d4e"</span>)</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> true_rate, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"grey40"</span>)</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="fu">c</span>(<span class="st">"fitted trend, projected"</span>, <span class="st">"reference-period mean"</span>, <span class="st">"truth"</span>),</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"#b5342e"</span>, <span class="st">"#2f5d4e"</span>, <span class="st">"grey40"</span>), <span class="at">lwd =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">1</span>),</span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>       <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="at">pch =</span> <span class="fu">c</span>(<span class="dv">19</span>, <span class="dv">19</span>, <span class="cn">NA</span>), <span class="at">bty =</span> <span class="st">"n"</span>, <span class="at">cex =</span> <span class="fl">0.8</span>)</span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>A proponent free to fit a trend and choose the window has been handed a dial. Nothing in the fitted model is dishonest; each regression is a correct summary of its five years. The problem is that a short noisy series does not contain enough information to identify a trend, so the fit reports sampling noise as signal, and the proponent picks the noise they prefer.</span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>Mandating an average removes the dial. It is a worse forecast and a far better rule, and the distinction between those two things is the whole of baseline design.</span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the standards actually specify</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>Two of the major programmes, arrived at independently, converge on almost the same structure.</span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>Under ART-TREES, the crediting level is the mean of a five-year historical reference period, updated every five years, with the reference period barred from overlapping the crediting period <span class="co">[</span><span class="ot">@art2021trees, Eq. 1</span><span class="co">]</span>. Under Verra's jurisdictional module for unplanned deforestation, historical activity data over a historical reference period is discounted for uncertainty, annualised, and projected flat across a six-year validity period, after which it must be rebuilt <span class="co">[</span><span class="ot">@verra2024jadb</span><span class="co">]</span>.</span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>Neither fits a curve. Both fix the window length in advance so it cannot be chosen after the fact. Both require the reference period to end before crediting begins.</span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## The ratchet</span></span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a>ART adds a device that is easy to miss and does a great deal of work. An updated crediting level may not be higher than the one it replaces. If the recomputed five-year mean comes out above the previous level, the previous level stands.</span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>crediting_levels <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) {</span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a>  k   <span class="ot">&lt;-</span> (p <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="dv">5</span> <span class="sc">+</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>  raw <span class="ot">&lt;-</span> <span class="fu">mean</span>(obs[k])</span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>  crediting_levels[p] <span class="ot">&lt;-</span> <span class="cf">if</span> (p <span class="sc">==</span> <span class="dv">1</span>) raw <span class="cf">else</span> <span class="fu">min</span>(raw, crediting_levels[p <span class="sc">-</span> <span class="dv">1</span>])</span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"period %d (%d-%d): five-year mean %5.0f -&gt; crediting level %5.0f%s</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a>              p, years[<span class="fu">min</span>(k)], years[<span class="fu">max</span>(k)], raw, crediting_levels[p],</span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> (p <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">&amp;&amp;</span> raw <span class="sc">&gt;</span> crediting_levels[p <span class="sc">-</span> <span class="dv">1</span>]) <span class="st">"   capped"</span> <span class="cf">else</span> <span class="st">""</span>))</span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>In the second period the recomputed mean rises to 4,192 and the ratchet holds the crediting level at 3,702. In the third it falls and the lower value is adopted. The baseline can therefore only ever decline, regardless of what the forest does.</span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>This is not a statistical adjustment and does not pretend to be. It is a one-way valve, and its purpose is to prevent a jurisdiction from being rewarded for a bad five years. Without it, a period of high deforestation raises the counterfactual and every subsequent year of ordinary performance looks like an achievement.</span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discounting for uncertainty</span></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>Verra's module requires the historical estimate to be conservatively discounted for its own statistical uncertainty before it becomes a baseline. This is a different use of uncertainty from the crediting deduction of the uncertainty chapter, and it points the same way: the less precisely the historical rate is known, the lower the baseline a project may claim against.</span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>ad_estimate <span class="ot">&lt;-</span> <span class="dv">4200</span></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>u <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.10</span>, <span class="fl">0.20</span>, <span class="fl">0.35</span>)</span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">uncertainty_pct =</span> <span class="dv">100</span> <span class="sc">*</span> u,</span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>           <span class="at">discounted_baseline =</span> <span class="fu">round</span>(ad_estimate <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u)),</span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a>           <span class="at">pct_of_estimate =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> u)))</span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>The incentive this creates runs the opposite way from the crediting deduction, and the two together are what make the system coherent. Sloppy historical work lowers the baseline, so it costs credits. Sloppy monitoring work raises the deduction, so it costs credits. There is no measurement corner a proponent can cut that pays.</span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>Note also which quantity is discounted. The uncertainty here is on the *activity data*, the hectares, which is the term the classification chapter was about. A jurisdiction whose historical map fails the accuracy thresholds does not merely have a caveat attached to its baseline; it has a materially lower one.</span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a><span class="fu">## From jurisdiction to project</span></span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a>A jurisdictional baseline is a rate for a whole territory, and a project occupies a fraction of it. Allocating the jurisdictional rate to project areas cannot be done by area alone, because deforestation is not spatially uniform: a project on a road frontage faces very different pressure from one in the interior.</span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a>The standard device is a risk surface. Each pixel receives a share of the zonal rate proportional to its modelled risk, so the allocation sums back to the jurisdictional total by construction:</span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a>$$\text{Allocated}_{pixel} = \frac{\text{risk}_{pixel}}{\sum_{zone} \text{risk}} \times \text{Rate}_{zone}$$</span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>stems <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(<span class="fu">read.csv</span>(<span class="st">"data/scbi_stems.csv"</span>),</span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>                  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"lon"</span>, <span class="st">"lat"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">32617</span>)</span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a>r  <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="fu">ext</span>(<span class="fu">vect</span>(stems)), <span class="at">resolution =</span> <span class="dv">10</span>, <span class="at">crs =</span> <span class="st">"EPSG:32617"</span>)</span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">xyFromCell</span>(r, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncell</span>(r))</span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a><span class="co"># a risk surface: pressure decays with distance from the western edge</span></span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>d_edge <span class="ot">&lt;-</span> xy[, <span class="dv">1</span>] <span class="sc">-</span> <span class="fu">min</span>(xy[, <span class="dv">1</span>])</span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a>risk   <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="sc">-</span>d_edge <span class="sc">/</span> <span class="dv">150</span>)</span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a>risk_r <span class="ot">&lt;-</span> <span class="fu">rast</span>(r); <span class="fu">values</span>(risk_r) <span class="ot">&lt;-</span> risk</span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a>zone_rate <span class="ot">&lt;-</span> <span class="dv">40</span>                                    <span class="co"># ha/yr across the whole area</span></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a>alloc     <span class="ot">&lt;-</span> risk <span class="sc">/</span> <span class="fu">sum</span>(risk) <span class="sc">*</span> zone_rate</span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a>alloc_r   <span class="ot">&lt;-</span> <span class="fu">rast</span>(r); <span class="fu">values</span>(alloc_r) <span class="ot">&lt;-</span> alloc</span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">c</span>(risk_r, alloc_r), <span class="at">main =</span> <span class="fu">c</span>(<span class="st">"Modelled risk"</span>, <span class="st">"Allocated loss (ha/yr)"</span>))</span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">zone_rate =</span> zone_rate, <span class="at">allocated_total =</span> <span class="fu">sum</span>(alloc)), <span class="dv">3</span>)</span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>The allocation conserves the total, which is the property that makes it auditable: a verifier can sum the project allocations and check they do not exceed the jurisdictional rate. Without that constraint, projects in aggregate can be credited against more deforestation than the jurisdiction has.</span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>project <span class="ot">&lt;-</span> xy[, <span class="dv">1</span>] <span class="sc">&lt;</span> <span class="fu">quantile</span>(xy[, <span class="dv">1</span>], <span class="fl">0.25</span>)       <span class="co"># a project on the high-risk edge</span></span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">project_share_of_area =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(project),</span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>        <span class="at">project_share_of_baseline =</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">sum</span>(alloc[project]) <span class="sc">/</span> <span class="fu">sum</span>(alloc)), <span class="dv">1</span>)</span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a>The project occupies under a quarter of the area and carries just over half the baseline, because it sits where the pressure is. That asymmetry is the entire reason risk allocation exists, and it is also where the arguments happen: the risk model's covariates and decay parameters are chosen by someone, and they determine how many credits the project may claim. A verifier who accepts a jurisdictional rate without interrogating the allocation has checked the easy half.</span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a>::: {.verification}</span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Reference periods and revalidation {.unnumbered .unlisted}</span></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a>The mechanics differ between programmes and the differences matter for anyone</span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a>reproducing a baseline.</span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a>**ART-TREES.** The crediting level is the mean of a five-year reference period,</span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a>recomputed every five calendar years starting with the first year of crediting.</span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a>The reference period may not overlap the crediting period and there may be no gap</span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>between them. An updated crediting level may not exceed the previous one; the</span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a>sole exception is where a new pool or activity is added, which requires the whole</span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a>five-year reference to be recalculated with it included. Interpolation is allowed</span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a>where data do not fall on the calendar years, provided no bias is introduced in</span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a>selecting the data used.</span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a>**Verra, jurisdictional unplanned deforestation.** Historical activity data are</span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>estimated over a historical reference period, conservatively discounted for</span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a>statistical uncertainty, annualised, and used to project forward. The validity</span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a>period is six years and the baseline must be updated at the end of each one.</span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>Four activity data categories must be estimated in every application: historical</span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>deforestation, stable forest, stable non-forest and forest regrowth.</span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a>One provision is worth emphasising because it contradicts a widespread</span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>assumption. Wall-to-wall mapping is **not required** to estimate the activity</span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>data. The estimate comes from a probability sample; maps may be used to stratify</span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a>that sample and reduce the effort needed to hit precision targets, but the map is</span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a>not the estimator. This is the same architecture the classification chapter</span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>described and the uncertainty chapter's area adjustment implements.</span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>Source note: the jurisdictional module consulted here is issued as a draft for</span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a>public consultation, so check its status before relying on the detail. The</span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a>ART provisions are from the published Standard.</span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a>::: {.verification}</span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a><span class="fu">#### What a verifier asks about a baseline {.unnumbered .unlisted}</span></span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a>Four questions, in the order they usually expose problems.</span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a>*Was the reference period fixed before the data were seen?* A window chosen after</span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a>inspecting the series is a chosen result. Check the dates against the programme's</span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a>rules and against the project's own earlier documents.</span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>*Is the method the mandated one?* If a proponent has fitted a trend, modelled</span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a>drivers, or applied a development adjustment, that is a departure requiring</span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a>explicit permission, not an improvement.</span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a>*What uncertainty was carried, and which way did it push?* The historical estimate</span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a>should be discounted, not merely reported with a caveat. Ask to see the sample</span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a>design behind it.</span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a>*Does the allocation conserve the jurisdictional total?* Sum the allocations</span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a>across all projects and leakage belts in the jurisdiction. If they exceed the</span>
+<span id="cb10-242"><a href="#cb10-242" aria-hidden="true" tabindex="-1"></a>jurisdictional rate, credits are being issued twice against the same</span>
+<span id="cb10-243"><a href="#cb10-243" aria-hidden="true" tabindex="-1"></a>deforestation.</span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a>The recurring theme is that baseline review is mostly documentary rather than</span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a>computational. The arithmetic is deliberately simple; what is under examination</span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a>is whether the choices around it were constrained in advance.</span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a><span class="fu">## Exercises</span></span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Rerun the window comparison with the observation noise halved (<span class="in">`sd = 550`</span>). By how much does the range of trend baselines shrink, and does it become acceptable? State the sample size or precision at which you would be willing to fit a trend.</span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Introduce a genuine downward trend of 100 ha/yr into the simulated series and repeat the comparison. Does the mean baseline now systematically over-credit the project, and by how much over a six-year validity period?</span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Apply the ART ratchet to a series with a genuine downward trend. Does the ratchet ever bind, and what does that tell you about which kind of jurisdiction it is designed to constrain?</span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Change the risk decay length from 150 m to 400 m and recompute the project's share of the baseline. How sensitive is the project's crediting entitlement to a parameter that no field measurement determines?</span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>A jurisdiction reports historical activity data with 30 per cent uncertainty. Compute the discounted baseline, then compute what the project would have claimed at 10 per cent uncertainty. Express the difference as credits over a six-year validity period at 4,200 ha/yr and a nominal 150 tCO2e per hectare.</span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>*(Applied.)* You are reviewing a project whose allocated baseline is 62 per cent of the jurisdictional rate on 25 per cent of the area. Write the paragraph you would send the proponent, naming the specific evidence you require to accept the allocation.</span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="https://github.com/seamusrobertmurphy/training-rspatial">Source</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/baseline-modelling.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+</body></html>

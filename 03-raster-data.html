@@ -217,20 +217,26 @@ div.csl-indent {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./baseline-modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Baseline Modelling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -381,12 +387,12 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/sample.html">spatSample</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/as.polygons.html">as.polygons</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/crs.html">crs</a></span><span class="op">(</span><span class="va">ba</span><span class="op">)</span><span class="op">)</span>, <span class="fl">5</span>, method <span class="op">=</span> <span class="st">"random"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/extract.html">extract</a></span><span class="op">(</span><span class="va">ba</span>, <span class="va">pts</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   ID   basal_area</span></span>
-<span><span class="co">#&gt; 1  1 0.0008042477</span></span>
-<span><span class="co">#&gt; 2  2 0.0000000000</span></span>
-<span><span class="co">#&gt; 3  3 0.0000000000</span></span>
-<span><span class="co">#&gt; 4  4 0.0000000000</span></span>
-<span><span class="co">#&gt; 5  5 0.0023192808</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;   ID basal_area</span></span>
+<span><span class="co">#&gt; 1  1 0.01444661</span></span>
+<span><span class="co">#&gt; 2  2 0.00000000</span></span>
+<span><span class="co">#&gt; 3  3 0.00000000</span></span>
+<span><span class="co">#&gt; 4  4 0.00000000</span></span>
+<span><span class="co">#&gt; 5  5 0.00000000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Extraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.</p>
 </section><section id="keystone-land-cover-reclassification" class="level2" data-number="3.6"><h2 data-number="3.6" class="anchored" data-anchor-id="keystone-land-cover-reclassification">
