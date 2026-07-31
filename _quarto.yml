@@ -33,6 +33,7 @@ book:
     - 06-disturbance-risk.qmd
     - allometry.qmd
     - emission-factors.qmd
+    - activity-data.qmd
     - 07-uncertainty.qmd
     - 08-time-series.qmd
     - 09-spatial-patterns.qmd
