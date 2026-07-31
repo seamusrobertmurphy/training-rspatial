@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.7.33">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>9&nbsp; Uncertainty – Spatial Analysis in R for Forest Carbon Verification</title>
+<title>10&nbsp; Uncertainty – Spatial Analysis in R for Forest Carbon Verification</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -82,7 +82,7 @@ div.csl-indent {
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./08-time-series.html" rel="next">
-<link href="./emission-factors.html" rel="prev">
+<link href="./activity-data.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -144,7 +144,7 @@ window.Quarto = {
   typesetMath
 };
 </script>
-<meta property="og:title" content="9&nbsp; Uncertainty – Spatial Analysis in R for Forest Carbon Verification">
+<meta property="og:title" content="10&nbsp; Uncertainty – Spatial Analysis in R for Forest Carbon Verification">
 <meta property="og:description" content="">
 <meta property="og:image" content="07-uncertainty_files/figure-html/unnamed-chunk-15-1.png">
 <meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
@@ -156,7 +156,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./07-uncertainty.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./07-uncertainty.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -236,20 +236,26 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./activity-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -283,23 +289,23 @@ window.Quarto = {
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title"><strong>On this page</strong></h2>
    
   <ul>
-<li><a href="#why-uncertainty" id="toc-why-uncertainty" class="nav-link active" data-scroll-target="#why-uncertainty"><span class="header-section-number">9.1</span> Why uncertainty</a></li>
-  <li><a href="#a-carbon-estimate" id="toc-a-carbon-estimate" class="nav-link" data-scroll-target="#a-carbon-estimate"><span class="header-section-number">9.2</span> A carbon estimate</a></li>
-  <li><a href="#sampling-error" id="toc-sampling-error" class="nav-link" data-scroll-target="#sampling-error"><span class="header-section-number">9.3</span> Sampling error</a></li>
-  <li><a href="#measuring-error" id="toc-measuring-error" class="nav-link" data-scroll-target="#measuring-error"><span class="header-section-number">9.4</span> Measuring error</a></li>
-  <li><a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation"><span class="header-section-number">9.5</span> Cross-validation</a></li>
-  <li><a href="#monte-carlo-propagation" id="toc-monte-carlo-propagation" class="nav-link" data-scroll-target="#monte-carlo-propagation"><span class="header-section-number">9.6</span> Monte Carlo propagation</a></li>
-  <li><a href="#conservative-estimates" id="toc-conservative-estimates" class="nav-link" data-scroll-target="#conservative-estimates"><span class="header-section-number">9.7</span> Conservative estimates</a></li>
-  <li><a href="#keystone-area-adjusted-accuracy" id="toc-keystone-area-adjusted-accuracy" class="nav-link" data-scroll-target="#keystone-area-adjusted-accuracy"><span class="header-section-number">9.8</span> Keystone: area-adjusted accuracy</a></li>
-  <li><a href="#reported-against-adjusted" id="toc-reported-against-adjusted" class="nav-link" data-scroll-target="#reported-against-adjusted"><span class="header-section-number">9.9</span> Reported against adjusted</a></li>
-  <li><a href="#what-the-registries-do-with-the-number" id="toc-what-the-registries-do-with-the-number" class="nav-link" data-scroll-target="#what-the-registries-do-with-the-number"><span class="header-section-number">9.10</span> What the registries do with the number</a></li>
-  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9.11</span> Exercises</a></li>
+<li><a href="#why-uncertainty" id="toc-why-uncertainty" class="nav-link active" data-scroll-target="#why-uncertainty"><span class="header-section-number">10.1</span> Why uncertainty</a></li>
+  <li><a href="#a-carbon-estimate" id="toc-a-carbon-estimate" class="nav-link" data-scroll-target="#a-carbon-estimate"><span class="header-section-number">10.2</span> A carbon estimate</a></li>
+  <li><a href="#sampling-error" id="toc-sampling-error" class="nav-link" data-scroll-target="#sampling-error"><span class="header-section-number">10.3</span> Sampling error</a></li>
+  <li><a href="#measuring-error" id="toc-measuring-error" class="nav-link" data-scroll-target="#measuring-error"><span class="header-section-number">10.4</span> Measuring error</a></li>
+  <li><a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation"><span class="header-section-number">10.5</span> Cross-validation</a></li>
+  <li><a href="#monte-carlo-propagation" id="toc-monte-carlo-propagation" class="nav-link" data-scroll-target="#monte-carlo-propagation"><span class="header-section-number">10.6</span> Monte Carlo propagation</a></li>
+  <li><a href="#conservative-estimates" id="toc-conservative-estimates" class="nav-link" data-scroll-target="#conservative-estimates"><span class="header-section-number">10.7</span> Conservative estimates</a></li>
+  <li><a href="#keystone-area-adjusted-accuracy" id="toc-keystone-area-adjusted-accuracy" class="nav-link" data-scroll-target="#keystone-area-adjusted-accuracy"><span class="header-section-number">10.8</span> Keystone: area-adjusted accuracy</a></li>
+  <li><a href="#reported-against-adjusted" id="toc-reported-against-adjusted" class="nav-link" data-scroll-target="#reported-against-adjusted"><span class="header-section-number">10.9</span> Reported against adjusted</a></li>
+  <li><a href="#what-the-registries-do-with-the-number" id="toc-what-the-registries-do-with-the-number" class="nav-link" data-scroll-target="#what-the-registries-do-with-the-number"><span class="header-section-number">10.10</span> What the registries do with the number</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">10.11</span> Exercises</a></li>
   </ul><div class="toc-actions"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/07-uncertainty.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <div class="quarto-title-block"><div><h1 class="title">
-<span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Uncertainty</span>
+<span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span>
 </h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
@@ -314,11 +320,11 @@ window.Quarto = {
   
 
 
-</header><section id="why-uncertainty" class="level2" data-number="9.1"><h2 data-number="9.1" class="anchored" data-anchor-id="why-uncertainty">
-<span class="header-section-number">9.1</span> Why uncertainty</h2>
+</header><section id="why-uncertainty" class="level2" data-number="10.1"><h2 data-number="10.1" class="anchored" data-anchor-id="why-uncertainty">
+<span class="header-section-number">10.1</span> Why uncertainty</h2>
 <p>Every estimate in this book is wrong by some amount, and the discipline of verification is knowing by how much. A carbon figure without an uncertainty is not conservative, it is simply incomplete, and the crediting standards, ART-TREES, VCS, ACR, all deduct credits in proportion to how uncertain the estimate is. Reducing uncertainty is therefore worth real money, and quantifying it honestly is the auditor’s core duty. This chapter builds the estimate, then its error, on the running stem data.</p>
-</section><section id="a-carbon-estimate" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="a-carbon-estimate">
-<span class="header-section-number">9.2</span> A carbon estimate</h2>
+</section><section id="a-carbon-estimate" class="level2" data-number="10.2"><h2 data-number="10.2" class="anchored" data-anchor-id="a-carbon-estimate">
+<span class="header-section-number">10.2</span> A carbon estimate</h2>
 <p>We convert diameters to aboveground biomass with a published generic hardwood equation <span class="citation" data-cites="jenkins2003biomass">(<a href="references/index.html#ref-jenkins2003biomass" role="doc-biblioref">Jenkins et al., 2003</a>)</span>, apply the IPCC default carbon fraction of 0.47 <span class="citation" data-cites="ipcc2006gl">(<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">IPCC, 2006</a>)</span>, and scale to the plot area:</p>
 <div class="cell">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org">dplyr</a></span><span class="op">)</span></span>
@@ -336,8 +342,8 @@ window.Quarto = {
 <span><span class="co">#&gt;       82.3        3.2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>That point estimate is the easy part. Three distinct sources of error sit beneath it: sampling error from measuring plots rather than the whole population, model error in the allometric equation, and parameter error in constants like the carbon fraction.</p>
-</section><section id="sampling-error" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="sampling-error">
-<span class="header-section-number">9.3</span> Sampling error</h2>
+</section><section id="sampling-error" class="level2" data-number="10.3"><h2 data-number="10.3" class="anchored" data-anchor-id="sampling-error">
+<span class="header-section-number">10.3</span> Sampling error</h2>
 <p>Divide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval:</p>
 <div class="cell">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">stems</span><span class="op">$</span><span class="va">quadrat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span><span class="op">(</span><span class="va">stems</span><span class="op">$</span><span class="va">gx</span>, <span class="fl">8</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/cut.html">cut</a></span><span class="op">(</span><span class="va">stems</span><span class="op">$</span><span class="va">gy</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
@@ -355,8 +361,8 @@ window.Quarto = {
 <span><span class="co">#&gt;   3.2   0.4   2.5   3.9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The half-width relative to the mean is the number the standards care about: the wider it is, the deeper the deduction.</p>
-</section><section id="measuring-error" class="level2" data-number="9.4"><h2 data-number="9.4" class="anchored" data-anchor-id="measuring-error">
-<span class="header-section-number">9.4</span> Measuring error</h2>
+</section><section id="measuring-error" class="level2" data-number="10.4"><h2 data-number="10.4" class="anchored" data-anchor-id="measuring-error">
+<span class="header-section-number">10.4</span> Measuring error</h2>
 <p>Sampling error assumed the per-tree biomass was right and asked only how well the plot represents the stand. The other half of the problem is the model itself, and to quantify that you need trees whose biomass was actually measured rather than predicted. The <code>tree_measurements</code> file holds 6,681 harvested trees across six coastal species, each with diameter, height and observed aboveground biomass, so predictions can be checked against truth.</p>
 <p>No single number describes an error well, and the common metrics answer genuinely different questions. Written on the residual <span class="math inline">\(e_i = \hat{y}_i - y_i\)</span>:</p>
 <p><span class="math display">\[\text{bias} = \frac{1}{n}\sum e_i \qquad \text{MAE} = \frac{1}{n}\sum |e_i| \qquad \text{MSE} = \frac{1}{n}\sum e_i^2 \qquad \text{RMSE} = \sqrt{\text{MSE}}\]</span></p>
@@ -416,8 +422,8 @@ window.Quarto = {
 <span><span class="co">#&gt;    0.166    0.023   36.341   81.161   11.233    5.069    0.996</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Fitting one equation per species halves the relative RMSE, from about 22 per cent to about 11. Under the crediting arithmetic below, that difference is worth real money, and it required no new field data, only refusing to pool species that scale differently.</p>
-</section><section id="cross-validation" class="level2" data-number="9.5"><h2 data-number="9.5" class="anchored" data-anchor-id="cross-validation">
-<span class="header-section-number">9.5</span> Cross-validation</h2>
+</section><section id="cross-validation" class="level2" data-number="10.5"><h2 data-number="10.5" class="anchored" data-anchor-id="cross-validation">
+<span class="header-section-number">10.5</span> Cross-validation</h2>
 <p>Every number in the previous section is optimistic, because the model was scored on the same trees that determined its coefficients. Out-of-sample error is what a prediction on a new tree will actually cost, and cross-validation estimates it by repeatedly holding data back <span class="citation" data-cites="hastie2009esl">(<a href="references/index.html#ref-hastie2009esl" role="doc-biblioref">Hastie et al., 2009</a>)</span>.</p>
 <p>The standard device is <span class="math inline">\(k\)</span>-fold: split the data into <span class="math inline">\(k\)</span> parts, fit on <span class="math inline">\(k-1\)</span> and predict the one held out, rotating until every observation has been predicted by a model that never saw it.</p>
 <div class="cell">
@@ -540,8 +546,8 @@ window.Quarto = {
 <span><span class="co">#&gt; [4,] 30     14.0        1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>At fifteen plots this model fails and at twenty it passes, on nothing but which plots were drawn. Eligibility is a random variable, and a project that installs the minimum viable number of plots is buying a coin toss.</p>
-</section></section><section id="monte-carlo-propagation" class="level2" data-number="9.6"><h2 data-number="9.6" class="anchored" data-anchor-id="monte-carlo-propagation">
-<span class="header-section-number">9.6</span> Monte Carlo propagation</h2>
+</section></section><section id="monte-carlo-propagation" class="level2" data-number="10.6"><h2 data-number="10.6" class="anchored" data-anchor-id="monte-carlo-propagation">
+<span class="header-section-number">10.6</span> Monte Carlo propagation</h2>
 <p>Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like <span class="math inline">\(a\,D^{b}\)</span>, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results <span class="citation" data-cites="ipcc2006gl">(<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">IPCC, 2006</a>)</span>.</p>
 <div class="cell">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -569,8 +575,8 @@ window.Quarto = {
 </div>
 </div>
 </div>
-</section><section id="conservative-estimates" class="level2" data-number="9.7"><h2 data-number="9.7" class="anchored" data-anchor-id="conservative-estimates">
-<span class="header-section-number">9.7</span> Conservative estimates</h2>
+</section><section id="conservative-estimates" class="level2" data-number="10.7"><h2 data-number="10.7" class="anchored" data-anchor-id="conservative-estimates">
+<span class="header-section-number">10.7</span> Conservative estimates</h2>
 <p>The standards translate uncertainty into a deduction. A common rule is that when the half-width of the 90% or 95% interval exceeds a threshold (often 15% of the mean), credits are issued against the conservative lower bound rather than the mean. Computing the uncertainty percentage and the conservative estimate is a few lines:</p>
 <div class="cell">
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">half_width</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">mc_ci</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="va">mc_ci</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
@@ -582,8 +588,8 @@ window.Quarto = {
 <span><span class="co">#&gt;                  38.9                   3.3                   2.0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>If the uncertainty percentage clears the threshold, the gap between the mean and the conservative figure is credit the project forgoes for being imprecise, the direct financial incentive to measure better.</p>
-</section><section id="keystone-area-adjusted-accuracy" class="level2" data-number="9.8"><h2 data-number="9.8" class="anchored" data-anchor-id="keystone-area-adjusted-accuracy">
-<span class="header-section-number">9.8</span> Keystone: area-adjusted accuracy</h2>
+</section><section id="keystone-area-adjusted-accuracy" class="level2" data-number="10.8"><h2 data-number="10.8" class="anchored" data-anchor-id="keystone-area-adjusted-accuracy">
+<span class="header-section-number">10.8</span> Keystone: area-adjusted accuracy</h2>
 <p>The Bolivia land-cover work raises the same question for areas rather than carbon: a class area read straight off a map inherits the map’s classification errors, and good practice adjusts it and attaches a confidence interval <span class="citation" data-cites="olofsson2014gpg">(<a href="references/index.html#ref-olofsson2014gpg" role="doc-biblioref">Olofsson et al., 2014</a>)</span>. This is the LULC counterpart of the carbon deduction, and it uses the confusion matrix from the disturbance chapter. We take mapped forest and non-forest areas and an error matrix, and compute the area-adjusted estimate:</p>
 <div class="cell">
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">A</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>forest <span class="op">=</span> <span class="fl">18000</span>, nonforest <span class="op">=</span> <span class="fl">7000</span><span class="op">)</span>      <span class="co"># mapped area, ha</span></span>
@@ -607,8 +613,8 @@ window.Quarto = {
 <span><span class="co">#&gt;                   18000                   17940                     893</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The adjusted area differs from the mapped area because the map commits and omits forest at rates the reference sample reveals, and the confidence interval is the honest precision of the figure. A project that reports only the mapped area, with no adjustment and no interval, has reported a number no auditor can accept. The full Bolivia workflow applies this class by class across the national legend; the estimator is the one above.</p>
-</section><section id="reported-against-adjusted" class="level2" data-number="9.9"><h2 data-number="9.9" class="anchored" data-anchor-id="reported-against-adjusted">
-<span class="header-section-number">9.9</span> Reported against adjusted</h2>
+</section><section id="reported-against-adjusted" class="level2" data-number="10.9"><h2 data-number="10.9" class="anchored" data-anchor-id="reported-against-adjusted">
+<span class="header-section-number">10.9</span> Reported against adjusted</h2>
 <p>One year in isolation understates what this correction does. A crediting period runs for a decade, the adjustment is applied every year, and the interesting quantity is the gap between what a project reports and what it can defend. We run the same estimator across an eight-year record of mapped forest loss. Each year has its own reference sample and its own error rates, and both degrade towards the present, because recent imagery has had less interpretation effort and the map is harder to validate close to the reporting date.</p>
 <div class="cell">
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">years</span>  <span class="op">&lt;-</span> <span class="fl">2017</span><span class="op">:</span><span class="fl">2024</span></span>
@@ -678,8 +684,8 @@ window.Quarto = {
 </div>
 <p>Over the whole period the reported total overstates the defensible total by around twelve per cent. That gap is the project’s exposure: it is the portion of the claim that would not survive a reference-based check. The conservative basis, summing the lower bounds, is lower again by about a quarter, and that second gap is the price of imprecision rather than of bias.</p>
 <p>Notice which of the two is easier to fix. The bias is corrected by the estimator itself, at the cost of running a reference sample, and once corrected it is gone. The interval width is set by how many reference points sit in each stratum, and it narrows only as the square root of that effort. The widening band in the last two years is not a modelling failure; it is a direct readout of thin reference data, and the only remedy is more interpretation. This is the whole argument of the chapter in one picture. Uncertainty is not a statistical afterthought appended to a result. It is a budget, it has line items, and each line has a known price.</p>
-</section><section id="what-the-registries-do-with-the-number" class="level2" data-number="9.10"><h2 data-number="9.10" class="anchored" data-anchor-id="what-the-registries-do-with-the-number">
-<span class="header-section-number">9.10</span> What the registries do with the number</h2>
+</section><section id="what-the-registries-do-with-the-number" class="level2" data-number="10.10"><h2 data-number="10.10" class="anchored" data-anchor-id="what-the-registries-do-with-the-number">
+<span class="header-section-number">10.10</span> What the registries do with the number</h2>
 <p>You now have an uncertainty percentage estimated honestly. What it costs depends entirely on which registry the project is going to, and the differences are larger than most practitioners expect. Three rules cover most of the market.</p>
 <div class="cell">
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">acr_ifm</span>   <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmax</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">u</span> <span class="op">-</span> <span class="fl">10</span><span class="op">)</span>                    <span class="co"># excess over threshold</span></span>
@@ -795,8 +801,8 @@ window.Quarto = {
 <p>The split exists because the map is not the estimator. VM0048 derives activity data from a probability sample; the map only stratifies that sample. This is the same argument the area-adjusted accuracy section above makes from the other direction, and it is the cleanest statement in any standard of why counting classified pixels is a biased way to estimate area.</p>
 <p>The accuracy requirements follow from that: over the historical reference period, deforestation needs user’s and producer’s accuracy at 70 per cent or better, and forest at the end of the period better than 90 per cent, with at least 100 sample observations per class and 200 per estimate. Open-canopy jurisdictions, where at least half the forest carries under 50 per cent canopy cover, may use 60 and 80 per cent instead.</p>
 <p>ACR’s Improved Forest Management methodology, by contrast, sets no minimum mapping unit and requires no accuracy assessment at all, because its uncertainty is field-inventory sampling error rather than map classification error. The two standards are not measuring the same thing, which is worth remembering before comparing their uncertainty figures.</p>
-</section></section><section id="exercises" class="level2" data-number="9.11"><h2 data-number="9.11" class="anchored" data-anchor-id="exercises">
-<span class="header-section-number">9.11</span> Exercises</h2>
+</section></section><section id="exercises" class="level2" data-number="10.11"><h2 data-number="10.11" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">10.11</span> Exercises</h2>
 <ol type="1">
 <li>Recompute the sampling confidence interval using a 4-by-6 quadrat grid instead of 8-by-12. Does the mean change? Does the standard error? Explain the difference.</li>
 <li>In the Monte Carlo, double the uncertainty on the carbon fraction (sd 0.04) and rerun. How much does the uncertainty percentage grow, and would it now trigger a 15% deduction?</li>
@@ -1278,13 +1284,13 @@ Olofsson, P., Foody, G. M., Herold, M., Stehman, S. V., Woodcock, C. E., &amp; W
     }
   });
   </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="./emission-factors.html" class="pagination-link" aria-label="Emission Factors">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span>
+      <a href="./activity-data.html" class="pagination-link" aria-label="Activity Data and Classification">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
       <a href="./08-time-series.html" class="pagination-link" aria-label="Time Series">
-        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Time Series</span></span> <i class="bi bi-arrow-right-short"></i>
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Time Series</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">

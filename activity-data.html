@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>9&nbsp; Activity Data and Classification – Spatial Analysis in R for Forest Carbon Verification</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./07-uncertainty.html" rel="next">
+<link href="./emission-factors.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-352c1c0ff19b8228249a899e5c7e3202.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta property="og:title" content="9&nbsp; Activity Data and Classification – Spatial Analysis in R for Forest Carbon Verification">
+<meta property="og:description" content="">
+<meta property="og:image" content="activity-data_files/figure-html/unnamed-chunk-4-1.png">
+<meta property="og:site_name" content="Spatial Analysis in R for Forest Carbon Verification">
+</head>
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./activity-data.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Course Contents</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/seamusrobertmurphy/training-rspatial" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-getting-started.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Getting Started</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-vector-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Vector Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-raster-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Raster Data</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-terrain-hydrology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Terrain and Hydrology</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-lidar-point-clouds.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">LiDAR and Point Clouds</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-disturbance-risk.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Disturbance and Risk</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./allometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Allometry and Biomass</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emission-factors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./activity-data.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-time-series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Time Series</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-spatial-patterns.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Spatial Patterns</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./A-automation-registries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Automation, Protocols and Registries</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">References</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title"><strong>On this page</strong></h2>
+   
+  <ul>
+<li><a href="#the-extent-term" id="toc-the-extent-term" class="nav-link active" data-scroll-target="#the-extent-term"><span class="header-section-number">9.1</span> The extent term</a></li>
+  <li><a href="#three-approaches" id="toc-three-approaches" class="nav-link" data-scroll-target="#three-approaches"><span class="header-section-number">9.2</span> Three approaches</a></li>
+  <li><a href="#a-scene-to-classify" id="toc-a-scene-to-classify" class="nav-link" data-scroll-target="#a-scene-to-classify"><span class="header-section-number">9.3</span> A scene to classify</a></li>
+  <li><a href="#training-design-and-the-rare-class-trap" id="toc-training-design-and-the-rare-class-trap" class="nav-link" data-scroll-target="#training-design-and-the-rare-class-trap"><span class="header-section-number">9.4</span> Training design and the rare-class trap</a></li>
+  <li><a href="#why-reweighting-does-not-rescue-it" id="toc-why-reweighting-does-not-rescue-it" class="nav-link" data-scroll-target="#why-reweighting-does-not-rescue-it"><span class="header-section-number">9.5</span> Why reweighting does not rescue it</a></li>
+  <li><a href="#probability-surfaces" id="toc-probability-surfaces" class="nav-link" data-scroll-target="#probability-surfaces"><span class="header-section-number">9.6</span> Probability surfaces</a></li>
+  <li><a href="#spending-the-next-field-day-well" id="toc-spending-the-next-field-day-well" class="nav-link" data-scroll-target="#spending-the-next-field-day-well"><span class="header-section-number">9.7</span> Spending the next field day well</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9.8</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/activity-data.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title">
+<span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Activity Data and Classification</span>
+</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><section id="the-extent-term" class="level2" data-number="9.1"><h2 data-number="9.1" class="anchored" data-anchor-id="the-extent-term">
+<span class="header-section-number">9.1</span> The extent term</h2>
+<p>The emission factors chapter dealt with the greenhouse gas consequence per hectare. This chapter deals with the hectares. Activity data is the extent and location of whatever the factor is being applied to: land deforested, land converted, land brought under a new management regime. It is the term spatial analysis is actually for.</p>
+<p>It is also the term most likely to be produced by a classification, and therefore the term that inherits a classifier’s errors. The disturbance chapter built a two-class change map and validated it. Real activity data is rarely two classes, the classes of interest are usually rare, and both of those facts change the problem in ways that a binary example conceals.</p>
+</section><section id="three-approaches" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="three-approaches">
+<span class="header-section-number">9.2</span> Three approaches</h2>
+<p>The IPCC distinguishes three ways of collecting activity data, and the distinction is about spatial explicitness rather than accuracy of measurement <span class="citation" data-cites="ipcc2006gl">(<a href="references/index.html#ref-ipcc2006gl" role="doc-biblioref">IPCC, 2006</a>)</span>.</p>
+<p><strong>Approach 1</strong> uses aggregate area statistics: how much cropland, how much forest, at two points in time. It gives net change and cannot say what became what.</p>
+<p><strong>Approach 2</strong> adds transition information: how much forest became cropland, tracked as a matrix, but without locating the transitions.</p>
+<p><strong>Approach 3</strong> is spatially explicit: every parcel or pixel carries its own land-use trajectory, so transitions are located as well as counted.</p>
+<p>Only Approach 3 supports the parcel-level transition clocks that the emission factors chapter showed are necessary to avoid double counting across overlapping interventions, and only Approach 3 lets you stratify emission factors by anything you can map. It is also the only one that produces a classification, and therefore the only one with classification error to worry about. That is not a drawback. Approaches 1 and 2 have the same errors; they simply have no mechanism for measuring them.</p>
+</section><section id="a-scene-to-classify" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="a-scene-to-classify">
+<span class="header-section-number">9.3</span> A scene to classify</h2>
+<p>We build a four-class scene over the plot footprint: forest, a cleared block, a patch of regrowth, and water along the southern edge. Four spectral bands are simulated with deliberate overlap between forest and regrowth, because that is where real classifiers fail and a scene with separable classes teaches nothing.</p>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/">terra</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/">sf</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://imbs-hl.github.io/ranger/">ranger</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stems</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html">st_as_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/read.table.html">read.csv</a></span><span class="op">(</span><span class="st">"data/scbi_stems.csv"</span><span class="op">)</span>,</span>
+<span>                  coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"lon"</span>, <span class="st">"lat"</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html">st_transform</a></span><span class="op">(</span><span class="fl">32617</span><span class="op">)</span></span>
+<span><span class="va">r</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html">ext</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html">vect</a></span><span class="op">(</span><span class="va">stems</span><span class="op">)</span><span class="op">)</span>, resolution <span class="op">=</span> <span class="fl">10</span>, crs <span class="op">=</span> <span class="st">"EPSG:32617"</span><span class="op">)</span></span>
+<span><span class="va">xy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/xyCellFrom.html">xyFromCell</a></span><span class="op">(</span><span class="va">r</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">cls</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="st">"forest"</span>, <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">cls</span><span class="op">[</span><span class="va">xy</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">747760</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">747900</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">4309050</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">4309200</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"cleared"</span></span>
+<span><span class="va">cls</span><span class="op">[</span><span class="va">xy</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">747620</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">747720</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">4308950</span> <span class="op">&amp;</span> <span class="va">xy</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">4309080</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"regrowth"</span></span>
+<span><span class="va">cls</span><span class="op">[</span><span class="va">xy</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">4308880</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"water"</span></span>
+<span></span>
+<span><span class="co"># simulated reflectance: forest and regrowth deliberately overlap</span></span>
+<span><span class="va">mu</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>forest   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.04</span>, <span class="fl">0.06</span>, <span class="fl">0.32</span>, <span class="fl">0.18</span><span class="op">)</span>,</span>
+<span>            regrowth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.08</span>, <span class="fl">0.28</span>, <span class="fl">0.22</span><span class="op">)</span>,</span>
+<span>            cleared  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.12</span>, <span class="fl">0.16</span>, <span class="fl">0.20</span>, <span class="fl">0.30</span><span class="op">)</span>,</span>
+<span>            water    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.03</span>, <span class="fl">0.04</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">sd_</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.012</span>, <span class="fl">0.014</span>, <span class="fl">0.030</span>, <span class="fl">0.025</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="kw">function</span><span class="op">(</span><span class="va">b</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">k</span> <span class="kw">in</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">mu</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span> <span class="va">i</span> <span class="op">&lt;-</span> <span class="va">cls</span> <span class="op">==</span> <span class="va">k</span>; <span class="va">v</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">i</span><span class="op">)</span>, <span class="va">mu</span><span class="op">[[</span><span class="va">k</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="va">b</span><span class="op">]</span>, <span class="va">sd_</span><span class="op">[</span><span class="va">b</span><span class="op">]</span><span class="op">)</span> <span class="op">}</span></span>
+<span>  <span class="va">v</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span>, nlyrs <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>; <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">bands</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"green"</span>, <span class="st">"nir"</span>, <span class="st">"swir"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>; <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">truth</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">cls</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">cls</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; cls</span></span>
+<span><span class="co">#&gt;  cleared   forest regrowth    water </span></span>
+<span><span class="co">#&gt;      7.8     81.1      4.8      6.2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Regrowth covers under five per cent of the scene. That is the situation activity data is almost always in: the class you are being paid to detect is the rare one, and the class that dominates the accuracy statistics is the one nobody is asking about.</p>
+</section><section id="training-design-and-the-rare-class-trap" class="level2" data-number="9.4"><h2 data-number="9.4" class="anchored" data-anchor-id="training-design-and-the-rare-class-trap">
+<span class="header-section-number">9.4</span> Training design and the rare-class trap</h2>
+<p>The obvious way to collect training data is to sample the scene at random, which gives each class a share proportional to its area.</p>
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_and_assess</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">idx</span>, <span class="va">label</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>cover <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">cls</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span><span class="op">)</span>, <span class="va">bands</span><span class="op">[</span><span class="va">idx</span>, <span class="op">]</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">tr</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
+<span>  <span class="va">f</span>  <span class="op">&lt;-</span> <span class="fu"><a href="http://imbs-hl.github.io/ranger/reference/ranger.html">ranger</a></span><span class="op">(</span><span class="va">cover</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">tr</span>, probability <span class="op">=</span> <span class="cn">TRUE</span>, num.trees <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">pp</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html">predict</a></span><span class="op">(</span><span class="va">img</span>, <span class="va">f</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                       fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">m</span>, <span class="va">d</span><span class="op">)</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html">predict</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">d</span><span class="op">)</span><span class="op">$</span><span class="va">predictions</span><span class="op">)</span></span>
+<span>  <span class="va">hard</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/maxCol.html">max.col</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/coerce.html">as.matrix</a></span><span class="op">(</span><span class="va">pp</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">cm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span>map <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/factors.html">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">cls</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="va">hard</span><span class="op">]</span>, ref <span class="op">=</span> <span class="va">cls</span><span class="op">)</span></span>
+<span>  <span class="va">ua</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html">diag</a></span><span class="op">(</span><span class="va">cm</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rowSums.html">rowSums</a></span><span class="op">(</span><span class="va">cm</span><span class="op">)</span>; <span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html">diag</a></span><span class="op">(</span><span class="va">cm</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rowSums.html">colSums</a></span><span class="op">(</span><span class="va">cm</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">label</span>,</span>
+<span>             overall <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html">mean</a></span><span class="op">(</span><span class="va">hard</span> <span class="op">==</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">truth</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>             regrowth_UA <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">ua</span><span class="op">[[</span><span class="st">"regrowth"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>             regrowth_PA <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="va">pa</span><span class="op">[[</span><span class="st">"regrowth"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>             VM0048 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">ua</span><span class="op">[[</span><span class="st">"regrowth"</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">0.7</span> <span class="op">&amp;</span> <span class="va">pa</span><span class="op">[[</span><span class="st">"regrowth"</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">0.7</span>,</span>
+<span>                             <span class="st">"pass"</span>, <span class="st">"fail"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
+<span><span class="va">prop300</span> <span class="op">&lt;-</span> <span class="fu">fit_and_assess</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">300</span><span class="op">)</span>, <span class="st">"proportional, n = 300"</span><span class="op">)</span></span>
+<span><span class="va">prop300</span></span>
+<span><span class="co">#&gt;                  design overall regrowth_UA regrowth_PA VM0048</span></span>
+<span><span class="co">#&gt; 1 proportional, n = 300    97.2       0.886       0.477   fail</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Ninety-seven per cent overall accuracy, which in a project report would look like a finished job. The class-level figures say otherwise: the map catches under half of the real regrowth. Overall accuracy is dominated by forest, which is 81 per cent of the scene and easy, so it tells you almost nothing about the class you care about.</p>
+<p>This is why the standards require class-level accuracies rather than an overall figure, and why they require <em>both</em> user’s and producer’s accuracy to clear the threshold. A single number can always be gamed by a class that is common and easy.</p>
+</section><section id="why-reweighting-does-not-rescue-it" class="level2" data-number="9.5"><h2 data-number="9.5" class="anchored" data-anchor-id="why-reweighting-does-not-rescue-it">
+<span class="header-section-number">9.5</span> Why reweighting does not rescue it</h2>
+<p>The standard response is to stratify: sample equally from each class so the rare one is properly represented. Compare four designs, holding the classifier fixed.</p>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">strat</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/split.html">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span>, <span class="va">cls</span><span class="op">)</span>,</span>
+<span>                                   <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">i</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">i</span><span class="op">)</span>, <span class="va">n</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="va">prop300</span>,</span>
+<span>  <span class="fu">fit_and_assess</span><span class="op">(</span><span class="fu">strat</span><span class="op">(</span><span class="fl">75</span><span class="op">)</span>,                <span class="st">"stratified, 75 per class"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">fit_and_assess</span><span class="op">(</span><span class="fu">strat</span><span class="op">(</span><span class="fl">300</span><span class="op">)</span>,               <span class="st">"stratified, 300 per class"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">fit_and_assess</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">1200</span><span class="op">)</span>,   <span class="st">"proportional, n = 1200"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html">kable</a></span><span class="op">(</span><span class="va">results</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead><tr class="header">
+<th style="text-align: left;">design</th>
+<th style="text-align: right;">overall</th>
+<th style="text-align: right;">regrowth_UA</th>
+<th style="text-align: right;">regrowth_PA</th>
+<th style="text-align: left;">VM0048</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">proportional, n = 300</td>
+<td style="text-align: right;">97.2</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.477</td>
+<td style="text-align: left;">fail</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">stratified, 75 per class</td>
+<td style="text-align: right;">88.5</td>
+<td style="text-align: right;">0.289</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: left;">fail</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">stratified, 300 per class</td>
+<td style="text-align: right;">96.4</td>
+<td style="text-align: right;">0.579</td>
+<td style="text-align: right;">0.931</td>
+<td style="text-align: left;">fail</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">proportional, n = 1200</td>
+<td style="text-align: right;">98.4</td>
+<td style="text-align: right;">0.939</td>
+<td style="text-align: right;">0.708</td>
+<td style="text-align: left;">pass</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Stratifying does exactly what it promises and not what was wanted. Producer’s accuracy for regrowth climbs above 0.9, because the classifier now finds the class. User’s accuracy collapses, because it now finds it everywhere, including where it is not. Omission has been traded for commission at close to a one-for-one rate, and overall accuracy has fallen.</p>
+<p>Only the last row passes. What fixed it was not a cleverer allocation of the sample but four times as much of it. That is an unwelcome result, because reweighting is free and fieldwork is not, and it is worth stating plainly: when a rare class is spectrally confusable, sampling design redistributes the error rather than reducing it. Reducing it takes more information, either more training data or better features.</p>
+<p>The dual threshold in the standards exists precisely to prevent the trade. A project may not buy producer’s accuracy with user’s accuracy, because a map that over-calls deforestation is as unusable as one that misses it, just in the opposite fiscal direction.</p>
+</section><section id="probability-surfaces" class="level2" data-number="9.6"><h2 data-number="9.6" class="anchored" data-anchor-id="probability-surfaces">
+<span class="header-section-number">9.6</span> Probability surfaces</h2>
+<p>A classifier that returns only a label discards most of what it knows. Asking for probabilities gives a surface per class, and the shape of those surfaces is where the useful diagnostics live.</p>
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
+<span><span class="va">idx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncell</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span>, <span class="fl">1200</span><span class="op">)</span></span>
+<span><span class="va">tr</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>cover <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">cls</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span><span class="op">)</span>, <span class="va">bands</span><span class="op">[</span><span class="va">idx</span>, <span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">tr</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://imbs-hl.github.io/ranger/reference/ranger.html">ranger</a></span><span class="op">(</span><span class="va">cover</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">tr</span>, probability <span class="op">=</span> <span class="cn">TRUE</span>, num.trees <span class="op">=</span> <span class="fl">300</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">prob</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html">predict</a></span><span class="op">(</span><span class="va">img</span>, <span class="va">fit</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                       fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">m</span>, <span class="va">d</span><span class="op">)</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/predict.html">predict</a></span><span class="op">(</span><span class="va">m</span>, <span class="va">d</span><span class="op">)</span><span class="op">$</span><span class="va">predictions</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">prob</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/factors.html">levels</a></span><span class="op">(</span><span class="va">tr</span><span class="op">$</span><span class="va">cover</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">prob</span>, range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="activity-data_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Two summaries turn the four surfaces into one uncertainty layer. The <strong>margin</strong> is the difference between the highest and second-highest class probability: it is small where two classes compete. <strong>Entropy</strong>, normalised to a maximum of one, is small where the classifier is confident in any single class and large where probability is spread.</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pm</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/coerce.html">as.matrix</a></span><span class="op">(</span><span class="va">prob</span><span class="op">)</span></span>
+<span><span class="va">top2</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/transpose.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">pm</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/sort.html">sort</a></span><span class="op">(</span><span class="va">x</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">margin</span> <span class="op">&lt;-</span> <span class="va">top2</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">top2</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">entropy</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rowSums.html">rowSums</a></span><span class="op">(</span><span class="va">pm</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">pmax</a></span><span class="op">(</span><span class="va">pm</span>, <span class="fl">1e-12</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html">ncol</a></span><span class="op">(</span><span class="va">pm</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">unc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span>, nlyrs <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>; <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">unc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">margin</span>, <span class="va">entropy</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html">names</a></span><span class="op">(</span><span class="va">unc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"margin"</span>, <span class="st">"entropy"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="va">unc</span>, main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Margin (high = confident)"</span>, <span class="st">"Entropy (high = uncertain)"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="activity-data_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Uncertainty is not spread evenly. It concentrates along class boundaries, where a pixel genuinely contains two covers, and across the regrowth patch, where the spectral overlap with forest was built in. That spatial structure is the point: it tells you <em>where</em> the map is weak, which a single accuracy figure never can.</p>
+<div class="cell">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">hard</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/maxCol.html">max.col</a></span><span class="op">(</span><span class="va">pm</span><span class="op">)</span></span>
+<span><span class="va">correct</span> <span class="op">&lt;-</span> <span class="va">hard</span> <span class="op">==</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html">values</a></span><span class="op">(</span><span class="va">truth</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>margin_when_correct <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html">mean</a></span><span class="op">(</span><span class="va">margin</span><span class="op">[</span><span class="va">correct</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>        margin_when_wrong   <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html">mean</a></span><span class="op">(</span><span class="va">margin</span><span class="op">[</span><span class="op">!</span><span class="va">correct</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; margin_when_correct   margin_when_wrong </span></span>
+<span><span class="co">#&gt;               0.956               0.543</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">!</span><span class="va">correct</span> <span class="op">&amp;</span> <span class="va">margin</span> <span class="op">&lt;=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/quantile.html">quantile</a></span><span class="op">(</span><span class="va">margin</span>, <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">!</span><span class="va">correct</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 77.8</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Correct pixels carry a mean margin close to twice that of incorrect ones, and more than three quarters of all errors fall in the lowest-margin tenth of the scene. The margin is therefore a usable predictor of error without any reference data at all, which is what makes the next step possible.</p>
+</section><section id="spending-the-next-field-day-well" class="level2" data-number="9.7"><h2 data-number="9.7" class="anchored" data-anchor-id="spending-the-next-field-day-well">
+<span class="header-section-number">9.7</span> Spending the next field day well</h2>
+<p>If errors concentrate where the margin is low, then the most informative place to collect another training point is where the classifier is least sure. This is active learning, and in an operational setting it is the difference between a validation campaign that improves the map and one that merely measures it.</p>
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/order.html">order</a></span><span class="op">(</span><span class="va">margin</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">]</span></span>
+<span><span class="va">cand_xy</span>    <span class="op">&lt;-</span> <span class="va">xy</span><span class="op">[</span><span class="va">candidates</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html">rast</a></span><span class="op">(</span><span class="va">r</span>, vals <span class="op">=</span> <span class="va">margin</span><span class="op">)</span>, main <span class="op">=</span> <span class="st">"Where to send the field crew"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html">points</a></span><span class="op">(</span><span class="va">cand_xy</span>, pch <span class="op">=</span> <span class="fl">19</span>, cex <span class="op">=</span> <span class="fl">0.25</span>, col <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure"><p><img src="activity-data_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="2100"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html">round</a></span><span class="op">(</span><span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">cls</span><span class="op">[</span><span class="va">candidates</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  cleared   forest regrowth </span></span>
+<span><span class="co">#&gt;      2.3     59.3     38.3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The three hundred least-certain pixels are heavily enriched in regrowth relative to its share of the scene. A crew sent to those locations returns labels for the class the map is failing on, which is exactly what a proportional random sample would not have delivered. Note that these points are useful for <em>training</em> and are not a valid basis for <em>accuracy assessment</em>: a sample chosen because it is difficult is not representative, and using it to estimate accuracy would understate the map’s quality. Accuracy needs a probability sample, which is the subject of the uncertainty chapter.</p>
+<section id="what-vm0048-requires-of-a-map" class="level4 unnumbered unlisted verification"><h4 class="unnumbered unlisted anchored" data-anchor-id="what-vm0048-requires-of-a-map">What VM0048 requires of a map</h4>
+<p>Verra’s activity data module sets class-level thresholds rather than an overall accuracy figure, and the reasoning is the one demonstrated above.</p>
+<p>For a jurisdictional forest cover benchmark map, user’s and producer’s accuracy must <strong>each</strong> be 70 per cent or greater for areas mapped as deforestation over the historical reference period, and <strong>each</strong> greater than 90 per cent for areas mapped as forest at the end of that period. Where it is demonstrated that half or more of the jurisdiction’s forest carries under 50 per cent canopy cover, those thresholds relax to 60 and 80 per cent respectively.</p>
+<p>A minimum of 100 sample observations should be made of the target and non-target classes, so at least 200 per estimate, following the same interpretation protocol used to develop the activity data in the first place.</p>
+<p>Resolution is prescribed too, and asymmetrically: the wall-to-wall benchmark map must be at 30 m or finer and must not exceed 30 m, while imagery interpreted inside sample plots must be 10 m or finer. The split follows from the map not being the estimator. Under VM0048 the area comes from the probability sample and the map only stratifies it, which is the same argument the uncertainty chapter makes when it adjusts a mapped area against a reference sample.</p>
+<p>Sources: VMD0055 v1.1, accuracy assessment of the jurisdictional FCBM.</p>
+</section><section id="the-operational-stack" class="level4 unnumbered unlisted verification"><h4 class="unnumbered unlisted anchored" data-anchor-id="the-operational-stack">The operational stack</h4>
+<p>Production activity data work is rarely done with a raster and a random forest in memory. The <code>sits</code> package organises satellite time series into regularised data cubes and runs classification over them, with the training-sample tooling that large multi-class problems need <span class="citation" data-cites="simoes2021sits">(<a href="references/index.html#ref-simoes2021sits" role="doc-biblioref">Simões et al., 2021</a>)</span>. The code below is the shape of that workflow. It is not executed here, because the book renders offline and the dependency stack is heavy, but it maps one-to-one onto the steps above.</p>
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># a regularised cube, rather than a single-date image</span></span>
+<span><span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"MPC"</span>, collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>                  roi <span class="op">=</span> <span class="va">roi</span>, start_date <span class="op">=</span> <span class="st">"2022-01-01"</span>, end_date <span class="op">=</span> <span class="st">"2022-12-31"</span><span class="op">)</span></span>
+<span><span class="va">reg</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_regularize.html">sits_regularize</a></span><span class="op">(</span><span class="va">cube</span>, period <span class="op">=</span> <span class="st">"P16D"</span>, res <span class="op">=</span> <span class="fl">10</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># spectral indices as additional cube bands</span></span>
+<span><span class="va">reg</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply</a></span><span class="op">(</span><span class="va">reg</span>, NDVI <span class="op">=</span> <span class="op">(</span><span class="va">B08</span> <span class="op">-</span> <span class="va">B04</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">B08</span> <span class="op">+</span> <span class="va">B04</span><span class="op">)</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># training samples carry a full time series per point, not one observation</span></span>
+<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_get_data.html">sits_get_data</a></span><span class="op">(</span><span class="va">reg</span>, samples <span class="op">=</span> <span class="va">training_points</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># self-organising map to find and drop mislabelled samples</span></span>
+<span><span class="va">som</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_som_map.html">sits_som_map</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span><span class="va">clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_som_clean_samples.html">sits_som_clean_samples</a></span><span class="op">(</span><span class="va">som</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># class imbalance handled explicitly rather than by resampling pixels</span></span>
+<span><span class="va">bal</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_reduce_imbalance.html">sits_reduce_imbalance</a></span><span class="op">(</span><span class="va">clean</span>, n_samples_over <span class="op">=</span> <span class="fl">200</span>, n_samples_under <span class="op">=</span> <span class="fl">400</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">bal</span>, <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">reg</span>, <span class="va">model</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Bayesian smoothing over the probability cube before labelling</span></span>
+<span><span class="va">sm</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth</a></span><span class="op">(</span><span class="va">probs</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">map</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span><span class="va">sm</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># per-pixel uncertainty, then active learning on the worst pixels</span></span>
+<span><span class="va">unc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_uncertainty.html">sits_uncertainty</a></span><span class="op">(</span><span class="va">sm</span>, type <span class="op">=</span> <span class="st">"margin"</span>, output_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">new</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_uncertainty_sampling.html">sits_uncertainty_sampling</a></span><span class="op">(</span><span class="va">unc</span>, n <span class="op">=</span> <span class="fl">300</span>, min_uncert <span class="op">=</span> <span class="fl">0.4</span>, sampling_window <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Three things in that sequence do not appear in the in-memory version above and are worth knowing about. <code><a href="https://e-sensing.github.io/sits/reference/sits_som_clean_samples.html">sits_som_clean_samples()</a></code> finds training points whose spectra are inconsistent with their label, which catches interpretation errors before they poison the model. <code><a href="https://e-sensing.github.io/sits/reference/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> addresses the rare-class problem at the sample level with explicit over- and under-sampling targets. And <code><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth()</a></code> applies Bayesian smoothing to the probability cube before labelling, which suppresses isolated misclassified pixels while preserving real edges, a step with no equivalent in the hard-label workflow.</p>
+</section></section><section id="exercises" class="level2" data-number="9.8"><h2 data-number="9.8" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">9.8</span> Exercises</h2>
+<ol type="1">
+<li>Change the regrowth spectral means to be more distinct from forest, for instance by raising the near-infrared value, and rerun the four training designs. At what point does the proportional design at n = 300 pass the VM0048 thresholds, and what does that tell you about the relative value of better features against more samples?</li>
+<li>Compute the confusion matrix for the n = 1200 proportional design and report all four classes’ user’s and producer’s accuracies. Which class pair accounts for nearly all of the remaining error?</li>
+<li>Replace the margin with entropy as the active-learning criterion and compare the class composition of the 300 selected pixels. Do the two criteria disagree, and where?</li>
+<li>Using the area-adjusted estimator from the uncertainty chapter, compute the adjusted area of regrowth and its confidence interval under both the proportional and stratified designs. Which design gives the tighter interval, and is it the one with the higher overall accuracy?</li>
+<li>The active-learning sample is explicitly not valid for accuracy assessment. Design a sampling scheme that serves both purposes, or explain in one paragraph why one cannot.</li>
+<li>
+<em>(Applied.)</em> A jurisdiction reports a benchmark map with 94 per cent overall accuracy, deforestation user’s accuracy of 0.81 and producer’s accuracy of 0.62. State whether it meets VM0048, what the failure implies about the direction of bias in the reported area, and what you would ask the proponent to do next.</li>
+</ol>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-ipcc2006gl" class="csl-entry" role="listitem">
+IPCC. (2006). <em>2006 IPCC guidelines for national greenhouse gas inventories, volume 4: Agriculture, forestry and other land use</em>. Institute for Global Environmental Strategies.
+</div>
+<div id="ref-simoes2021sits" class="csl-entry" role="listitem">
+Simões, R., Camara, G., Queiroz, G., Souza, F., Andrade, P. R., Santos, L., Carvalho, A., &amp; Ferreira, K. (2021). Satellite image time series analysis for big earth observation data. <em>Remote Sensing</em>, <em>13</em>(13), 2428. <a href="https://doi.org/10.3390/rs13132428">https://doi.org/10.3390/rs13132428</a>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./emission-factors.html" class="pagination-link" aria-label="Emission Factors">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Emission Factors</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./07-uncertainty.html" class="pagination-link" aria-label="Uncertainty">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Uncertainty</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb10" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Activity Data and Classification"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">  docx:</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">    reference-doc: ./references/style.docx</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">    highlight-style: github</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="an">execute:</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">  eval: true</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">  echo: true</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">  warning: false</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">  message: false</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="an">knitr:</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">  opts_chunk:</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">    prefer-html: true</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">    dev: "png"</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="co">    dpi: 300</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> ./references/references.bib</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="an">csl:</span><span class="co"> ./references/apa.csl</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## The extent term</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>The emission factors chapter dealt with the greenhouse gas consequence per hectare. This chapter deals with the hectares. Activity data is the extent and location of whatever the factor is being applied to: land deforested, land converted, land brought under a new management regime. It is the term spatial analysis is actually for.</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>It is also the term most likely to be produced by a classification, and therefore the term that inherits a classifier's errors. The disturbance chapter built a two-class change map and validated it. Real activity data is rarely two classes, the classes of interest are usually rare, and both of those facts change the problem in ways that a binary example conceals.</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="fu">## Three approaches</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>The IPCC distinguishes three ways of collecting activity data, and the distinction is about spatial explicitness rather than accuracy of measurement <span class="co">[</span><span class="ot">@ipcc2006gl</span><span class="co">]</span>.</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>**Approach 1** uses aggregate area statistics: how much cropland, how much forest, at two points in time. It gives net change and cannot say what became what.</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>**Approach 2** adds transition information: how much forest became cropland, tracked as a matrix, but without locating the transitions.</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>**Approach 3** is spatially explicit: every parcel or pixel carries its own land-use trajectory, so transitions are located as well as counted.</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>Only Approach 3 supports the parcel-level transition clocks that the emission factors chapter showed are necessary to avoid double counting across overlapping interventions, and only Approach 3 lets you stratify emission factors by anything you can map. It is also the only one that produces a classification, and therefore the only one with classification error to worry about. That is not a drawback. Approaches 1 and 2 have the same errors; they simply have no mechanism for measuring them.</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="fu">## A scene to classify</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>We build a four-class scene over the plot footprint: forest, a cleared block, a patch of regrowth, and water along the southern edge. Four spectral bands are simulated with deliberate overlap between forest and regrowth, because that is where real classifiers fail and a scene with separable classes teaches nothing.</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>stems <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(<span class="fu">read.csv</span>(<span class="st">"data/scbi_stems.csv"</span>),</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>                  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"lon"</span>, <span class="st">"lat"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">32617</span>)</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>r  <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="fu">ext</span>(<span class="fu">vect</span>(stems)), <span class="at">resolution =</span> <span class="dv">10</span>, <span class="at">crs =</span> <span class="st">"EPSG:32617"</span>)</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">xyFromCell</span>(r, <span class="dv">1</span><span class="sc">:</span><span class="fu">ncell</span>(r))</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>cls <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="st">"forest"</span>, <span class="fu">ncell</span>(r))</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>cls[xy[,<span class="dv">1</span>] <span class="sc">&gt;</span> <span class="dv">747760</span> <span class="sc">&amp;</span> xy[,<span class="dv">1</span>] <span class="sc">&lt;</span> <span class="dv">747900</span> <span class="sc">&amp;</span> xy[,<span class="dv">2</span>] <span class="sc">&gt;</span> <span class="dv">4309050</span> <span class="sc">&amp;</span> xy[,<span class="dv">2</span>] <span class="sc">&lt;</span> <span class="dv">4309200</span>] <span class="ot">&lt;-</span> <span class="st">"cleared"</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>cls[xy[,<span class="dv">1</span>] <span class="sc">&gt;</span> <span class="dv">747620</span> <span class="sc">&amp;</span> xy[,<span class="dv">1</span>] <span class="sc">&lt;</span> <span class="dv">747720</span> <span class="sc">&amp;</span> xy[,<span class="dv">2</span>] <span class="sc">&gt;</span> <span class="dv">4308950</span> <span class="sc">&amp;</span> xy[,<span class="dv">2</span>] <span class="sc">&lt;</span> <span class="dv">4309080</span>] <span class="ot">&lt;-</span> <span class="st">"regrowth"</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>cls[xy[,<span class="dv">2</span>] <span class="sc">&lt;</span> <span class="dv">4308880</span>] <span class="ot">&lt;-</span> <span class="st">"water"</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="co"># simulated reflectance: forest and regrowth deliberately overlap</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">forest   =</span> <span class="fu">c</span>(<span class="fl">0.04</span>, <span class="fl">0.06</span>, <span class="fl">0.32</span>, <span class="fl">0.18</span>),</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>            <span class="at">regrowth =</span> <span class="fu">c</span>(<span class="fl">0.05</span>, <span class="fl">0.08</span>, <span class="fl">0.28</span>, <span class="fl">0.22</span>),</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>            <span class="at">cleared  =</span> <span class="fu">c</span>(<span class="fl">0.12</span>, <span class="fl">0.16</span>, <span class="fl">0.20</span>, <span class="fl">0.30</span>),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>            <span class="at">water    =</span> <span class="fu">c</span>(<span class="fl">0.03</span>, <span class="fl">0.04</span>, <span class="fl">0.02</span>, <span class="fl">0.01</span>))</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>sd_ <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.012</span>, <span class="fl">0.014</span>, <span class="fl">0.030</span>, <span class="fl">0.025</span>)</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>bands <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>, <span class="cf">function</span>(b) {</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>  v <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">ncell</span>(r))</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (k <span class="cf">in</span> <span class="fu">names</span>(mu)) { i <span class="ot">&lt;-</span> cls <span class="sc">==</span> k; v[i] <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="fu">sum</span>(i), mu[[k]][b], sd_[b]) }</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>  v</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>img <span class="ot">&lt;-</span> <span class="fu">rast</span>(r, <span class="at">nlyrs =</span> <span class="dv">4</span>); <span class="fu">values</span>(img) <span class="ot">&lt;-</span> bands</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(img) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"green"</span>, <span class="st">"nir"</span>, <span class="st">"swir"</span>)</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>truth <span class="ot">&lt;-</span> <span class="fu">rast</span>(r); <span class="fu">values</span>(truth) <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">factor</span>(cls))</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">table</span>(cls) <span class="sc">/</span> <span class="fu">ncell</span>(r), <span class="dv">1</span>)</span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>Regrowth covers under five per cent of the scene. That is the situation activity data is almost always in: the class you are being paid to detect is the rare one, and the class that dominates the accuracy statistics is the one nobody is asking about.</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="fu">## Training design and the rare-class trap</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>The obvious way to collect training data is to sample the scene at random, which gives each class a share proportional to its area.</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>fit_and_assess <span class="ot">&lt;-</span> <span class="cf">function</span>(idx, label) {</span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>  tr <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">cover =</span> <span class="fu">factor</span>(cls[idx]), bands[idx, ])</span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(tr)[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">names</span>(img)</span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>  f  <span class="ot">&lt;-</span> <span class="fu">ranger</span>(cover <span class="sc">~</span> ., <span class="at">data =</span> tr, <span class="at">probability =</span> <span class="cn">TRUE</span>, <span class="at">num.trees =</span> <span class="dv">300</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>  pp <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">predict</span>(img, f, <span class="at">na.rm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fun =</span> <span class="cf">function</span>(m, d) <span class="fu">predict</span>(m, d)<span class="sc">$</span>predictions)</span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>  hard <span class="ot">&lt;-</span> <span class="fu">max.col</span>(<span class="fu">as.matrix</span>(pp))</span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>  cm <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="at">map =</span> <span class="fu">levels</span>(<span class="fu">factor</span>(cls))[hard], <span class="at">ref =</span> cls)</span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>  ua <span class="ot">&lt;-</span> <span class="fu">diag</span>(cm) <span class="sc">/</span> <span class="fu">rowSums</span>(cm); pa <span class="ot">&lt;-</span> <span class="fu">diag</span>(cm) <span class="sc">/</span> <span class="fu">colSums</span>(cm)</span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">design =</span> label,</span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>             <span class="at">overall =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(hard <span class="sc">==</span> <span class="fu">values</span>(truth)), <span class="dv">1</span>),</span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a>             <span class="at">regrowth_UA =</span> <span class="fu">round</span>(ua[[<span class="st">"regrowth"</span>]], <span class="dv">3</span>),</span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>             <span class="at">regrowth_PA =</span> <span class="fu">round</span>(pa[[<span class="st">"regrowth"</span>]], <span class="dv">3</span>),</span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>             <span class="at">VM0048 =</span> <span class="fu">ifelse</span>(ua[[<span class="st">"regrowth"</span>]] <span class="sc">&gt;=</span> <span class="fl">0.7</span> <span class="sc">&amp;</span> pa[[<span class="st">"regrowth"</span>]] <span class="sc">&gt;=</span> <span class="fl">0.7</span>,</span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"pass"</span>, <span class="st">"fail"</span>))</span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">7</span>)</span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>prop300 <span class="ot">&lt;-</span> <span class="fu">fit_and_assess</span>(<span class="fu">sample</span>(<span class="fu">ncell</span>(r), <span class="dv">300</span>), <span class="st">"proportional, n = 300"</span>)</span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a>prop300</span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a>Ninety-seven per cent overall accuracy, which in a project report would look like a finished job. The class-level figures say otherwise: the map catches under half of the real regrowth. Overall accuracy is dominated by forest, which is 81 per cent of the scene and easy, so it tells you almost nothing about the class you care about.</span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>This is why the standards require class-level accuracies rather than an overall figure, and why they require *both* user's and producer's accuracy to clear the threshold. A single number can always be gamed by a class that is common and easy.</span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## Why reweighting does not rescue it</span></span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>The standard response is to stratify: sample equally from each class so the rare one is properly represented. Compare four designs, holding the classifier fixed.</span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>strat <span class="ot">&lt;-</span> <span class="cf">function</span>(n) <span class="fu">unlist</span>(<span class="fu">lapply</span>(<span class="fu">split</span>(<span class="fu">seq_len</span>(<span class="fu">ncell</span>(r)), cls),</span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>                                   <span class="cf">function</span>(i) <span class="fu">sample</span>(i, <span class="fu">min</span>(<span class="fu">length</span>(i), n))))</span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">7</span>)</span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>  prop300,</span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_and_assess</span>(<span class="fu">strat</span>(<span class="dv">75</span>),                <span class="st">"stratified, 75 per class"</span>),</span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_and_assess</span>(<span class="fu">strat</span>(<span class="dv">300</span>),               <span class="st">"stratified, 300 per class"</span>),</span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_and_assess</span>(<span class="fu">sample</span>(<span class="fu">ncell</span>(r), <span class="dv">1200</span>),   <span class="st">"proportional, n = 1200"</span>))</span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(results, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>Stratifying does exactly what it promises and not what was wanted. Producer's accuracy for regrowth climbs above 0.9, because the classifier now finds the class. User's accuracy collapses, because it now finds it everywhere, including where it is not. Omission has been traded for commission at close to a one-for-one rate, and overall accuracy has fallen.</span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>Only the last row passes. What fixed it was not a cleverer allocation of the sample but four times as much of it. That is an unwelcome result, because reweighting is free and fieldwork is not, and it is worth stating plainly: when a rare class is spectrally confusable, sampling design redistributes the error rather than reducing it. Reducing it takes more information, either more training data or better features.</span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a>The dual threshold in the standards exists precisely to prevent the trade. A project may not buy producer's accuracy with user's accuracy, because a map that over-calls deforestation is as unusable as one that misses it, just in the opposite fiscal direction.</span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a><span class="fu">## Probability surfaces</span></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>A classifier that returns only a label discards most of what it knows. Asking for probabilities gives a surface per class, and the shape of those surfaces is where the useful diagnostics live.</span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">7</span>)</span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a>idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">ncell</span>(r), <span class="dv">1200</span>)</span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a>tr  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">cover =</span> <span class="fu">factor</span>(cls[idx]), bands[idx, ])</span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tr)[<span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">names</span>(img)</span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">ranger</span>(cover <span class="sc">~</span> ., <span class="at">data =</span> tr, <span class="at">probability =</span> <span class="cn">TRUE</span>, <span class="at">num.trees =</span> <span class="dv">300</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a>prob <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">predict</span>(img, fit, <span class="at">na.rm =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a>                       <span class="at">fun =</span> <span class="cf">function</span>(m, d) <span class="fu">predict</span>(m, d)<span class="sc">$</span>predictions)</span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(prob) <span class="ot">&lt;-</span> <span class="fu">levels</span>(tr<span class="sc">$</span>cover)</span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(prob, <span class="at">range =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>Two summaries turn the four surfaces into one uncertainty layer. The **margin** is the difference between the highest and second-highest class probability: it is small where two classes compete. **Entropy**, normalised to a maximum of one, is small where the classifier is confident in any single class and large where probability is spread.</span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a>pm     <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(prob)</span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>top2   <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">apply</span>(pm, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">sort</span>(x, <span class="at">decreasing =</span> <span class="cn">TRUE</span>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>]))</span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a>margin <span class="ot">&lt;-</span> top2[, <span class="dv">1</span>] <span class="sc">-</span> top2[, <span class="dv">2</span>]</span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a>entropy <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">rowSums</span>(pm <span class="sc">*</span> <span class="fu">log</span>(<span class="fu">pmax</span>(pm, <span class="fl">1e-12</span>))) <span class="sc">/</span> <span class="fu">log</span>(<span class="fu">ncol</span>(pm))</span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a>unc <span class="ot">&lt;-</span> <span class="fu">rast</span>(r, <span class="at">nlyrs =</span> <span class="dv">2</span>); <span class="fu">values</span>(unc) <span class="ot">&lt;-</span> <span class="fu">cbind</span>(margin, entropy)</span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(unc) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"margin"</span>, <span class="st">"entropy"</span>)</span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(unc, <span class="at">main =</span> <span class="fu">c</span>(<span class="st">"Margin (high = confident)"</span>, <span class="st">"Entropy (high = uncertain)"</span>))</span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>Uncertainty is not spread evenly. It concentrates along class boundaries, where a pixel genuinely contains two covers, and across the regrowth patch, where the spectral overlap with forest was built in. That spatial structure is the point: it tells you *where* the map is weak, which a single accuracy figure never can.</span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>hard    <span class="ot">&lt;-</span> <span class="fu">max.col</span>(pm)</span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>correct <span class="ot">&lt;-</span> hard <span class="sc">==</span> <span class="fu">values</span>(truth)</span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">margin_when_correct =</span> <span class="fu">mean</span>(margin[correct]),</span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>        <span class="at">margin_when_wrong   =</span> <span class="fu">mean</span>(margin[<span class="sc">!</span>correct])), <span class="dv">3</span>)</span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">sum</span>(<span class="sc">!</span>correct <span class="sc">&amp;</span> margin <span class="sc">&lt;=</span> <span class="fu">quantile</span>(margin, <span class="fl">0.1</span>)) <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span>correct), <span class="dv">1</span>)</span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a>Correct pixels carry a mean margin close to twice that of incorrect ones, and more than three quarters of all errors fall in the lowest-margin tenth of the scene. The margin is therefore a usable predictor of error without any reference data at all, which is what makes the next step possible.</span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a><span class="fu">## Spending the next field day well</span></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a>If errors concentrate where the margin is low, then the most informative place to collect another training point is where the classifier is least sure. This is active learning, and in an operational setting it is the difference between a validation campaign that improves the map and one that merely measures it.</span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a>candidates <span class="ot">&lt;-</span> <span class="fu">order</span>(margin)[<span class="dv">1</span><span class="sc">:</span><span class="dv">300</span>]</span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a>cand_xy    <span class="ot">&lt;-</span> xy[candidates, ]</span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">rast</span>(r, <span class="at">vals =</span> margin), <span class="at">main =</span> <span class="st">"Where to send the field crew"</span>)</span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(cand_xy, <span class="at">pch =</span> <span class="dv">19</span>, <span class="at">cex =</span> <span class="fl">0.25</span>, <span class="at">col =</span> <span class="st">"white"</span>)</span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> <span class="fu">table</span>(cls[candidates]) <span class="sc">/</span> <span class="fu">length</span>(candidates), <span class="dv">1</span>)</span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a>The three hundred least-certain pixels are heavily enriched in regrowth relative to its share of the scene. A crew sent to those locations returns labels for the class the map is failing on, which is exactly what a proportional random sample would not have delivered. Note that these points are useful for *training* and are not a valid basis for *accuracy assessment*: a sample chosen because it is difficult is not representative, and using it to estimate accuracy would understate the map's quality. Accuracy needs a probability sample, which is the subject of the uncertainty chapter.</span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>::: {.verification}</span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a><span class="fu">#### What VM0048 requires of a map {.unnumbered .unlisted}</span></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>Verra's activity data module sets class-level thresholds rather than an overall</span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>accuracy figure, and the reasoning is the one demonstrated above.</span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a>For a jurisdictional forest cover benchmark map, user's and producer's accuracy</span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>must **each** be 70 per cent or greater for areas mapped as deforestation over</span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>the historical reference period, and **each** greater than 90 per cent for areas</span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a>mapped as forest at the end of that period. Where it is demonstrated that half or</span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a>more of the jurisdiction's forest carries under 50 per cent canopy cover, those</span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>thresholds relax to 60 and 80 per cent respectively.</span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>A minimum of 100 sample observations should be made of the target and non-target</span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a>classes, so at least 200 per estimate, following the same interpretation protocol</span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a>used to develop the activity data in the first place.</span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a>Resolution is prescribed too, and asymmetrically: the wall-to-wall benchmark map</span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a>must be at 30 m or finer and must not exceed 30 m, while imagery interpreted</span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a>inside sample plots must be 10 m or finer. The split follows from the map not</span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a>being the estimator. Under VM0048 the area comes from the probability sample and</span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a>the map only stratifies it, which is the same argument the uncertainty chapter</span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a>makes when it adjusts a mapped area against a reference sample.</span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a>Sources: VMD0055 v1.1, accuracy assessment of the jurisdictional FCBM.</span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>::: {.verification}</span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a><span class="fu">#### The operational stack {.unnumbered .unlisted}</span></span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a>Production activity data work is rarely done with a raster and a random forest in</span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a>memory. The <span class="in">`sits`</span> package organises satellite time series into regularised data</span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a>cubes and runs classification over them, with the training-sample tooling that</span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a>large multi-class problems need <span class="co">[</span><span class="ot">@simoes2021sits</span><span class="co">]</span>. The code below is the shape of</span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a>that workflow. It is not executed here, because the book renders offline and the</span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a>dependency stack is heavy, but it maps one-to-one onto the steps above.</span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sits)</span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a><span class="co"># a regularised cube, rather than a single-date image</span></span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a>cube <span class="ot">&lt;-</span> <span class="fu">sits_cube</span>(<span class="at">source =</span> <span class="st">"MPC"</span>, <span class="at">collection =</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a>                  <span class="at">roi =</span> roi, <span class="at">start_date =</span> <span class="st">"2022-01-01"</span>, <span class="at">end_date =</span> <span class="st">"2022-12-31"</span>)</span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a>reg  <span class="ot">&lt;-</span> <span class="fu">sits_regularize</span>(cube, <span class="at">period =</span> <span class="st">"P16D"</span>, <span class="at">res =</span> <span class="dv">10</span>, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a><span class="co"># spectral indices as additional cube bands</span></span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a>reg  <span class="ot">&lt;-</span> <span class="fu">sits_apply</span>(reg, <span class="at">NDVI =</span> (B08 <span class="sc">-</span> B04) <span class="sc">/</span> (B08 <span class="sc">+</span> B04), <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a><span class="co"># training samples carry a full time series per point, not one observation</span></span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">sits_get_data</span>(reg, <span class="at">samples =</span> training_points)</span>
+<span id="cb10-258"><a href="#cb10-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-259"><a href="#cb10-259" aria-hidden="true" tabindex="-1"></a><span class="co"># self-organising map to find and drop mislabelled samples</span></span>
+<span id="cb10-260"><a href="#cb10-260" aria-hidden="true" tabindex="-1"></a>som   <span class="ot">&lt;-</span> <span class="fu">sits_som_map</span>(samples)</span>
+<span id="cb10-261"><a href="#cb10-261" aria-hidden="true" tabindex="-1"></a>clean <span class="ot">&lt;-</span> <span class="fu">sits_som_clean_samples</span>(som)</span>
+<span id="cb10-262"><a href="#cb10-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a><span class="co"># class imbalance handled explicitly rather than by resampling pixels</span></span>
+<span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a>bal   <span class="ot">&lt;-</span> <span class="fu">sits_reduce_imbalance</span>(clean, <span class="at">n_samples_over =</span> <span class="dv">200</span>, <span class="at">n_samples_under =</span> <span class="dv">400</span>)</span>
+<span id="cb10-265"><a href="#cb10-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-266"><a href="#cb10-266" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">sits_train</span>(bal, <span class="fu">sits_rfor</span>())</span>
+<span id="cb10-267"><a href="#cb10-267" aria-hidden="true" tabindex="-1"></a>probs <span class="ot">&lt;-</span> <span class="fu">sits_classify</span>(reg, model, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-268"><a href="#cb10-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-269"><a href="#cb10-269" aria-hidden="true" tabindex="-1"></a><span class="co"># Bayesian smoothing over the probability cube before labelling</span></span>
+<span id="cb10-270"><a href="#cb10-270" aria-hidden="true" tabindex="-1"></a>sm    <span class="ot">&lt;-</span> <span class="fu">sits_smooth</span>(probs, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-271"><a href="#cb10-271" aria-hidden="true" tabindex="-1"></a>map   <span class="ot">&lt;-</span> <span class="fu">sits_label_classification</span>(sm, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-272"><a href="#cb10-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-273"><a href="#cb10-273" aria-hidden="true" tabindex="-1"></a><span class="co"># per-pixel uncertainty, then active learning on the worst pixels</span></span>
+<span id="cb10-274"><a href="#cb10-274" aria-hidden="true" tabindex="-1"></a>unc   <span class="ot">&lt;-</span> <span class="fu">sits_uncertainty</span>(sm, <span class="at">type =</span> <span class="st">"margin"</span>, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb10-275"><a href="#cb10-275" aria-hidden="true" tabindex="-1"></a>new   <span class="ot">&lt;-</span> <span class="fu">sits_uncertainty_sampling</span>(unc, <span class="at">n =</span> <span class="dv">300</span>, <span class="at">min_uncert =</span> <span class="fl">0.4</span>, <span class="at">sampling_window =</span> <span class="dv">10</span>)</span>
+<span id="cb10-276"><a href="#cb10-276" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb10-277"><a href="#cb10-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-278"><a href="#cb10-278" aria-hidden="true" tabindex="-1"></a>Three things in that sequence do not appear in the in-memory version above and</span>
+<span id="cb10-279"><a href="#cb10-279" aria-hidden="true" tabindex="-1"></a>are worth knowing about. <span class="in">`sits_som_clean_samples()`</span> finds training points whose</span>
+<span id="cb10-280"><a href="#cb10-280" aria-hidden="true" tabindex="-1"></a>spectra are inconsistent with their label, which catches interpretation errors</span>
+<span id="cb10-281"><a href="#cb10-281" aria-hidden="true" tabindex="-1"></a>before they poison the model. <span class="in">`sits_reduce_imbalance()`</span> addresses the rare-class</span>
+<span id="cb10-282"><a href="#cb10-282" aria-hidden="true" tabindex="-1"></a>problem at the sample level with explicit over- and under-sampling targets.</span>
+<span id="cb10-283"><a href="#cb10-283" aria-hidden="true" tabindex="-1"></a>And <span class="in">`sits_smooth()`</span> applies Bayesian smoothing to the probability cube before</span>
+<span id="cb10-284"><a href="#cb10-284" aria-hidden="true" tabindex="-1"></a>labelling, which suppresses isolated misclassified pixels while preserving real</span>
+<span id="cb10-285"><a href="#cb10-285" aria-hidden="true" tabindex="-1"></a>edges, a step with no equivalent in the hard-label workflow.</span>
+<span id="cb10-286"><a href="#cb10-286" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb10-287"><a href="#cb10-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-288"><a href="#cb10-288" aria-hidden="true" tabindex="-1"></a><span class="fu">## Exercises</span></span>
+<span id="cb10-289"><a href="#cb10-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-290"><a href="#cb10-290" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Change the regrowth spectral means to be more distinct from forest, for instance by raising the near-infrared value, and rerun the four training designs. At what point does the proportional design at n = 300 pass the VM0048 thresholds, and what does that tell you about the relative value of better features against more samples?</span>
+<span id="cb10-291"><a href="#cb10-291" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Compute the confusion matrix for the n = 1200 proportional design and report all four classes' user's and producer's accuracies. Which class pair accounts for nearly all of the remaining error?</span>
+<span id="cb10-292"><a href="#cb10-292" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Replace the margin with entropy as the active-learning criterion and compare the class composition of the 300 selected pixels. Do the two criteria disagree, and where?</span>
+<span id="cb10-293"><a href="#cb10-293" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Using the area-adjusted estimator from the uncertainty chapter, compute the adjusted area of regrowth and its confidence interval under both the proportional and stratified designs. Which design gives the tighter interval, and is it the one with the higher overall accuracy?</span>
+<span id="cb10-294"><a href="#cb10-294" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>The active-learning sample is explicitly not valid for accuracy assessment. Design a sampling scheme that serves both purposes, or explain in one paragraph why one cannot.</span>
+<span id="cb10-295"><a href="#cb10-295" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>*(Applied.)* A jurisdiction reports a benchmark map with 94 per cent overall accuracy, deforestation user's accuracy of 0.81 and producer's accuracy of 0.62. State whether it meets VM0048, what the failure implies about the direction of bias in the reported area, and what you would ask the proponent to do next.</span>
+</code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="https://github.com/seamusrobertmurphy/training-rspatial">Source</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/edit/main/activity-data.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/seamusrobertmurphy/training-rspatial/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+</body></html>
