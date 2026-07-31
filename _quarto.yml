@@ -34,6 +34,7 @@ book:
     - allometry.qmd
     - emission-factors.qmd
     - activity-data.qmd
+    - baseline-modelling.qmd
     - 07-uncertainty.qmd
     - 08-time-series.qmd
     - 09-spatial-patterns.qmd
