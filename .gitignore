@@ -56,6 +56,12 @@ rsconnect/
 /_freeze/
 *_files/
 
+# Rendering a single chapter, rather than the whole book, drops its HTML and a
+# site_libs/ copy at the repo root instead of in _book. The book publishes from
+# gh-pages, so these are always strays.
+/*.html
+/site_libs/
+
 # Reference library of third-party standards (ACR, ART, Verra, IPCC, FCPF,
 # GOFC-GOLD). Roughly 900 MB including geodatabases, with single files well
 # over GitHub's 100 MB hard limit, and redistributing other organisations'

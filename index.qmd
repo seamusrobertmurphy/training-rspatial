@@ -31,25 +31,25 @@ A reader who skips every verification track still gets a complete book. Nothing 
 
 The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.
 
-1. Getting Started — reproducible projects, the spatial stack, vector versus raster, a first map and coordinate check.
-2. Vector Data — geometries, attributes and support, spatial joins; closing on an area check.
-3. Raster Data — grids, map algebra, reclassification, extraction; closing on land-cover reclassification.
-4. Terrain and Hydrology — elevation, slope and aspect, flow; closing on inundation mapping.
-5. LiDAR and Point Clouds — returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.
-6. Disturbance and Risk — change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.
+1. Getting Started: reproducible projects, the spatial stack, vector versus raster, a first map and coordinate check.
+2. Vector Data: geometries, attributes and support, spatial joins; closing on an area check.
+3. Raster Data: grids, map algebra, reclassification, extraction; closing on land-cover reclassification.
+4. Terrain and Hydrology: elevation, slope and aspect, flow; closing on inundation mapping.
+5. LiDAR and Point Clouds: returns, ground and canopy, tree detection; closing on a LiDAR forest inventory.
+6. Disturbance and Risk: change detection, accuracy assessment, risk modelling; closing on VM0048 risk and ACR accuracy.
 
 The next four turn that toolkit on the accounting problem, and are where the book departs from every other R-spatial text.
 
-7. Allometry and Biomass — equation form and selection, extrapolation, wood density, scaling to the stand.
-8. Emission Factors — tiers, the stock-difference method, factor selection, propagation in quadrature.
-9. Activity Data and Classification — IPCC approaches, training design, probability surfaces, active learning.
-10. Baseline Modelling — counterfactuals, reference periods, the ratchet, risk-weighted allocation.
+7. Allometry and Biomass: equation form and selection, extrapolation, wood density, scaling to the stand.
+8. Emission Factors: tiers, the stock-difference method, factor selection, propagation in quadrature.
+9. Activity Data and Classification: IPCC approaches, training design, probability surfaces, active learning.
+10. Baseline Modelling: counterfactuals, reference periods, the ratchet, risk-weighted allocation.
 
 The last three quantify and close.
 
-11. Uncertainty — sampling error, accuracy metrics, cross-validation, Monte Carlo propagation, area-adjusted accuracy, and how three registries turn one statistic into three different deductions.
-12. Time Series — space-time cubes, seasonality and randomness, sampling and aliasing; closing on IPCC Tier 1 fire emissions.
-13. Spatial Patterns — point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.
+11. Uncertainty: sampling error, accuracy metrics, cross-validation, Monte Carlo propagation, area-adjusted accuracy, and how three registries turn one statistic into three different deductions.
+12. Time Series: space-time cubes, seasonality and randomness, sampling and aliasing; closing on IPCC Tier 1 fire emissions.
+13. Spatial Patterns: point patterns, intensity, nearest-neighbour, Ripley's K; closing on post-fire conifer regeneration.
 
 An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.
 

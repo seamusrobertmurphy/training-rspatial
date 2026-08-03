@@ -31,7 +31,7 @@ renv::restore()     # a reviewer rebuilds the exact environment
 A single entry point that runs every stage in order is the other half. When the raw data change, one command regenerates every figure and number, and nothing depends on remembering which script to run first.
 
 ```{r}
-# run.R — the one command that rebuilds everything
+# run.R, the one command that rebuilds everything
 source("01-ingest.R")       # read and validate raw survey data
 source("02-process.R")      # projection, extraction, modelling
 source("03-report.R")       # render outputs with quarto::quarto_render()

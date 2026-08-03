@@ -44,7 +44,7 @@ That point estimate is the easy part. Three distinct sources of error sit beneat
 
 ## Sampling error
 
-Divide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval:
+Divide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval. If the distinction between a standard deviation and a standard error is not immediate, the [statistical primers appendix](AA-statistics.qmd) covers it before you go further:
 
 ```{r}
 stems$quadrat <- paste(cut(stems$gx, 8), cut(stems$gy, 12))
@@ -275,7 +275,7 @@ the minimum viable number of plots is buying a coin toss.
 
 ## Monte Carlo propagation
 
-Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl].
+Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl]. The [statistical primers appendix](AA-statistics.qmd) sets out why the algebraic alternative, combining relative errors in quadrature, is the special case rather than the general rule, and how many iterations the simulation needs.
 
 ```{r}
 set.seed(42)

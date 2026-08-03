@@ -36,7 +36,7 @@ with $D$ the diameter at breast height and $b$ typically between 2.3 and 2.6. Ta
 
 $$\ln(AGB) = \ln(a) + b\,\ln(D) + \varepsilon$$
 
-Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972], and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics.
+Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972], and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics, and the [statistical primers appendix](AA-statistics.qmd) shows the skew that makes the correction necessary.
 
 ## Choosing an equation
 

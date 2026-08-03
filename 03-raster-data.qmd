@@ -71,7 +71,7 @@ plot(stocked, main = "Stocked cells")
 
 ## Reclassification
 
-Turning a continuous surface into a small number of classes is reclassification, the operation behind every land-cover and zonation map. `classify()` takes a matrix of from–to–becomes rows and cuts the surface at the thresholds:
+Turning a continuous surface into a small number of classes is reclassification, the operation behind every land-cover and zonation map. `classify()` takes a matrix of from, to and becomes rows and cuts the surface at the thresholds:
 
 ```{r}
 rcl <- matrix(c(-Inf, 0.05, 1,     # sparse

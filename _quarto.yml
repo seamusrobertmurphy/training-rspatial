@@ -40,6 +40,7 @@ book:
     - 09-spatial-patterns.qmd
 
   appendices:
+    - AA-statistics.qmd
     - A-automation-registries.qmd
     - references/index.qmd
 

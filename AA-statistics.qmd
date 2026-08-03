@@ -1,0 +1,271 @@
+---
+title: "Statistical Primers"
+format:
+  docx:
+    reference-doc: ./references/style.docx
+    highlight-style: github
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+The chapters assume you can read a standard error, combine two uncertainties, and
+say what a Monte Carlo simulation is doing. If any of that has gone rusty, this
+appendix is where to repair it. It is deliberately short and it teaches only what
+the book actually uses. Nothing here is a substitute for a statistics course, and
+nothing in the chapters depends on reading it first.
+
+## Spread, precision and intervals
+
+Start with a distinction that inventory reports get wrong more often than any
+other. The standard deviation and the standard error are not the same quantity
+and they answer different questions.
+
+The standard deviation describes the forest. It measures how much individual
+observations differ from one another. A stand of uniform planted spruce has a
+small standard deviation; a mixed natural stand with veterans and saplings has a
+large one. Adding plots does not shrink it, because it is a property of the thing
+you are measuring, not of your effort in measuring it.
+
+The standard error describes your sample. It measures how far your sample mean is
+likely to sit from the true population mean. It shrinks as you measure more,
+because more measurement genuinely does pin the mean down better:
+
+$$\text{SE} = \frac{s}{\sqrt{n}}$$
+
+The square root is the part worth internalising. To halve a standard error you
+must quadruple the sample. That single fact governs the economics of every
+inventory design in this book, and it is why the cheap uncertainty reductions are
+almost never "measure more plots".
+
+Take the stem data and divide the plot into quadrats, so each quadrat becomes one
+sample of carbon density:
+
+```{r}
+stems <- read.csv("data/scbi_stems.csv")
+stems$agb_kg    <- exp(-2.48 + 2.4835 * log(stems$dbh))
+stems$carbon_Mg <- 0.47 * stems$agb_kg / 1000
+
+stems$quadrat <- paste(cut(stems$gx, 8), cut(stems$gy, 12))
+quadrat_area  <- 25.6 / (8 * 12)
+
+qd <- aggregate(carbon_Mg ~ quadrat, data = stems, FUN = sum)
+qd$carbon_ha <- qd$carbon_Mg / quadrat_area
+
+n  <- nrow(qd)
+m  <- mean(qd$carbon_ha)
+s  <- sd(qd$carbon_ha)
+se <- s / sqrt(n)
+round(c(n = n, mean = m, sd = s, se = se), 2)
+```
+
+The standard deviation is an order of magnitude larger than the standard error,
+which is exactly as it should be with `r n` quadrats. Quadrupling the sample
+would move the standard error to `r round(s / sqrt(4 * n), 2)` and leave the
+standard deviation where it is.
+
+A confidence interval turns the standard error into a statement you can report.
+It is the mean plus or minus some multiple of the standard error, and the
+multiple is set by how confident you want to be:
+
+```{r}
+ci <- function(mean, se, level) {
+  z  <- qnorm(1 - (1 - level) / 2)
+  hw <- z * se
+  c(z = z, half_width = hw, rel_pct = 100 * hw / mean,
+    lower = mean - hw, upper = mean + hw)
+}
+round(rbind(`90%` = ci(m, se, 0.90),
+            `95%` = ci(m, se, 0.95)), 2)
+```
+
+The crediting standards work at 90 per cent, so the multiplier you will meet
+most often is 1.645. What they consume is the half-width expressed as a
+percentage of the mean, the `rel_pct` column above. That is the uncertainty
+figure a deduction schedule is applied to, and here it is large enough to trigger
+one under every schedule in the uncertainty chapter. Sampling error alone, on a
+well-mapped 25.6 hectare plot, is not a small problem.
+
+Two cautions. First, the interval is a statement about the mean, not about
+individual trees. An interval that contains the stand mean will not contain most
+of the trees, and a prediction interval for a single tree is far wider. Second,
+the interval assumes the sample mean is approximately normally distributed, which
+is a much weaker assumption than assuming the data are.
+
+That second point deserves a demonstration, because forest data are about as far
+from normal as ecological data get. Per-tree biomass is violently
+right-skewed, and yet the mean of a sample of them is not:
+
+```{r}
+set.seed(1)
+draws <- replicate(2000, mean(sample(stems$agb_kg, 96, replace = TRUE)))
+
+par(mfrow = c(1, 2))
+hist(stems$agb_kg, breaks = 60, col = "grey80", border = "white",
+     main = "Per-tree biomass", xlab = "kg")
+hist(draws, breaks = 40, col = "steelblue", border = "white",
+     main = "Mean of 96 trees", xlab = "kg")
+```
+
+```{r}
+round(c(tree_mean   = mean(stems$agb_kg),
+        tree_median = median(stems$agb_kg),
+        tree_max    = max(stems$agb_kg),
+        mean_of_96  = mean(draws),
+        sd_of_means = sd(draws)), 1)
+```
+
+The left panel is the forest: a median of `r round(median(stems$agb_kg), 1)` kg
+against a maximum of `r round(max(stems$agb_kg))` kg, with `r round(100 * sum(sort(stems$agb_kg, decreasing = TRUE)[1:round(0.05 * nrow(stems))]) / sum(stems$agb_kg))`
+per cent of all the biomass sitting in the largest five per cent of the stems.
+The right panel is a sampling distribution, and it is close to symmetric. This is
+the central limit theorem doing the work that lets you put a normal-theory
+interval around a mean computed from wildly non-normal data. It is also the
+reason large trees dominate inventory design: the skew does not stop the
+mathematics working, but it does mean a sample that misses the big stems misses
+most of the carbon.
+
+## Combining uncertainties
+
+Carbon estimates are built by multiplying uncertain things together. Area times
+carbon density gives stock. Activity data times an emission factor gives
+emissions. Each input carries its own error, and you need the error of the
+result.
+
+When the inputs are independent, relative errors combine in quadrature: square
+them, add, take the square root.
+
+$$U_{\text{total}} = \sqrt{U_1^2 + U_2^2 + \cdots + U_k^2}$$
+
+The reason is not arbitrary. Errors have signs. Sometimes the area is high while
+the factor is low, and the two partly cancel. Adding the percentages assumes
+every error goes the wrong way at the same time, which is possible but not
+probable, and an estimate built on that assumption is not conservative so much as
+wrong:
+
+```{r}
+quad <- function(...) sqrt(sum(c(...)^2))
+
+c(quadrature = quad(8, 12), naive_sum = 8 + 12)
+```
+
+Now notice what happens when you try to improve either input:
+
+```{r}
+rbind(
+  `as measured`         = c(ad = 8, ef = 12, total = quad(8, 12)),
+  `halve activity data` = c(ad = 4, ef = 12, total = quad(4, 12)),
+  `halve factor`        = c(ad = 8, ef =  6, total = quad(8, 6))
+)
+```
+
+Halving the smaller term buys you `r round(quad(8, 12) - quad(4, 12), 2)`
+percentage points. Halving the larger buys `r round(quad(8, 12) - quad(8, 6), 2)`.
+Quadrature is dominated by its largest term, and that is the single most useful
+piece of guidance in uncertainty management: find the biggest contributor and
+spend the money there. Refining anything else is close to wasted effort.
+
+The formula above applies to products. Sums behave differently: when you add
+carbon pools, their absolute errors combine in quadrature, so the relative error
+of the total is a magnitude-weighted quadratic mean in which a large pool with
+modest relative error can outweigh a small pool with a terrible one. That is the
+form the ACR improved forest management equation takes, and the uncertainty
+chapter works it through against the standard.
+
+Two assumptions are buried in all of this. The inputs must be independent, and if
+they are correlated, quadrature understates the total. And the combination must
+be roughly linear over the range of the errors. When either fails, stop
+propagating algebraically and simulate.
+
+## Monte Carlo methods
+
+Monte Carlo simulation replaces the algebra with brute force. Draw each uncertain
+input from its distribution, recompute the whole estimate, and repeat until the
+spread of results is itself stable. The spread is the answer.
+
+The method is not an approximation to quadrature; quadrature is an approximation
+to it. Where the two are both valid they agree, and it is worth seeing that
+before trusting either:
+
+```{r}
+set.seed(42)
+N <- 100000
+area   <- rnorm(N, 1000, 80)     # 8% relative standard error
+factor <- rnorm(N, 150,  18)     # 12% relative standard error
+total  <- area * factor
+
+round(c(monte_carlo = 100 * sd(total) / mean(total),
+        quadrature  = quad(8, 12)), 3)
+```
+
+They agree to within a few hundredths of a percentage point, which is the
+reassurance you want: when the function is a simple product of independent
+normals, the closed form is correct and very much cheaper. Reach for simulation
+when it is not.
+
+Allometry is the standard case where it is not. Biomass is exponential in the
+fitted coefficient, so the same coefficient uncertainty produces a different
+result depending on the tree it is applied to:
+
+```{r}
+set.seed(42)
+b <- rnorm(N, 2.4835, 0.05)      # uncertainty in the allometric exponent
+
+spread <- function(D) {
+  agb <- exp(-2.48 + b * log(D))
+  c(dbh_cm = D,
+    rel_sd_pct = 100 * sd(agb) / mean(agb),
+    mean_over_median = mean(agb) / median(agb))
+}
+round(t(sapply(c(10, 30, 60, 100), spread)), 3)
+```
+
+Two lessons fall out. The relative uncertainty grows with diameter, so quoting a
+single model uncertainty percentage for a whole inventory is meaningless without
+saying which trees it applies to. And the mean exceeds the median at every
+diameter, because exponentiating a symmetric distribution produces a skewed one.
+That skew is the same effect the Baskerville correction addresses in the
+allometry chapter, arriving here from the other direction.
+
+The remaining question is how many iterations to run. Monte Carlo error falls
+with the square root of the iteration count, the same rule that governs sample
+size:
+
+```{r}
+set.seed(7)
+iters    <- c(100, 1000, 10000, 100000)
+converge <- sapply(iters, function(k) sd(replicate(200, mean(rnorm(k, 150, 18)))))
+round(rbind(iterations = iters, sd_of_result = converge), 4)
+```
+
+Each hundredfold increase in iterations shrinks the scatter of the answer by
+roughly an order of magnitude, which is the square-root rule again. This is why
+ART-TREES requires that Monte Carlo simulations use the 90 per cent confidence
+interval and a simulation n of 10,000. Below that the reported
+uncertainty is itself noticeably uncertain, and two honest analysts running the
+same model would report materially different deductions from the same data.
+
+One operational point matters more than any of the statistics. Set the seed. A
+verifier must be able to run your script and obtain your number, and an
+unseeded simulation cannot be checked, only re-estimated. Every simulation in
+this book is seeded for that reason.
+
+## Where these are used
+
+| Idea | First used in |
+|---|---|
+| Standard error, confidence intervals | the uncertainty chapter, sampling error |
+| Skew and the sampling distribution | the allometry chapter, model fitting |
+| Quadrature | the uncertainty chapter, combining sources |
+| Magnitude-weighted quadratic mean | the uncertainty chapter, ACR deduction |
+| Monte Carlo | the uncertainty chapter, propagation |
+| Seeding and reproducibility | throughout |
