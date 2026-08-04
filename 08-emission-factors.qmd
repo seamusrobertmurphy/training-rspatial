@@ -1,0 +1,355 @@
+---
+title: "Emission Factors"
+aliases:
+  - emission-factors.html
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    prefer-html: true
+    dev: "png"
+    dpi: 300
+bibliography: ./references/references.bib
+csl: ./references/apa.csl
+---
+
+## Factor definition
+
+Almost every greenhouse gas estimate in land use reduces to one multiplication:
+
+$$\text{Emissions} = \text{Activity Data} \times \text{Emission Factor}$$
+
+Activity data is the extent of something happening: hectares deforested, hectares converted, hectares under a new management regime. The emission factor is the greenhouse gas consequence per unit of that activity. The previous chapters have been about the left-hand term, because that is where spatial analysis lives. This chapter is about the right-hand one, which is where most of the money and most of the uncertainty actually sit.
+
+The distinction matters more than it looks. An analyst who maps deforestation to the pixel and then multiplies by a factor pulled from a default table has spent all their effort on the term they measured and none on the term they assumed. The factor is usually the larger source of error, and unlike the map it cannot be improved by better imagery.
+
+## Tiers
+
+The IPCC organises methods into three tiers, and the tier is a statement about where the numbers came from rather than about how sophisticated the arithmetic is [@ipcc2006gl].
+
+**Tier 1** uses global or regional default factors published in the guidelines, applied through simple equations, with default assumptions about what happens after a land-use change. It requires no local measurement beyond the activity data. It is the fallback when nothing better exists, and its uncertainties are correspondingly wide.
+
+**Tier 2** keeps the Tier 1 equations but substitutes country-specific or region-specific factors derived from local measurement. This is where most credible national inventories sit.
+
+**Tier 3** replaces the equations themselves with models or direct measurement systems, calibrated and validated locally.
+
+The tiers are not a quality ladder in the sense that Tier 1 is wrong. A well-applied Tier 1 estimate with an honest uncertainty is more defensible than a Tier 3 model whose calibration nobody can reproduce. What the tiers do determine is the size of the interval you must report, and therefore the deduction you must accept.
+
+## Default factors
+
+The Tier 1 defaults are not conjured. They are meta-analyses of published soil and biomass measurements, and the guidelines publish their sample sizes and confidence limits alongside the means. Reading those columns is the single most useful habit in factor selection, because the stated uncertainty varies by more than an order of magnitude across the same table.
+
+This is an extract from the reference soil organic carbon stocks of the 2019 Refinement [@ipcc2019refinement, Table 2.3], which are derived from a global soil profile compilation [@batjes2011]. The full table covers ten climate zones by six soil classes; these are seven cells of it.
+
+```{r}
+soc_ref <- data.frame(
+  climate = c("Cool temperate moist", "Cool temperate moist", "Warm temperate dry",
+              "Tropical moist", "Tropical moist", "Tropical dry", "Boreal moist/dry"),
+  soil    = c("HAC", "Sandy", "HAC", "HAC", "LAC", "LAC", "Sandy"),
+  socref  = c(81, 51, 24, 40, 38, 19, 10),      # tonnes C / ha, 0-30 cm
+  unc_pct = c(5, 13, 5, 7, 5, 10, 90),          # 95% limit, % of mean
+  n       = c(334, 126, 781, 226, 326, 135, NA))
+knitr::kable(soc_ref)
+```
+
+Look at the last row against the third. Warm temperate dry soils with high activity clay are stated as 24 tonnes per hectare with a 95 per cent limit of five per cent, resting on 781 measured profiles. Boreal sandy soils are stated as 10 tonnes per hectare with a limit of ninety per cent, resting on no profiles at all: that figure is a nominal error assigned because no data were available, carried forward from the 1996 guidelines.
+
+Those two entries look identical in a spreadsheet. They are epistemically unrelated. One is a well-estimated mean; the other is a placeholder with an honesty marker attached. A project whose stratification lands it in the second cell is in a different position from one that lands in the first, and no amount of downstream care recovers the difference.
+
+```{r}
+c(worst_to_best_ratio = max(soc_ref$unc_pct) / min(soc_ref$unc_pct))
+```
+
+The stated uncertainty spans eighteenfold within a single table. Factor selection is therefore not a lookup; it is a decision about which of these positions you are willing to defend.
+
+## Fire factors
+
+Combustion is the other place Tier 1 factors are used heavily, and it is
+structurally different from soil. Where soil carbon is a stock difference over
+two decades, a fire is an event, and the guidelines give it a single equation
+[@ipcc2019refinement, Eq. 2.27]:
+
+$$L_{fire} = A \times M_B \times C_f \times G_{ef} \times 10^{-3}$$
+
+$A$ is the area burnt in hectares, $M_B$ the mass of fuel available in tonnes of
+dry matter per hectare, $C_f$ the dimensionless fraction of that fuel actually
+consumed, and $G_{ef}$ the emission factor in grams of gas per kilogram of dry
+matter burnt. The equation is a chain of four terms, so its uncertainty is the
+quadrature sum of four, and it can be no better than its weakest link.
+
+### Combustion parameters
+
+The fuel load and combustion factor come from a single table, stratified by
+vegetation and climate, and for savanna additionally by season
+[@ipcc2019refinement, Table 2.4]:
+
+```{r}
+fuel <- data.frame(
+  type    = c("Humid tropical forest", "Other forest, boreal",
+              "Other forest, temperate", "Other forest, tropical",
+              "Savanna woodland, early", "Savanna woodland, late",
+              "Savanna grassland, early", "Savanna grassland, late",
+              "Other grassland", "Tropical peatland"),
+  MB      = c(119.6, 41.0, 50.4, 69.4, 9.0, 9.0, 6.8, 6.8, 13.4, 41.2),
+  MB_sd   = c(52.4, 25.3, 30.8, 44.3, 7.5, 7.5, 6.0, 6.0, 8.8, 1.4),
+  Cf      = c(0.36, 0.45, 0.47, 0.47, 0.29, 0.51, 0.31, 0.83, 0.52, 1.00),
+  Cf_sd   = c(0.09, 0.15, 0.14, 0.14, 0.09, 0.15, 0.09, 0.15, 0.15, NA))
+fuel$consumed <- round(fuel$MB * fuel$Cf, 1)
+knitr::kable(fuel)
+```
+
+Two rows deserve attention. Savanna grassland burns at a combustion factor of
+0.31 early in the dry season and 0.83 late in it, so the same fuel load yields
+nearly three times the consumption depending on a date. Season is not a detail
+in savanna accounting; it is the dominant term. And tropical peatland carries a
+combustion factor of exactly 1.00, meaning the affected layer is assumed to burn
+completely, which is why peat fires dominate any inventory that contains them.
+
+The emission factors are gas-specific [@ipcc2019refinement, Table 2.5]:
+
+```{r}
+ef <- data.frame(
+  vegetation = c("Tropical forest", "Extratropical forest",
+                 "Savanna and grassland", "Tropical peatland"),
+  CO2  = c(1580, 1569, 1613, 1703),
+  CH4  = c(6.8, 4.7, 2.3, 5.7),
+  N2O  = c(0.20, 0.26, 0.21, NA))
+knitr::kable(ef)
+```
+
+The missing entry is real. The guidelines provide no default nitrous oxide
+factor for fires in organic soils, for want of data, and national inventories
+consequently report that cell as zero. Zero and unknown are different things,
+and a table that renders them identically has lost information a verifier needs.
+
+### Unit conversion
+
+The $10^{-3}$ in the equation is the whole unit chain, and dropping it is the
+most consequential arithmetic error in fire accounting. Working through the
+dimensions makes it explicit:
+
+```{r}
+biomass_Gg <- 1682.71     # dry matter burnt, gigagrams
+ef_ch4     <- 6.8         # grams CH4 per kilogram dry matter
+
+# Gg -> kg, multiply by EF (g/kg) to get grams, then g -> Gg
+correct <- biomass_Gg * 1e6 * ef_ch4 / 1e9
+wrong   <- biomass_Gg * ef_ch4        # the shortcut, units unchecked
+
+data.frame(correct_Gg_CH4 = round(correct, 2),
+           wrong_Gg_CH4   = round(wrong, 2),
+           ratio          = wrong / correct)
+```
+
+A factor of a thousand, and it does not announce itself. The shortcut is
+tempting because both quantities are already expressed in gigagrams and grams
+per kilogram look dimensionless at a glance. Applying a global warming potential
+then compounds it:
+
+```{r}
+gwp_ch4 <- 28             # AR5, 100-year, without feedbacks
+
+data.frame(correct_Gg_CO2e = round(correct * gwp_ch4, 1),
+           wrong_Gg_CO2e   = round(wrong * gwp_ch4, 0))
+```
+
+The erroneous figure is around 320,000 gigagrams of carbon dioxide equivalent
+from a single gas in a single fire category. The whole national inventory of the
+country this example is drawn from is of the order of 20,000. An error of this
+kind is invisible inside the pipeline and obvious the moment the output is
+compared against an independent total, which is the argument for always making
+that comparison.
+
+Two conventions have to be stated alongside any such number. The global warming
+potentials used here are the hundred-year AR5 values without climate-carbon
+feedbacks, 28 for methane and 265 for nitrous oxide, which is what national
+inventory reporting has used through recent submission cycles. The AR6 values
+are 27.9 and 273. Mixing assessment reports across a time series produces a
+discontinuity that looks like a trend.
+
+### Carbon dioxide
+
+Whether carbon dioxide from a fire is reported at all depends on the land
+category, and the rule is easy to get backwards:
+
+| Fire category | CO2 reported | Accounting route |
+|---|---|---|
+| Forest land | Yes | Carbon stock change, not this equation |
+| Savanna and grassland | No, at Tier 1 | Assumed synchronous with regrowth |
+| Organic soil | Yes | This equation, with its own factor |
+
+The logic is regrowth. Grass burnt this year regrows next year, so the emission
+and the removal cancel over the inventory cycle and reporting only the net, which
+is zero, is defensible. Woody biomass killed by fire represents several years of
+accumulation and does not regrow within the cycle, so forest fire emissions are
+real and are captured through the stock-change accounting rather than through
+this equation, which would double count them. Peat is the extreme case: the
+carbon accumulated over centuries to millennia, consumption runs to hundreds of
+millimetres in one event against an accumulation rate below a millimetre a year,
+and nothing regrows on any policy-relevant horizon.
+
+The trap is applying the equation's carbon dioxide factor to forest fires and
+adding the result to a stock-change inventory that already contains it. The
+factors appear in Table 2.5 for forest, which invites exactly this, and they are
+there as a cross-check rather than as an input.
+
+## Stock-difference method
+
+Soil carbon is the pool where Tier 1 methods have changed most. The 2006 guidelines assumed that converting land oxidised its soil carbon immediately. The 2019 Refinement replaces that with a linear transition to a new equilibrium spread over a default twenty years, computed as a difference between two stock estimates [@ipcc2019refinement, Eq. 2.25]:
+
+$$\Delta C_{Mineral} = \frac{SOC_0 - SOC_{(0-T)}}{D}$$
+
+where $SOC_0$ is the stock in the final year of the inventory period, $SOC_{(0-T)}$ the stock at its beginning, and $D$ the time dependence of the stock change factors, twenty years under Tier 1. Each stock is itself built from a reference value and three dimensionless factors:
+
+$$SOC = SOC_{REF} \times F_{LU} \times F_{MG} \times F_{I}$$
+
+$F_{LU}$ is the land use factor, $F_{MG}$ the management factor, and $F_I$ the input factor, each a multiplier relative to the native reference condition. All are defined for a 30 cm depth, because that is the depth the reference stocks were compiled at, and mixing a factor from one depth convention with a stock from another is a common and invisible error.
+
+```{r}
+socref <- 38      # tropical moist, LAC
+f_lu   <- 0.83    # forest to long-term cultivated
+f_mg   <- 1.00    # full tillage
+f_i    <- 0.94    # low input
+
+soc_new    <- socref * f_lu * f_mg * f_i
+annual_c   <- (soc_new - socref) / 20
+annual_co2 <- annual_c * 44 / 12
+
+round(c(soc_before = socref, soc_after = soc_new,
+        tC_ha_yr = annual_c, tCO2e_ha_yr = annual_co2), 3)
+```
+
+The chain matters more than any single link. Three multiplicative factors mean three opportunities for a stratification error, and because they multiply, a mistake in any one of them scales the whole result rather than adding to it.
+
+## Gain-loss asymmetry
+
+Tier 1 does not treat gains and losses alike. Carbon *increases* are spread over the twenty-year transition; carbon *losses* from dead organic matter on conversion are assigned to a single year [@ipcc2019refinement, s.2.3.2]. That asymmetry is deliberate and conservative: it credits slowly and debits fast.
+
+It also has a practical consequence for anyone comparing a project's numbers against an inventory. A project reporting a gain over five years captures a quarter of the eventual stock change, not all of it, and a project reporting a conversion loss books the whole thing at once. Two projects with identical biophysical outcomes and different timings will report very different annual figures, entirely legitimately.
+
+## Uncertainty propagation
+
+Each factor in the chain carries its own uncertainty, and they combine. For independent terms entering a product, the proportional uncertainties combine in quadrature:
+
+$$U_{total} = \sqrt{U_1^2 + U_2^2 + \dots + U_n^2}$$
+
+Take a silvopastoral project on a thousand hectares, with the uncertainty on each component taken from the guidelines and from the project's own measurement:
+
+```{r}
+u <- c(SOC_REF = 0.05,   # reference stock, well-sampled cell
+       F_MG    = 0.09,   # management factor, improved tropical grassland
+       F_I     = 0.30,   # input factor, high organic input
+       G       = 0.63,   # biomass accumulation rate, agroforestry
+       Area    = 0.10)   # activity data
+
+u_total <- sqrt(sum(u^2))
+round(100 * u_total, 1)
+```
+
+Seventy-one per cent. That figure is not unusual for a Tier 1 agroforestry estimate, and it is worth sitting with, because it means the honest interval on the claim is wider than the claim itself in one direction.
+
+## Dominant uncertainty
+
+Quadrature has a property that governs everything about how a project should spend its money, and it is not intuitive. Because the terms are squared before summing, a term's contribution to the total is proportional to its square, so large terms do not merely dominate, they annihilate the small ones.
+
+```{r}
+round(100 * u^2 / sum(u^2), 1)      # share of total variance
+```
+
+The biomass accumulation rate contributes seventy-eight per cent of the variance. The reference soil stock contributes half of one per cent. Now ask what improving each one would buy:
+
+```{r}
+sapply(names(u), function(k) {
+  v <- u; v[k] <- v[k] / 2
+  round(100 * sqrt(sum(v^2)), 1)
+})
+```
+
+Halving the uncertainty on the growth rate takes the project from 71 to 46 per cent. Halving the uncertainty on the reference soil stock takes it from 71.2 to 71.1. The comparison becomes starker if you imagine perfect knowledge:
+
+```{r}
+sapply(names(u), function(k) {
+  v <- u; v[k] <- 0
+  round(100 * sqrt(sum(v^2)), 1)
+})
+```
+
+Eliminating the area uncertainty *entirely*, surveying every boundary to the centimetre and knowing the hectares exactly, moves total uncertainty from 71.2 per cent to 70.5. Eliminating the soil reference stock uncertainty moves it to 71.1.
+
+This is the most actionable result in the chapter, and it cuts against how carbon projects usually allocate effort. Spatial precision is visible, satisfying, and easy to procure. It is also, in a project of this shape, nearly worthless. The money belongs in the growth-rate measurement, which is unglamorous fieldwork on permanent plots, and which no improvement in imagery will ever substitute for.
+
+The general rule follows from the algebra: rank the terms by $U_i^2$, and work down the list. A term contributing under one per cent of the variance cannot be worth measuring, however cheap, because the total will not move.
+
+## Cost of imprecision
+
+Convert it to credits, which is the language the decision is actually made in:
+
+```{r}
+point_estimate <- 18.5 * 1000                   # tCO2e/yr over 1,000 ha
+conservative   <- point_estimate * (1 - u_total)
+
+round(c(point_estimate = point_estimate,
+        conservative   = conservative,
+        forgone        = point_estimate - conservative,
+        forgone_pct    = 100 * u_total))
+```
+
+Reporting against the lower bound, the project claims about 5,300 tonnes where its central estimate is 18,500. Thirteen thousand tonnes a year are forgone, not because the carbon is not there, but because the project cannot demonstrate that it is. Under the deduction arithmetic of the uncertainty chapter the loss is smaller and the logic identical.
+
+That number is also the budget available for reducing it. If halving the growth-rate uncertainty costs less than the value of the credits it recovers, the measurement pays for itself, and this calculation is how you find out before commissioning the fieldwork rather than after.
+
+::: {.verification}
+#### Double counting {.unnumbered .unlisted}
+
+The twenty-year transition creates a bookkeeping hazard that catches experienced
+practitioners. A parcel that changes management in year one is still accruing its
+stock change in year fifteen. If a second intervention is credited on the same
+parcel in year eight, part of the soil carbon response may be claimed twice:
+once against the first transition and once against the second.
+
+The rule is that stock change for a given parcel is computed against a single
+transition timeline, not per intervention. Where interventions overlap, the
+parcel carries one trajectory and the later activity is credited only for the
+increment beyond what the first would have delivered anyway.
+
+Tracking this in practice means the parcel, not the project, is the accounting
+unit, and each parcel needs the date its transition clock started. Where activity
+data comes from wall-to-wall mapping rather than parcel records, that date may
+simply not exist, which is one of the strongest arguments for the transition
+matrices of IPCC Approach 3 over the aggregate statistics of Approach 1.
+:::
+
+::: {.verification}
+#### Registry acceptance {.unnumbered .unlisted}
+
+Standards differ on how much a project may lean on defaults. In general, a Tier 1
+default is acceptable where it is conservative for the claim being made, and not
+otherwise. A default that inflates a crediting claim will be challenged; the same
+default used to inflate a *baseline* against which the project is credited is
+usually accepted without argument, because it works against the proponent.
+
+That asymmetry is worth stating plainly because it is the fastest way to predict
+which of a project's factor choices a verifier will scrutinise. Work out, for each
+factor, whether an error in the direction of the default increases or decreases
+the credits issued. The ones that increase them are where the questions come.
+
+The uncertainty from this chapter then feeds the deduction machinery compared at
+the end of the uncertainty chapter. Under ACR it joins the other pool uncertainties in the
+weighted combination of Equation 22, and is measured against the ten per cent
+precision requirement. Under ART-TREES and Verra it enters the half-width of the
+90 per cent interval directly. A 71 per cent uncertainty is catastrophic under any
+of them, which is the practical reason Tier 1 agroforestry projects tend to move
+to Tier 2 growth rates as soon as they can afford to.
+:::
+
+## Exercises
+
+1. Recompute the stock change using a cool temperate moist HAC reference stock (81 tC/ha) instead of the tropical moist LAC value, holding the three factors constant. How much does the annual figure move, and what does that say about the cost of misclassifying climate zone?
+2. Using the extract of Table 2.3 above, identify which cells you would be comfortable using in a crediting claim and which you would not. Write one sentence per cell justifying the decision on the basis of the stated uncertainty and sample size.
+3. In the propagation example, suppose better fieldwork reduces the growth-rate uncertainty from 63 to 25 per cent, and that improving the input factor from 30 to 20 per cent costs the same amount. Which would you buy, and by how much does each move the total?
+4. Add a sixth uncertainty term of 15 per cent to the propagation, representing a carbon fraction. Does it change the ranking of where to spend money? Explain in terms of the squared contributions rather than the raw percentages.
+5. The transition period is twenty years for gains and one year for losses. Construct a numerical example of two projects with identical biophysical outcomes but different timings, and show how their reported annual figures differ.
+6. *(Applied.)* A project reports 71 per cent uncertainty and a point estimate of 18,500 tCO2e per year. Using the three registry deduction rules from the uncertainty chapter, calculate the credits issued under each. Then state what you would advise the project to measure first.

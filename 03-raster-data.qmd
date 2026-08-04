@@ -1,9 +1,5 @@
 ---
 title: "Raster Data"
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   eval: true
   echo: true
@@ -18,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## The raster model
+## Raster model
 
 A raster represents a surface as a grid of equal cells, each holding one value. Where vector data draw discrete objects, rasters describe things that vary continuously across space, elevation, reflectance, temperature, canopy height, and the things we derive from imagery: land cover, disturbance, biomass. The data model is nothing more than a matrix plus the georeferencing that ties cell (1,1) to a place and fixes the cell size. `terra` is the modern package for it [@hijmans2024terra].
 
@@ -94,52 +90,123 @@ extract(ba, pts)
 
 Extraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.
 
-## Keystone: land-cover reclassification
+## Area accounting
 
-Remote-sensing verification turns imagery into a land-use / land-cover (LULC) map and then reasons about it: how much forest, how much converted, how the classes change through time. The Bolivia national land-cover work does this at country scale; the mechanics are the reclassification and area accounting shown here, which we later carry into the uncertainty chapter to attach a confidence interval to each class area.
+Remote-sensing verification turns imagery into a land-use / land-cover (LULC) map and then reasons about it: how much forest, how much converted, how the classes change through time. The Bolivia national land-cover work does this at country scale, and the mechanics are the reclassification and area accounting shown here, which we later carry into the uncertainty chapter to attach a confidence interval to each class area.
 
-We stand in for a spectral index with a smooth synthetic surface over the plot, classify it into cover types by threshold, then reclassify to the forest / non-forest split that most carbon accounting turns on:
+Everything from here on is a real product rather than a demonstration surface. The data are a Sentinel-2 classification of Rondonia, in the Brazilian Amazon, for 2022, produced with the `sits` package and distributed with `sitsdata` [@simoes2021sits]. Rondonia is among the most heavily cleared states in the Amazon, which makes it the pattern a verifier spends their career looking at.
+
+Start with what a classifier actually sees. A spectral index compresses several bands into one number that separates vegetation from everything else, and the normalised difference vegetation index is the standard choice. This is a real sixteen-day Sentinel-2 composite over a twenty-four kilometre window on the Madeira river. `sits` stores the index as an integer scaled by ten thousand, so it has to be divided back:
 
 ```{r}
-set.seed(1)
-xy  <- xyFromCell(r, 1:ncell(r))
-val <- 0.55 + 0.30 * sin(xy[, 1] / 120) + 0.20 * cos(xy[, 2] / 160) +
-       rnorm(ncell(r), 0, 0.05)
-ndvi <- setValues(r, pmin(pmax(val, -0.1, na.rm = TRUE), 0.95))
+ndvi <- rast("data/rondonia_ndvi_2022-07-16.tif") / 1e4
 names(ndvi) <- "ndvi"
-
-# thresholds -> cover classes
-lulc <- classify(ndvi, matrix(c(-Inf, 0.2, 1,     # water/bare
-                                 0.2, 0.5, 2,      # grass/shrub
-                                 0.5, Inf, 3),     # forest
-                              ncol = 3, byrow = TRUE))
-levels(lulc) <- data.frame(id = 1:3,
-                           cover = c("water/bare", "grass/shrub", "forest"))
-plot(lulc, main = "Land cover from a spectral index")
+plot(ndvi, main = "Sentinel-2 NDVI, Rondonia, 16 July 2022")
 ```
+
+Read the image as an analyst would. Water is strongly negative because it absorbs in the near infrared. Intact forest saturates near the top of the scale. The rectangles of intermediate value east of the river are pasture and cropland cut out of the forest, and their straight edges are the giveaway that the boundary is a property line rather than anything ecological.
+
+A classifier turns that continuous surface into labelled classes. Rather than threshold the index here, we take the published nine-class map, which was produced from a full year of imagery instead of a single date. Its legend and colours ship with the product:
+
+```{r}
+legend <- read.csv("data/rondonia_legend.csv")
+
+lulc <- rast("data/rondonia_class_2022.tif")
+levels(lulc)  <- legend[, c("id", "cover")]
+coltab(lulc)  <- legend[, c("id", "colour")]
+plot(lulc, main = "Rondonia land cover, 2022", mar = c(2, 2, 2, 11),
+     plg = list(cex = 0.85))
+```
+
+The fishbone is the signature of Amazon frontier clearing: a road is cut, side roads run off it at regular spacing, and lots are cleared either side. It is visible here at the scale of an entire state.
 
 The class areas are the deliverable. `freq()` counts cells per class, and multiplying by the cell area gives hectares:
 
 ```{r}
 cell_ha <- prod(res(lulc)) / 1e4
 f <- freq(lulc)
-f$area_ha <- round(f$count * cell_ha, 2)
-f[, c("value", "count", "area_ha")]
+f$area_ha <- round(f$count * cell_ha)
+f[, c("value", "area_ha")]
 ```
 
-Reclassifying the three classes into a forest mask, the exact step behind a forest-area or deforestation figure, is one more `classify()`:
+Reclassifying the nine classes into a forest mask, the exact step behind a forest-area or deforestation figure, is one more `classify()`. Three of the nine classes are forest, and deciding which is a definitional choice, not a technical one:
 
 ```{r}
-forest <- classify(lulc, matrix(c(1, 0, 2, 0, 3, 1), ncol = 2, byrow = TRUE))
+forest <- classify(lulc, cbind(legend$id, as.integer(legend$forest)))
 forest_ha <- global(forest, "sum", na.rm = TRUE)[1, 1] * cell_ha
-round(forest_ha, 1)                             # hectares of forest
+round(forest_ha)                                # hectares of forest
 ```
 
-That single number, forest area, is what a project claims and an auditor recomputes. The uncertainty chapter returns to it to ask how *certain* the number is, because a class area is only as good as the map's accuracy.
+That single number is what a project claims and an auditor recomputes. Before accepting it, though, ask what the map gets wrong. The product ships a validation sample of independently interpreted points, and comparing it against the map is exactly the extraction operation from earlier in the chapter:
+
+```{r}
+val <- read.csv("data/rondonia_validation.csv")
+pts <- project(vect(val, geom = c("longitude", "latitude"), crs = "EPSG:4326"),
+               crs(lulc))
+
+val$mapped <- levels(lulc)[[1]]$cover[extract(lulc, pts)[, 2]]
+val <- val[!is.na(val$mapped), ]        # a few points fall outside the mosaic
+
+cm <- table(mapped = val$mapped, reference = val$cover)
+round(100 * sum(diag(cm)) / sum(cm), 1)          # overall accuracy, per cent
+```
+
+```{r}
+data.frame(users     = round(100 * diag(cm) / rowSums(cm), 1),
+           producers = round(100 * diag(cm) / colSums(cm), 1))
+```
+
+Eighty-three per cent overall would pass most reporting thresholds without comment, and the per-class figures show why that is not enough. Water is found almost perfectly. Mountainside forest is caught less than a fifth of the time, and burned clear-cut a third, because both are confused with the larger class they sit next to. An omission rate that high on a minor class barely moves overall accuracy, but it moves that class's area a great deal, and if the class in question is the one being credited, it moves the credits. The uncertainty chapter returns to this matrix to adjust the mapped areas and put a confidence interval on each, because a class area is only as good as the map's accuracy.
+
+::: {.verification}
+#### Classification with sits {.unnumbered .unlisted}
+
+The map above was read from disk. Producing it is the `sits` workflow, which
+organises satellite time series into regularised data cubes and classifies the
+whole cube rather than a single date [@simoes2021sits]. The sequence below is
+not executed here, because the book renders offline and the dependency stack is
+heavy, but it is the chain that generated the file this section reads.
+
+```{r}
+#| eval: false
+library(sits)
+library(sitsdata)
+
+# a local cube: the shipped tile, no network access
+cube <- sits_cube(source = "MPC", collection = "SENTINEL-2-L2A",
+                  data_dir = system.file("extdata/Rondonia-20LMR",
+                                         package = "sitsdata"))
+
+# training samples carry a full year of observations per point, not one date
+data("samples_deforestation_rondonia")
+model <- sits_train(samples_deforestation_rondonia,
+                    sits_rfor(num_trees = 120, mtry = 10))
+
+probs <- sits_classify(cube, model, output_dir = tempdir(), multicores = 4)
+
+# Bayesian smoothing over the probability cube, before any hard label exists
+bayes <- sits_smooth(probs, output_dir = tempdir(), multicores = 4)
+map   <- sits_label_classification(bayes, output_dir = tempdir())
+
+# area estimation and accuracy in the Olofsson sense, from a stratified sample
+design  <- sits_sampling_design(map, expected_ua = c(Forest = 0.75))
+samples <- sits_stratified_sampling(map, design, alloc = "alloc_120")
+acc     <- sits_accuracy(map, validation = samples)
+```
+
+Two steps deserve attention because they have no equivalent in a single-date
+workflow. `sits_smooth()` applies Bayesian smoothing to the probability cube
+before labelling, which suppresses isolated misclassified pixels while
+preserving real edges. And `sits_stratified_sampling()` allocates the validation
+sample across classes by their mapped area, so that rare classes receive enough
+points to estimate their accuracy at all, which is precisely the failure the
+per-class table above exposes.
+:::
 
 ## Exercises
 
 1. Build the basal-area raster at 20-metre resolution instead of 10. How do the mean cell value and the number of cells change, and why does total basal area stay the same?
 2. Reclassify the basal-area surface into four stocking classes and report the area in hectares of each. Which class covers the most ground?
 3. Extract the basal-area value at the location of every stem with `extract()`. Why is the extracted value not the same as the stem's own basal area?
-4. *(Applied.)* Change the forest threshold on the synthetic index from 0.5 to 0.45 and recompute forest area. By how many hectares does the estimate move, and what does that sensitivity imply for defining a class boundary in a real LULC map?
+4. *(Applied.)* The forest mask counts three of Rondonia's nine classes as forest. Recompute the forest area with riparian forest excluded, and again with clear-cut regrowth included. Report the range in hectares, and explain why the definition of forest, rather than the accuracy of the classification, is often the largest single lever on a reported area.
+5. *(Applied.)* Mountainside forest has a producer's accuracy under twenty per cent. Find which class absorbs the missing points in the confusion matrix, and state what you would require of a project before accepting an area figure for that class.

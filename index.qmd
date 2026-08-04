@@ -1,8 +1,4 @@
 ---
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   echo: true
   warning: false
@@ -17,7 +13,7 @@ Carbon projects are audited on numbers that come out of a geographic information
 
 This book is written to close that gap. It teaches the spatial and statistical methods that forest carbon measurement and verification actually rests on, from reading a shapefile to reporting an area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly. It assumes an introductory course in statistics and no prior GIS.
 
-## Two readers {.unnumbered}
+## Target audience {.unnumbered}
 
 The book is written for two audiences at once, and it is honest about which parts belong to whom.
 
@@ -27,7 +23,7 @@ Interleaved with it are **verification tracks**, set off in tinted boxes. These 
 
 A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.
 
-## The chapters {.unnumbered}
+## Chapter outline {.unnumbered}
 
 The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.
 
@@ -53,21 +49,33 @@ The last three quantify and close.
 
 An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.
 
-## The data {.unnumbered}
+## Input datasets {.unnumbered}
 
-One plot runs through the book: a mapped forest-dynamics plot modelled on the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 2,287 stems in a 400 by 640 metre footprint, each identified to species and measured for diameter. Terrain, imagery, LiDAR and time-series layers are simulated over that same footprint, so a single geography carries from raw coordinates through to a quantified emission.
+One plot anchors the book: the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 38,517 living stems across 39 genera in a 400 by 640 metre footprint, each identified to species and measured for diameter. It carries the vector, allometry, biomass and error chapters.
 
-Four smaller datasets join it where the plot cannot answer the question. Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations. A file of harvested trees with measured biomass supports the error metrics, because model error cannot be estimated without observations to compare against. A set of forest inventory plots supports the eligibility and baseline work.
+Four further datasets, each real and each committed so the book builds offline, carry the chapters the plot cannot answer.
+
+The raster, activity data and disturbance chapters run on a 2022 Sentinel-2 land-cover map of Rondonia, Brazil, with a matching vegetation index composite and a validation sample of 2,032 points. Labelled disturbance classes make it possible to measure what an index threshold actually catches rather than assume it.
+
+The terrain and hydrology chapter runs on Lake Chilwa in southern Malawi: an elevation model on a 100 metre grid, with the lake, its catchment and its river network from HydroSHEDS. Chilwa is endorheic, so it is a genuine test of watershed delineation rather than a demonstration, and it is the reference case for wetland inundation mapping.
+
+The LiDAR chapter runs on airborne laser tiles distributed with the `lidR` package, real surveys over real terrain, so ground classification, terrain interpolation and tree detection are performed rather than described.
+
+The spatial patterns chapter runs on the published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia [@murphy2026selkirk].
+
+Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations.
 
 ::: callout-note
-## About the data
+## Secondary sources
 
-The stem list follows the published ForestGEO census. Within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the maps are representative rather than a survey of record. Terrain, imagery, LiDAR and time-series layers are simulated over the same footprint so the book renders offline and reproducibly, and every synthetic layer says so where it is built. The keystone closings describe workflows from real verification projects and reproduce their analytical core on this shared data.
+Every dataset above is real and is committed to the repository, and two scripts under `data-raw/` rebuild the derived ones from their sources. Within-plot coordinates for the ForestGEO stems were generated across the real footprint because the source census table omitted them, so those maps are representative rather than a survey of record; this is stated again where they are used.
 
-One chapter is different. Spatial Patterns runs on the real, published coordinates of a post-fire conifer regeneration survey in the Selkirk Mountains of British Columbia [@murphy2026selkirk].
+A small number of illustrative surfaces are constructed rather than observed, in order to isolate one effect at a time. Each says so where it is built, and none carries a reported number.
+
+The keystone closings and verification tracks describe workflows from real verification projects, and reproduce their analytical core on this shared data.
 :::
 
-## Using this book {.unnumbered}
+## User guides {.unnumbered}
 
 Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises.
 

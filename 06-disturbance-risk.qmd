@@ -1,9 +1,5 @@
 ---
 title: "Disturbance and Risk"
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   eval: true
   echo: true
@@ -18,100 +14,461 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Change detection
+## Disturbance screening
 
-The core remote-sensing task in verification is finding where the forest changed. The simplest and most transparent method is image differencing: take a spectral index at two dates and subtract. Where vegetation was lost, the index drops; a threshold on the difference marks candidate disturbance. We build two dates of a synthetic index over the plot, the second with several patches cleared, and difference them.
+A verifier's central remote-sensing task is to find where the forest changed
+between two dates, and to decide what caused it. The screening is not a
+substitute for plot remeasurement or the developer's monitoring report. It is an
+independent layer used to direct attention: to find the clearing nobody
+declared, and to test whether the loss a project did declare has the extent and
+the cause it claims.
+
+The method is spectral index differencing. Take an index at two dates, subtract,
+and threshold the difference. Everything difficult is in the last step, and this
+chapter is mostly about the last step.
+
+The working data are the 2022 Sentinel-2 land-cover map of Rondonia and one NDVI
+composite over the same window, both introduced in the raster chapter. The map
+carries labelled disturbance classes, which makes it possible to measure how
+well an index threshold actually separates cleared ground from forest rather
+than assuming it does:
 
 ```{r}
 library(terra)
 library(sf)
 
-stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
-                  coords = c("lon", "lat"), crs = 4326) |>
-  st_transform(32617)
-r <- rast(ext(vect(stems)), resolution = 10, crs = "EPSG:32617")
+sf_use_s2(FALSE)
 
-set.seed(7)
-xy  <- xyFromCell(r, 1:ncell(r))
-t1  <- setValues(r, 0.7 + 0.1 * sin(xy[, 1] / 100) + rnorm(ncell(r), 0, 0.03))
+cls  <- rast("data/rondonia_class_2022.tif")
+ndvi <- rast("data/rondonia_ndvi_2022-07-16.tif") / 1e4
+leg  <- read.csv("data/rondonia_legend.csv")
 
-# time 2: same forest, minus three cleared blocks
-t2 <- t1
-clear <- (xy[, 1] > 747050 & xy[, 1] < 747130 & xy[, 2] > 4306100 & xy[, 2] < 4306180) |
-         (xy[, 1] > 747250 & xy[, 1] < 747300 & xy[, 2] > 4306300 & xy[, 2] < 4306380)
-t2[clear] <- 0.15 + rnorm(sum(clear), 0, 0.03)
-names(t1) <- "ndvi_t1"; names(t2) <- "ndvi_t2"
-
-change <- t2 - t1
-plot(change, main = "NDVI change (t2 − t1)")
+window <- project(as.polygons(ext(ndvi), crs = crs(ndvi)), crs(cls))
+cw     <- crop(cls, window) |> project(ndvi, method = "near")
+names(cw) <- "class"; names(ndvi) <- "ndvi"
 ```
 
-A negative threshold isolates loss. The disturbed area is the immediate deliverable, and the same number that drives an emissions estimate:
+The NDVI rasters store the index multiplied by ten thousand, which is why the
+division appears above. Reading them raw yields indices in the thousands and
+every threshold in this chapter silently fails to fire.
+
+## Spectral indices
+
+Three indices carry most operational disturbance screening, and they answer
+different questions.
+
+$$\text{NDVI} = \frac{\text{NIR} - \text{Red}}{\text{NIR} + \text{Red}}
+\qquad
+\text{NDMI} = \frac{\text{NIR} - \text{SWIR}_1}{\text{NIR} + \text{SWIR}_1}
+\qquad
+\text{NBR} = \frac{\text{NIR} - \text{SWIR}_2}{\text{NIR} + \text{SWIR}_2}$$
+
+NDVI tracks greenness and responds to canopy removal. NDMI tracks canopy
+moisture and responds to stress before the canopy is gone, which makes it the
+index for insect attack and drought. NBR contrasts near-infrared against the
+longer shortwave band where char absorbs strongly, so it responds to fire.
+
+The sign conventions differ and mixing them up inverts the map:
+
+$$\Delta\text{NDVI} = \text{pre} - \text{post}
+\qquad
+\Delta\text{NDMI} = \text{pre} - \text{post}
+\qquad
+\Delta\text{NBR} = \text{post} - \text{pre}$$
+
+Positive dNDVI and dNDMI mean loss. Positive dNBR means burned, following the
+convention of the Monitoring Trends in Burn Severity programme. There is no deep
+reason for the inconsistency; it is historical, and it has to be checked against
+the source of any published threshold before that threshold is applied.
+
+## Threshold selection
+
+Published severity breaks exist for each index. The ones in operational use,
+drawn from the burn severity literature and from forest health screening
+practice, are these:
+
+| Index | Low | Moderate | High |
+|---|---|---|---|
+| dNDVI | 0.10 to 0.20 | 0.20 to 0.35 | above 0.35 |
+| dNDMI | 0.15 to 0.30 | 0.30 to 0.45 | above 0.45 |
+| dNBR | 0.10 to 0.27 | 0.27 to 0.44 | above 0.44 |
+
+These are defaults, not constants. Treating them as constants is the most
+common failure in disturbance screening, and the way to see why is to measure
+what a threshold actually catches.
+
+### Class separation
+
+The land-cover map labels each pixel, so the NDVI distribution of each class can
+be read directly. This is the empirical basis a threshold ought to rest on:
 
 ```{r}
-disturbed <- change < -0.3
-cell_ha   <- prod(res(r)) / 1e4
-dist_ha   <- global(disturbed, "sum", na.rm = TRUE)[1, 1] * cell_ha
-round(dist_ha, 2)                                  # hectares of detected loss
+d <- as.data.frame(c(ndvi, cw), na.rm = TRUE)
+
+tab <- do.call(rbind, lapply(leg$id, function(i) {
+  v <- d$ndvi[d$class == i]
+  if (!length(v)) return(NULL)
+  data.frame(label  = leg$label[leg$id == i],
+             forest = leg$forest[leg$id == i],
+             n      = length(v),
+             q05    = round(unname(quantile(v, 0.05)), 3),
+             median = round(median(v), 3),
+             q95    = round(unname(quantile(v, 0.95)), 3))
+}))
+tab
 ```
 
-## Accuracy assessment
+Three things in that table decide everything downstream.
 
-A map is a claim, and an unvalidated map is an unsupported claim. Accuracy assessment compares the map against reference data at a sample of points and summarises the agreement in a confusion matrix. From it come overall accuracy, and the per-class user's and producer's accuracies that ACR and VM0048 require, because a class area is only credible with its accuracy attached. We assess the disturbed / stable map against a reference sample:
+Intact forest is tight: a median around 0.84 with the fifth percentile still
+above 0.78. Cleared ground with bare soil sits far below it, around 0.51. Those
+two are separable and any sensible threshold finds them.
+
+Clear cut with regrowth is not separable. Its median sits near 0.79, inside the
+forest distribution, because two or three years after clearing the vegetation
+that returns is green. An index threshold cannot distinguish recovering clearing
+from forest, and a project whose deforestation is a few years old will not be
+caught by one.
+
+Wetland has a median around 0.84, indistinguishable from forest, which is why
+water masking is applied before thresholding rather than after.
+
+Measuring the trade-off directly makes the cost of each published break
+explicit:
 
 ```{r}
-set.seed(11)
-ref <- data.frame(
-  reference = sample(c("disturbed", "stable"), 120, replace = TRUE, prob = c(.3, .7)))
-# a map that is mostly right, with some confusion
-ref$mapped <- ifelse(ref$reference == "disturbed",
-                     sample(c("disturbed", "stable"), 120, TRUE, c(.85, .15)),
-                     sample(c("disturbed", "stable"), 120, TRUE, c(.10, .90)))
+forest_ndvi <- d$ndvi[d$class %in% leg$id[leg$forest]]
+cleared     <- d$ndvi[d$class %in% c(1, 2, 6)]
+baseline    <- median(forest_ndvi)
 
-cm <- table(mapped = ref$mapped, reference = ref$reference)
-cm
+sens <- do.call(rbind, lapply(c(0.10, 0.15, 0.20, 0.30), function(t) {
+  cut <- baseline - t
+  data.frame(dNDVI_threshold = t,
+             ndvi_below      = round(cut, 3),
+             pct_cleared_caught = round(100 * mean(cleared < cut), 1),
+             pct_forest_flagged = round(100 * mean(forest_ndvi < cut), 1))
+}))
+sens
 ```
 
+Read the third column. The "Low severity" break of 0.10 catches about three
+quarters of genuinely cleared ground. The "Moderate" break of 0.20 catches
+three fifths. The "High severity" break of 0.35, extrapolating past the last
+row, catches well under half. Every one of those misses is omitted
+deforestation, and omission understates emissions, which is the direction that
+concerns an auditor most.
+
+The fourth column is the other side of the trade. Tightening the threshold buys
+a falling false-positive rate on forest, from 2.5 per cent down to 0.5. That is
+a real gain, and it is why the tight thresholds are popular: they produce clean
+maps. Clean is not the same as correct.
+
+### Histogram diagnostic
+
+Since defaults cannot be trusted, the threshold has to be read off the data. The
+diagnostic is the histogram of the difference image, and it supports three
+readings.
+
 ```{r}
-overall <- sum(diag(cm)) / sum(cm)
-users   <- diag(cm) / rowSums(cm)      # commission: of mapped X, how many correct
-producers <- diag(cm) / colSums(cm)    # omission: of true X, how many caught
-round(c(overall = overall), 3)
-round(rbind(users, producers), 3)
+#| fig-cap: "NDVI distribution for forest and for cleared classes, with the published dNDVI breaks marked relative to the forest median."
+hist(forest_ndvi, breaks = 60, xlim = c(-0.2, 1), col = "#1E844980",
+     border = NA, main = "", xlab = "NDVI", ylab = "Cells")
+hist(cleared, breaks = 60, col = "#D7C49C99", border = NA, add = TRUE)
+abline(v = baseline - c(0.10, 0.20, 0.35), lty = c(3, 2, 1), col = "grey20")
+legend("topleft", bty = "n",
+       legend = c("Forest", "Cleared", "Breaks: 0.10 / 0.20 / 0.35"),
+       fill = c("#1E844980", "#D7C49C99", NA), border = NA)
 ```
 
-Overall accuracy is the headline; the per-class figures are where problems hide. A high user's but low producer's accuracy for "disturbed" means the map misses real clearing, an omission error that understates loss, which is exactly the direction an auditor scrutinises. These same counts feed the area-adjusted estimator and its confidence interval in the next chapter.
+A unimodal distribution centred on zero with a narrow tail means noise and
+phenology only, and the defaults can stand because nothing is there to find.
 
-## Spatial risk
+A bimodal distribution with a gap above about 0.15 means a real disturbance
+signal, and the low break belongs in the gap rather than on a default.
 
-Some verification, additionality and permanence, turns on where disturbance is *likely*, not just where it happened. Risk modelling predicts that probability from spatial covariates. A robust and widely used predictor is proximity: disturbance begets disturbance, so distance to existing clearing is a strong risk covariate, the assumption behind deforestation-risk maps such as those in VM0048 baseline work. We compute distance to the detected disturbance and turn it into a risk surface:
+A long unimodal right tail with no gap means the composite is contaminated, by
+cloud shadow, senescence, or view-angle effects. The correct response is to
+rebuild the composite with a tighter cloud filter or a shifted date window, not
+to classify it.
+
+## Composite construction
+
+The threshold problem is downstream of a compositing problem, and three
+practical rules do more for accuracy than any amount of threshold tuning.
+
+Use enough scenes. A five-day revisit over a two-month window yields eight or
+more cloud-filtered observations per pixel, and a median composite is unstable
+below about four.
+
+Choose the season for the question. Composites built in the dormant or senescent
+season carry a canopy that is naturally dry and naturally less green, which
+inflates dNDMI enormously. In one verification the default moisture breaks
+applied to an October to December composite flagged 38 per cent of the project
+area as disturbed; rebuilding the same analysis on a July to September window
+collapsed that to 4 per cent, all of it co-located with reported beetle survey
+polygons. The 34-point difference was seasonal phenology, not disturbance.
+
+Watch the processing baseline. Sentinel-2 surface reflectance carries a digital
+number offset introduced in January 2022. Mixing scenes across that boundary
+without harmonising propagates a spurious index difference of around 0.04 across
+the entire project area, which is a third of the way to the low severity break
+before any real change has occurred.
+
+## Attribution
+
+Detecting loss is half the task. Deciding its cause determines whether it is a
+reversal the project must account for, a natural disturbance that may be
+excluded, or a leakage signal on land the proponent controls elsewhere.
+
+No single index answers it. The cross-check does:
+
+| Signal | Reading | Required corroboration |
+|---|---|---|
+| High dNDVI, dNBR clean | Harvest, blowdown or clearing | Edge geometry, harvest records |
+| High dNDVI, high dNBR | Fire | Official burn perimeters |
+| High dNDMI alone | Moisture stress | Drought index or pest survey |
+
+The third row is the one most often over-read. Moisture stress on its own is not
+disturbance, and classifying it as such without corroboration produces the false
+positives described above.
+
+### Edge geometry
+
+The most reliable attribution cue is the shape of the patch. Anthropogenic
+clearing follows property and operational boundaries, so it has straight edges,
+right angles, and fills its bounding box. Natural disturbance follows wind,
+terrain and hydrology, so it is curvilinear and amorphous.
+
+That is a testable claim, and the labelled map lets it be tested. Rectangularity,
+the ratio of a patch's area to the area of its bounding box, formalises it:
 
 ```{r}
-disturbed[disturbed == 0] <- NA
-dist_to_loss <- distance(disturbed)                 # metres to nearest clearing
-risk <- exp(-dist_to_loss / 80)                     # decays with distance
+rectangularity <- function(class_ids, min_cells = 40) {
+  m <- ifel(cw %in% class_ids, 1, NA)
+  p <- as.polygons(patches(m, directions = 8), dissolve = TRUE) |> st_as_sf()
+  p$area <- as.numeric(st_area(p))
+  p <- p[p$area >= min_cells * prod(res(cw)), ]
+  bb <- vapply(seq_len(nrow(p)), function(i) {
+    b <- st_bbox(p[i, ]); as.numeric((b$xmax - b$xmin) * (b$ymax - b$ymin))
+  }, numeric(1))
+  p$area / bb
+}
+
+anthro  <- rectangularity(c(1, 2))
+natural <- rectangularity(c(8, 9))
+
+data.frame(
+  origin      = c("Clear cut (bare, burned)", "Wetland, seasonally flooded"),
+  patches     = c(length(anthro), length(natural)),
+  median_rect = round(c(median(anthro), median(natural)), 3)
+)
+```
+
+The cleared patches sit marginally above the natural ones, and the difference is
+far too small to separate anything. As a summary statistic over all patches, the
+edge geometry rule fails here.
+
+That result is worth more than a confirmation would have been, because it locates
+what the rule actually is. Three things defeat the aggregate test. Patches
+delineated from a classified map inherit the classifier's edges, which are
+already blocky at 20 m whatever produced them. Amazonian wetlands follow river
+courses and are themselves linear and compact. And rectangularity collapses a
+shape to one number, discarding the thing an analyst is actually reading, which
+is whether the corners are square.
+
+The rule is a visual heuristic applied to individual polygons by someone looking
+at them, and it is a good one in that role: a right-angled corner on a loss patch
+is strong evidence of machinery. It is not a classifier, it does not survive
+being averaged, and a screening workflow that automates it into a threshold will
+find nothing. Geometry raises or lowers a prior on a specific polygon. Records
+settle it.
+
+## Risk mapping
+
+Where disturbance is *likely* is a different question from where it happened,
+and it is the one that drives a baseline. Under VM0048 and the associated
+allocation tooling, a risk map distributes an expected quantity of future loss
+across the landscape in proportion to modelled pressure.
+
+The covariates are distances. Pressure falls with distance from existing
+clearing, from roads, from settlements and from water, and rises on flat ground.
+Two of those are computable from the map itself:
+
+```{r}
+forest_mask <- ifel(cw %in% leg$id[leg$forest], 1, NA)
+edge        <- boundaries(forest_mask, inner = FALSE)
+dist_edge   <- distance(edge) / 1000
+
+cleared_mask <- ifel(cw %in% c(1, 2, 6), 1, NA)
+dist_clear   <- distance(cleared_mask) / 1000
+
+normalise <- function(x) {
+  r <- unlist(global(x, range, na.rm = TRUE))
+  (x - r[1]) / (r[2] - r[1])
+}
+
+risk_edge  <- 1 - normalise(dist_edge)
+risk_clear <- 1 - normalise(dist_clear)
+```
+
+Both are inverted, because risk rises as distance falls. Forgetting the
+inversion produces a map that is exactly wrong and looks entirely plausible.
+
+### Index weights
+
+The covariates are combined as a weighted sum. A published implementation uses
+these weights:
+
+```{r}
+weights <- c(edge = 0.2, roads = 0.2, places = 0.2,
+             urban = 0.1, water = 0.1, slope = 0.1)
+sum(weights)
+```
+
+They sum to 0.9, not 1.0. The consequence is not that the map is wrong: the
+index is rescaled to zero-one afterwards, and the allocation step below
+normalises by the zonal sum, so a constant factor cancels. The consequence is
+that the number cannot be audited. Nobody reading the index can tell whether the
+missing tenth is a dropped covariate, a typing error, or an intentional choice,
+and a verifier confronted with weights that do not sum to unity is entitled to
+reject the whole construction until it is explained.
+
+Weights should sum to one and each should be justified. With the two covariates
+available here:
+
+```{r}
+risk <- 0.5 * risk_edge + 0.5 * risk_clear
+risk <- normalise(risk)
 names(risk) <- "risk"
-plot(risk, main = "Relative deforestation risk")
-```
 
-Classifying the surface into zones gives the map a planner or auditor acts on, and the area in each zone:
+global(risk, quantile, probs = c(0.05, 0.5, 0.95), na.rm = TRUE)
+```
 
 ```{r}
-risk_zone <- classify(risk, matrix(c(-Inf, 0.2, 1,
-                                      0.2, 0.5, 2,
-                                      0.5, Inf, 3), ncol = 3, byrow = TRUE))
-levels(risk_zone) <- data.frame(id = 1:3, zone = c("low", "medium", "high"))
-f <- freq(risk_zone); f$area_ha <- round(f$count * cell_ha, 1)
-f[, c("value", "area_ha")]
+#| fig-cap: "Deforestation risk index over the Rondonia window, with mapped forest outlined."
+plot(risk, col = hcl.colors(50, "Inferno"), mar = c(2, 2, 2, 4))
 ```
 
-## Keystone: disturbance checks and VM0048 risk
+### Risk allocation
 
-Put together, the chapter is the disturbance-check pipeline: difference two dates to detect loss, quantify the area, validate it with an accuracy assessment, and model where further loss is likely. VM0048 and the associated risk tools formalise the last step into a baseline of expected deforestation; the ACR accuracy requirements formalise the middle step into a mandatory confusion matrix. The auditor's job is to reproduce each: recompute the change area, rebuild the confusion matrix from the reference sample, and check that the risk model's covariates and thresholds are defensible. Every number here, hectares lost, overall accuracy, area at high risk, is one a project reports and a verifier must be able to regenerate.
+The risk surface is relative, not absolute. It becomes a baseline only when a
+quantity of expected loss is distributed across it. The allocation rule assigns
+each pixel a share of its zone's expected annual loss in proportion to its own
+risk:
+
+$$\text{AllocatedLoss}_{\text{pixel}}
+= \frac{\text{risk}_{\text{pixel}}}{\sum \text{risk}_{\text{zone}}}
+\times \text{AnnualLoss}_{\text{zone}}$$
+
+In practice the fraction is computed as a per-zone factor and multiplied
+through, which is the same arithmetic in a form that rasterises:
+
+```{r}
+annual_loss_ha <- 4654          # zone expected annual loss, hectares
+risk_forest    <- mask(risk, forest_mask)
+risk_sum       <- global(risk_forest, "sum", na.rm = TRUE)[1, 1]
+
+loss_factor <- annual_loss_ha / risk_sum
+allocated   <- risk_forest * loss_factor
+
+data.frame(
+  risk_sum        = round(risk_sum),
+  loss_factor     = signif(loss_factor, 3),
+  allocated_total = round(global(allocated, "sum", na.rm = TRUE)[1, 1], 1)
+)
+```
+
+The allocated total reproduces the input by construction. That is the property to
+check first on any allocation: it is a redistribution, not a model of how much
+will be lost, and if the totals do not close the implementation is broken.
+Everything about *how much* comes from the historical rate, which the baseline
+chapter treats, and everything about *where* comes from the risk index above.
+
+## Leakage belts
+
+Activity displaced outside a project boundary is leakage, and it is assessed on a
+belt drawn around the project. The rules are prescriptive: a belt of a stated
+width, then a sequence of exclusions for land where deforestation could not
+plausibly be displaced, or where it would be attributed elsewhere.
+
+The exclusions typically remove ground within a set distance of existing road
+infrastructure, ground steeper than ten per cent, mapped wetlands, and protected
+areas in the stricter management categories. The slope rule is worth writing
+carefully, because it is a strict inequality:
+
+```{r}
+#| eval: false
+slope_pct     <- tan(terrain(dem, "slope", unit = "degrees") * pi / 180) * 100
+slope_invalid <- slope_pct > 10          # strictly greater, not >=
+```
+
+The combination step is where implementations fail. Each mask produces a
+residual belt, the belt minus that exclusion, and the valid area is the ground
+that survives *every* exclusion. That is an intersection:
+
+```{r}
+#| eval: false
+valid <- Reduce(st_intersection,
+                list(belt_minus_roads, belt_minus_slope,
+                     belt_minus_wetland, belt_minus_protected))
+```
+
+Chaining `st_union()` across the four residuals instead, which is an easy slip
+because each residual is itself called a leakage area, readmits every excluded
+parcel: a pixel excluded by the slope mask survives in the roads residual, and
+the union restores it. The resulting belt is larger than it should be in a
+direction that suits the project. A verifier reproducing a leakage area should
+check the set operation before checking the arithmetic.
+
+::: {.verification}
+#### Standards divergence {.unnumbered .unlisted}
+
+Two families of requirement apply to the material in this chapter, and they rest
+on different philosophies. Treating them as interchangeable misrepresents both.
+
+The Verra methodologies approach map quality through stratified area estimation.
+A map is accompanied by a sample drawn across strata, the sample yields an
+area-adjusted estimate with a confidence interval, and per-class accuracies must
+clear stated floors: for deforestation, user's and producer's accuracy of at
+least 70 per cent each, with forest above 90 and open canopy classes at 60 and
+80. The map is not the estimate; the sample is. The uncertainty chapter develops
+the estimator.
+
+The ACR improved forest management standards approach disturbance as screening
+rather than estimation. There is no confusion matrix requirement, because the
+output is not an area claim. Defensibility comes instead from a documented
+threshold justified by the histogram, corroboration across independent layers,
+and cross-reference to official fire perimeters and pest survey polygons. A
+finding directs a verifier to a location; the account of what happened there
+comes from records and from the field.
+
+The practical consequence is that a threshold and a sample answer different
+questions. Do not report a screening result as an area estimate, and do not
+offer a stratified area estimate as evidence that a particular polygon was
+harvested.
+:::
 
 ## Exercises
 
-1. Change the detection threshold from −0.3 to −0.2 and recompute disturbed area. Which way does the estimate move, and how does that trade omission against commission error?
-2. From the confusion matrix, compute the omission and commission error for the "disturbed" class. Which type of error causes a project to *understate* emissions, and why does that concern a verifier most?
-3. Rebuild the risk surface with a slower distance decay (divide by 160 instead of 80). How does the high-risk area change, and what real assumption does the decay rate encode?
-4. *(Applied.)* A project reports 200 ha of avoided deforestation with an overall map accuracy of 78%. Explain why the accuracy figure alone is not enough, and which per-class accuracies you would demand before accepting the area.
+1. Recompute the threshold sensitivity table for breaks of 0.05 and 0.25. At
+   what threshold does the proportion of cleared ground caught fall below half,
+   and what does that imply for a project relying on the published high severity
+   break?
+
+2. Repeat the class separation table using only the clear cut with regrowth
+   class against forest. Explain why no NDVI threshold separates them, and name
+   the data source that would.
+
+3. Compute rectangularity for the riparian forest class and compare it against
+   both groups in the text. Riparian forest is natural but linear: what does
+   that do to the edge geometry rule, and how would you amend the rule?
+
+4. Rebuild the risk index weighting distance to existing clearing at 0.8 and
+   distance to forest edge at 0.2. How much of the high risk area moves, and
+   what assumption about deforestation behaviour does the reweighting encode?
+
+5. *(Applied.)* A project reports 200 hectares of avoided deforestation, an
+   overall map accuracy of 78 per cent, and a disturbance screen showing no
+   unreported loss. State what each of those three claims does and does not
+   support, and list the per-class accuracies you would require before accepting
+   the area.

@@ -1,9 +1,5 @@
 ---
 title: "Getting Started"
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   eval: true
   echo: true
@@ -24,7 +20,7 @@ An audit stands or falls on whether someone else can reproduce the number. A spr
 
 R is a free, open-source language with a mature ecosystem for geographic data. In one session you can read a shapefile a surveyor sent you, pull an elevation model from an open server, overlay the two, extract terrain at your field plots, fit a model, and export a map, without leaving the environment or paying for a licence. For a forest-carbon or agriculture auditor that means the whole chain from raw data to reported estimate lives in one reviewable document. This course uses the modern R-spatial stack, built on two packages that have become the standard tools of the field [@pebesma2018sf; @hijmans2024terra].
 
-## The stack
+## Software stack
 
 You will meet these packages throughout the book. Install them once before you begin.
 
@@ -72,12 +68,12 @@ training-rspatial/
 
 With a project open, every path in this book that begins with `data/` resolves correctly.
 
-## The running dataset
+## Course dataset
 
 One dataset runs through the whole course: a mapped forest-dynamics plot, modelled on the Smithsonian ForestGEO plot at the Conservation Biology Institute in Front Royal, Virginia. Every stem in a 400 by 640 metre plot is stem-mapped, identified to species, and measured for diameter. It is an ideal teaching set because it is large, real in structure, and every tree carries a location.
 
 ::: callout-note
-## About the data
+## Data provenance
 
 The stem list (species, diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the map is representative rather than a survey of record. Terrain, imagery and LiDAR layers in later chapters are simulated over the same footprint for a clean, always-runnable progression, and every synthetic layer says so where it is built.
 :::
@@ -107,13 +103,14 @@ Diameters run from saplings at 1 cm to canopy trees near a metre, and a handful 
 
 Spatial data come in two great families, and knowing which you hold is the first decision in any analysis. Vector data represent discrete objects by their geometry: a tree is a point, a road a line, a stand boundary a polygon, each carrying attributes in a table. Raster data represent a continuous surface as a grid of equal cells, each holding one value: elevation, reflectance, canopy height. Our stems are vector; the elevation and imagery we bring in later are raster. Most real analysis moves between the two, and the middle chapters of this book are about doing that cleanly.
 
-## A first map
+## First map
 
 The CSV knows nothing about geography yet: `lon` and `lat` are just numbers. `sf` turns them into geometry by naming the coordinate columns and the coordinate reference system, here WGS 84 longitude/latitude, whose EPSG code is 4326:
 
 ```{r}
+#| df-print: default
 stems_sf <- st_as_sf(stems, coords = c("lon", "lat"), crs = 4326)
-stems_sf
+print(stems_sf, n = 5)
 ```
 
 Notice what `sf` prints: the geometry type (`POINT`), the bounding box, the CRS (`Geodetic CRS: WGS 84`), and the attribute table with a `geometry` column on the end. An `sf` object is a data frame that also knows where each row sits on Earth. The plot layer also ships as a shapefile, read the same way with `st_read("data/scbi_stems.shp")`.
@@ -127,7 +124,7 @@ plot(canopy["dbh"], pch = 19, cex = 0.5, main = "Stems ≥ 20 cm DBH")
 
 There is the plot: canopy trees scattered across the footprint, shaded by diameter. From here the course is about doing this properly.
 
-## First checks
+## Coordinate checks
 
 The first thing to do on any real project is not analysis but a coordinate sanity check. A layer whose CRS is wrong, or missing, will silently misplace every downstream result, and the error is invisible on a plot that looks fine on its own axes. Two questions answer it: does the layer declare a CRS, and does it land where it should on Earth?
 

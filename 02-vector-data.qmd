@@ -1,9 +1,5 @@
 ---
 title: "Vector Data"
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   eval: true
   echo: true
@@ -102,7 +98,7 @@ Summing a density, or averaging a total, is simply wrong, and it is exactly how 
 plot(grid_join["stems_ha"], main = "Stem density (stems/ha)")
 ```
 
-## Keystone: area checks
+## Area checks
 
 The applied heart of vector GIS in verification work is the area check: confirming that the area a project *claims* matches the area its geometry actually encloses, and that its parcels do not overlap or leave gaps. Overstated area is overstated crediting, so this is often the first quantitative finding in an audit. The tools are exactly those above, `st_area`, `st_is_valid`, `st_intersection`, applied to the project's own polygons.
 
@@ -113,27 +109,32 @@ boundary <- st_as_sfc(st_bbox(stems)) |> st_sf(id = "claimed_boundary")
 all(st_is_valid(boundary))
 ```
 
-Now the area reconciliation. A claimed area is compared with the geometry's measured area; the auditor reports the difference:
+Now the area reconciliation. A claimed area is compared with the geometry's measured area; the auditor reports the difference. Measure it two ways, once from the bounding box and once from the convex hull of the stems:
 
 ```{r}
-claimed_ha  <- 25.6                                   # nominal 400 x 640 m plot
-measured_ha <- as.numeric(st_area(boundary)) / 1e4
+claimed_ha <- 25.6                                    # nominal 400 x 640 m plot
+bbox_ha <- as.numeric(st_area(st_as_sfc(st_bbox(stems)))) / 1e4
+hull_ha <- as.numeric(st_area(st_convex_hull(st_union(stems)))) / 1e4
 
 data.frame(
-  claimed_ha  = claimed_ha,
-  measured_ha = round(measured_ha, 2),
-  difference_ha = round(measured_ha - claimed_ha, 2),
-  pct_error   = round(100 * (measured_ha - claimed_ha) / claimed_ha, 1)
+  geometry      = c("bounding box", "convex hull"),
+  measured_ha   = round(c(bbox_ha, hull_ha), 2),
+  difference_ha = round(c(bbox_ha, hull_ha) - claimed_ha, 2),
+  pct_error     = round(100 * (c(bbox_ha, hull_ha) - claimed_ha) / claimed_ha, 1)
 )
 ```
+
+The two disagree, and the disagreement is the lesson. The plot grid runs about 1.8 degrees off UTM north, and a bounding box is axis-aligned by construction, so it wraps a tilted rectangle inside a larger upright one. The convex hull follows the stems and recovers the nominal area almost exactly. Neither figure reflects a survey error. When a claimed area and a mapped area disagree, the first question is not whether the survey is wrong but whether the thing being measured is the boundary or a box drawn around it, because that choice alone moved the answer by more than a hectare.
 
 Finally, overlap detection between parcels. Where two subareas are submitted, their intersection must be empty; any positive intersection area is double-counted land:
 
 ```{r}
-a <- st_as_sfc(st_bbox(c(xmin = 747000, xmax = 747250,
-                         ymin = 4306000, ymax = 4306400), crs = 32617))
-b <- st_as_sfc(st_bbox(c(xmin = 747200, xmax = 747450,
-                         ymin = 4306000, ymax = 4306400), crs = 32617))
+e  <- st_bbox(stems)                                  # two parcels on the plot
+x0 <- unname(e["xmin"]); y0 <- unname(e["ymin"])
+a <- st_as_sfc(st_bbox(c(xmin = x0,       xmax = x0 + 250,
+                         ymin = y0,       ymax = y0 + 400), crs = 32617))
+b <- st_as_sfc(st_bbox(c(xmin = x0 + 200, xmax = x0 + 450,
+                         ymin = y0,       ymax = y0 + 400), crs = 32617))
 overlap <- st_intersection(a, b)
 as.numeric(st_area(overlap)) / 1e4          # hectares of double-counted area
 ```

@@ -1,0 +1,10 @@
+"id","label","cover","colour","forest"
+1,"Clear_Cut_Bare_Soil","Clear cut, bare soil","#D7C49C",FALSE
+2,"Clear_Cut_Burned_Area","Clear cut, burned","#EC7063",FALSE
+3,"Mountainside_Forest","Mountainside forest","#229C59",TRUE
+4,"Forest","Forest","#1E8449",TRUE
+5,"Riparian_Forest","Riparian forest","#00B29E",TRUE
+6,"Clear_Cut_Vegetation","Clear cut, regrowth","#D8DA83",FALSE
+7,"Water","Water","#2980B9",FALSE
+8,"Seasonally_Flooded","Seasonally flooded","#3ABABA",FALSE
+9,"Wetland","Wetland","#A0B9C8",FALSE

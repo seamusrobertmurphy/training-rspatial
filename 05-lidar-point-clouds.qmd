@@ -1,9 +1,5 @@
 ---
 title: "LiDAR and Point Clouds"
-format:
-  docx:
-    reference-doc: ./references/style.docx
-    highlight-style: github
 execute:
   eval: true
   echo: true
@@ -20,90 +16,425 @@ csl: ./references/apa.csl
 
 ## Point clouds
 
-Airborne LiDAR measures the forest in three dimensions. A scanner fires laser pulses and times their return, and each pulse can produce several returns as it passes through the canopy: the first off the treetops, later ones off branches and understory, the last off the ground. The result is a dense point cloud, millions of x, y, z points, from which we reconstruct both the ground surface and the vegetation above it. Full-waveform sensors record the entire returned energy profile rather than discrete points, giving even finer vertical structure. The dedicated R package is `lidR`, which reads the LAS/LAZ files LiDAR ships in.
+Airborne laser scanning measures the forest in three dimensions. The sensor
+fires pulses and times their returns, and a single pulse passing through a
+canopy produces several: the first off the treetops, later ones off branches and
+understorey, the last off the ground. The result is a point cloud of millions of
+x, y, z coordinates from which both the ground surface and the vegetation above
+it can be reconstructed.
 
-We illustrate the vertical structure with a simulated transect: a sloping ground surface with canopy returns scattered above it, exactly the mix a single scan line produces.
-
-```{r}
-set.seed(1)
-n <- 2000
-x <- runif(n, 0, 100)
-ground <- 100 + 0.05 * x
-canopy <- runif(n) < 0.6
-z <- ground + ifelse(canopy, rgamma(n, 2, 0.25), 0)
-
-plot(x, z, pch = 20, cex = 0.4,
-     col = ifelse(canopy, "forestgreen", "tan4"),
-     xlab = "Distance (m)", ylab = "Elevation (m)",
-     main = "LiDAR returns: ground (brown) and canopy (green)")
-```
-
-## Ground and canopy
-
-Two surfaces come out of a point cloud. Classifying the lowest returns as ground and interpolating them gives the digital terrain model (DTM), the bare earth. Taking the highest returns gives the digital surface model (DSM), the top of the canopy. Their difference is the quantity forestry cares about, the canopy height model (CHM):
-
-$$\text{CHM} = \text{DSM} - \text{DTM}$$
-
-Ground classification is the delicate step, separating last returns that hit soil from those that hit low vegetation, and `lidR` implements the standard algorithms (cloth simulation, progressive morphological filters). The principle is that height above ground, not height above sea level, is what relates to biomass.
-
-## Building a CHM
-
-Rather than process raw LAS here, we construct a CHM from the stem map, since each tree's height and crown define the canopy top. We give every stem a height from its diameter with a standard saturating growth curve, then rasterise the maximum height in each 5-metre cell:
+The R package is `lidR` [@lidR], which reads the LAS and LAZ formats laser data
+ships in. It bundles sample tiles, so this chapter runs on real airborne data
+without downloading anything:
 
 ```{r}
+library(lidR)
 library(terra)
 library(sf)
 
-stems <- st_as_sf(read.csv("data/scbi_stems.csv"),
-                  coords = c("lon", "lat"), crs = 4326) |>
-  st_transform(32617)
-stems$height <- 1.3 + 27 * (1 - exp(-0.035 * stems$dbh))   # DBH → height (m)
+topo <- readLAS(system.file("extdata", "Topography.laz", package = "lidR"),
+                filter = "-drop_z_below 0")
+topo
+```
 
-v   <- vect(stems)
-r   <- rast(ext(v), resolution = 5, crs = "EPSG:32617")
-chm <- rasterize(v, r, field = "height", fun = max, background = 0)
-names(chm) <- "canopy_height"
-plot(chm, main = "Canopy height model (m)")
+Two properties govern everything that follows. Point density sets the finest
+structure that can be resolved, and the classification field records what each
+return is assumed to have hit. The LAS standard reserves class 2 for ground and
+class 1 for unclassified, and the numbers matter because every later step keys
+off them:
+
+```{r}
+data.frame(
+  points     = npoints(topo),
+  area_ha    = round(as.numeric(st_area(topo)) / 1e4, 2),
+  density    = round(density(topo), 2),
+  z_min      = round(min(topo$Z), 1),
+  z_max      = round(max(topo$Z), 1)
+)
+
+table(topo$Classification)
+```
+
+Elevations here are hundreds of metres above the datum, not heights above
+ground. That distinction is the subject of most of this chapter.
+
+## Ground classification
+
+Separating returns that hit soil from those that hit low vegetation is the
+delicate step, and everything downstream inherits its errors. Two algorithms
+dominate.
+
+Cloth simulation filtering [@zhang2016easy] inverts the point cloud and drapes a
+simulated cloth over it; the cloth settles onto the ground and the points it
+touches are classified. Progressive morphological filtering [@zhang2003pmf]
+instead opens the surface with windows of increasing size, removing anything
+that rises too fast over too short a distance.
+
+Stripping the existing classification and running both makes the comparison
+honest:
+
+```{r}
+raw <- topo
+raw@data$Classification <- 0L
+
+t_csf <- system.time(
+  g_csf <- classify_ground(raw, csf(sloop_smooth = TRUE, 0.5, 1))
+)
+t_pmf <- system.time(
+  g_pmf <- classify_ground(raw, pmf(ws = c(3, 6, 9), th = c(0.5, 1, 1.5)))
+)
+
+data.frame(
+  algorithm = c("CSF", "PMF"),
+  ground    = c(sum(g_csf$Classification == 2L), sum(g_pmf$Classification == 2L)),
+  seconds   = round(c(t_csf[["elapsed"]], t_pmf[["elapsed"]]), 2)
+)
+
+round(100 * mean((g_csf$Classification == 2L) == (g_pmf$Classification == 2L)), 1)
+```
+
+The two agree on about nine returns in ten and disagree on the tenth, with PMF
+admitting substantially more points as ground. Neither is a reference standard.
+The disagreement is concentrated where it always is, under dense low vegetation
+and on steep breaks of slope, and it propagates directly into terrain height and
+therefore into every canopy height derived from it. A project that does not state
+which algorithm produced its terrain model, and with what parameters, has not
+described a reproducible method.
+
+## Noise removal
+
+Laser data contains returns that are physically impossible: birds, low cloud,
+multipath reflections, and points hundreds of metres below the ground. Statistical
+outlier removal flags a point when its mean distance to its `k` nearest
+neighbours exceeds `m` standard deviations of that statistic over the cloud:
+
+```{r}
+noisy <- classify_noise(g_csf, sor(k = 10, m = 3))
+sum(noisy$Classification == LASNOISE)
+
+clean <- filter_poi(noisy, Classification != LASNOISE)
+```
+
+A few hundred points out of seventy thousand. The count is small and the
+consequence is not, because a single spurious high return becomes a spurious
+treetop, and a single spurious low return drags the interpolated ground surface
+down with it across the whole neighbourhood.
+
+## Terrain models
+
+Interpolating the ground returns onto a grid gives the digital terrain model.
+`lidR` offers inverse-distance weighting on the k nearest neighbours, a
+triangulated surface, and kriging. The first is fast and robust at moderate
+density:
+
+```{r}
+dtm <- rasterize_terrain(clean, res = 1, knnidw(k = 10, p = 2, rmax = 50))
+global(dtm, range, na.rm = TRUE)
+```
+
+```{r}
+#| fig-cap: "Hillshaded terrain model interpolated from the classified ground returns."
+hs <- shade(terrain(dtm, "slope",  unit = "radians"),
+            terrain(dtm, "aspect", unit = "radians"),
+            angle = 40, direction = 270)
+
+plot(hs, col = grey(0:100 / 100), legend = FALSE, mar = c(2, 2, 2, 2))
+```
+
+## Height normalisation
+
+Biomass relates to height above ground, not height above sea level. Normalising
+subtracts the terrain from every point, so a return four metres up a slope at
+800 m and one four metres up a slope at 810 m become the same number:
+
+```{r}
+norm <- normalize_height(clean, dtm)
+
+data.frame(
+  z_min = round(min(norm$Z), 2),
+  z_max = round(max(norm$Z), 2)
+)
+```
+
+The check on a normalisation is the residual on the ground returns themselves.
+They should centre on zero, because the surface was interpolated through them:
+
+```{r}
+g <- filter_ground(norm)$Z
+
+data.frame(
+  mean_m  = round(mean(g), 3),
+  sd_m    = round(sd(g), 3),
+  q95_abs = round(unname(quantile(abs(g), 0.95)), 3)
+)
+```
+
+Centred, with a spread of a few centimetres. A mean that departs from zero
+indicates a systematic terrain bias, and a spread of metres rather than
+centimetres indicates that ground classification has admitted vegetation.
+
+### Normalisation trap
+
+The order of operations here is not interchangeable, and getting it wrong fails
+silently. Interpolating a terrain model from an already-normalised cloud
+produces this:
+
+```{r}
+dtm_wrong <- rasterize_terrain(norm, res = 1, knnidw(k = 10, p = 2, rmax = 50))
+global(dtm_wrong, range, na.rm = TRUE)
+```
+
+Twenty-five metres of relief have become one metre of residual noise about zero.
+The arithmetic is correct and the result is useless: the ground returns of a
+normalised cloud are already at height zero, so interpolating them recovers the
+interpolation residual rather than the terrain.
+
+Nothing errors. The object is a valid raster of the right extent, resolution and
+projection, and it plots without complaint. Slope computed from it is noise,
+aspect is undefined, and any model carrying terrain covariates loses them
+entirely while continuing to fit, predict and report. The rule is that terrain
+models are built before normalisation, from the classified but un-normalised
+cloud, and there is no exception.
+
+## Canopy models
+
+The canopy height model is the surface of the vegetation over the terrain. Built
+from a normalised cloud it is a direct rasterisation of the highest return in
+each cell, and the difficulty is the cells that receive no return at all:
+
+```{r}
+mc <- readLAS(system.file("extdata", "MixedConifer.laz", package = "lidR"),
+              filter = "-drop_z_below 0")
+
+chm_p2r     <- rasterize_canopy(mc, res = 0.5, p2r(subcircle = 0.2))
+chm_pitfree <- rasterize_canopy(mc, res = 0.5, pitfree(subcircle = 0.2))
+
+data.frame(
+  algorithm = c("points-to-raster", "pit-free"),
+  empty     = c(global(is.na(chm_p2r),     "sum")[1, 1],
+                global(is.na(chm_pitfree), "sum")[1, 1]),
+  cells     = ncell(chm_p2r)
+)
+```
+
+Points-to-raster leaves several hundred empty cells: the pits that appear
+wherever a pulse penetrated to the ground between crowns. The pit-free algorithm
+[@khosravipour2014generating] builds a set of triangulated surfaces at
+successive height thresholds and takes their maximum, which closes almost all of
+them. Pits matter because local-maximum tree detection reads a pit as a crown
+edge and splits one tree into two.
+
+```{r}
+#| fig-cap: "Pit-free canopy height model of the mixed conifer stand."
+plot(chm_pitfree, col = height.colors(50), mar = c(2, 2, 2, 4))
 ```
 
 ## Tree detection
 
-A CHM lets you find individual trees: each treetop is a local maximum, a cell higher than its neighbours. This is the basis of individual-tree detection, and the crown-radius-varying window in `ForestTools` refines it. We do the core operation directly, flagging cells that equal the maximum in a moving window and clear a minimum height:
+Each treetop is a local maximum: a cell higher than every other cell within some
+window. The window size is the entire method, and it is not a detail.
+
+### Window size
 
 ```{r}
-win  <- focal(chm, w = matrix(1, 5, 5), fun = max, na.policy = "omit")
-tops <- (chm == win) & (chm > 5)
-tops[tops == 0] <- NA
-top_pts <- as.points(tops)
-nrow(top_pts)                              # detected treetops
+counts <- sapply(c(3, 5, 11), function(w) nrow(locate_trees(mc, lmf(ws = w))))
+area_ha <- as.numeric(st_area(mc)) / 1e4
+
+data.frame(
+  window_m  = c(3, 5, 11),
+  trees     = counts,
+  stems_ha  = round(counts / area_ha)
+)
 ```
+
+A three-metre window finds nearly five times as many trees as an eleven-metre
+window over the same 0.8 hectares. Neither count is a measurement of the stand.
+The small window splits broad crowns into multiple maxima; the large one merges
+adjacent trees and detects only dominants. The correct window depends on crown
+size, which depends on height, which is why fixed windows are a starting point
+rather than an answer.
+
+### Variable windows
+
+Making the window a function of height is the standard refinement. A linear
+function with a floor is the usual form, and the coefficients are stand-specific:
 
 ```{r}
-plot(chm, main = "Detected treetops")
-plot(top_pts, add = TRUE, pch = 3, cex = 0.6)
+wf <- function(x) pmax(0.07 * x + 0.6, 0.5)
+
+ttops <- locate_trees(mc, lmf(wf), uniqueness = "bitmerge")
+
+data.frame(
+  trees    = nrow(ttops),
+  stems_ha = round(nrow(ttops) / area_ha)
+)
 ```
 
-## Keystone: lidar-forestry
+This is a calibrated function taken from a different forest, a regenerating
+burn, and applied here it returns an implausible stem density: an order of
+magnitude above what a mixed conifer stand carries. The window it opens at
+typical heights in this stand is a couple of metres, far narrower than the
+crowns, so it fragments them.
 
-The lidar-forestry workflow chains exactly these steps into an inventory: classify ground, build the DTM and CHM, detect treetops, segment crowns, and derive canopy metrics that predict biomass. The reason it matters for verification is that a CHM covers every square metre, where field plots sample a fraction of a percent, so LiDAR turns a handful of plots into a wall-to-wall map, provided the plot-to-LiDAR relationship is calibrated and its error carried through.
+The lesson is not that variable windows are wrong. It is that a window function
+is a calibration, valid for the stand structure it was fitted to, and
+transferring one between forests without refitting produces confident nonsense.
+Detected stem counts must be checked against field plots before they are used.
 
-The bridge to biomass is a canopy metric summarised per unit area and regressed on plot biomass. Mean canopy height is the simplest such metric:
+The `uniqueness = "bitmerge"` argument is a separate and mandatory precaution.
+When a survey is processed tile by tile with overlapping buffers, sequential
+tree identifiers collide between tiles and the same tree is counted twice.
+Bitmerge derives the identifier from the tree's coordinates instead, so the
+duplicate resolves to one tree.
+
+## Crown segmentation
+
+Detection gives points. Segmentation assigns every return to a tree, which is
+what yields crown area and per-tree metrics. Dalponte and Coomes' algorithm
+[@dalponte2016tree] grows regions outward from each detected top, bounded by
+height thresholds relative to the seed:
 
 ```{r}
-cell_ha <- prod(res(chm)) / 1e4
-metrics <- data.frame(
-  mean_canopy_height = round(global(chm, "mean", na.rm = TRUE)[1, 1], 1),
-  p95_height         = round(quantile(values(chm), 0.95, na.rm = TRUE), 1),
-  detected_trees     = nrow(top_pts),
-  area_ha            = round(ncell(chm) * cell_ha, 1))
-metrics
+ttops_fixed <- locate_trees(mc, lmf(ws = 5))
+ttops_fixed$treeID <- seq_len(nrow(ttops_fixed))
+
+seg    <- segment_trees(mc, dalponte2016(chm_pitfree, ttops_fixed))
+crowns <- crown_metrics(seg, func = .stdtreemetrics, geom = "convex")
+
+data.frame(
+  crowns          = nrow(crowns),
+  median_area_m2  = round(median(crowns$convhull_area), 1),
+  median_height_m = round(median(crowns$Z), 1)
+)
 ```
 
-Detected trees will fall short of the true stem count, because the understory hides beneath the canopy and only dominant trees form local maxima. That gap is the central caution of LiDAR inventory: it sees the canopy, not the stand, and the correction comes from calibrating against field plots that *do* count every stem. The height metrics, by contrast, are robust and are what a LiDAR biomass model is built on. The full project fits that model and maps predicted biomass with its prediction error, the subject of the uncertainty chapter.
+The `treeID` reset on the line above is not cosmetic. Identifiers produced by
+`uniqueness = "bitmerge"` are 64-bit integers derived from coordinates, and
+`dalponte2016()` uses the identifier to index its output raster. Passing bitmerge
+identifiers to it produces an error or a corrupted segmentation depending on
+version. Reset them to a simple sequence within a single tile.
+
+```{r}
+#| fig-cap: "Segmented crown polygons over the canopy height model."
+plot(chm_pitfree, col = height.colors(50), mar = c(2, 2, 2, 4))
+plot(st_geometry(crowns), add = TRUE, border = "black", lwd = 0.4)
+```
+
+## Dominant height
+
+Stand height is a mensurational variable with a specific definition, usually the
+mean height of the tallest trees per unit area rather than the mean of all
+trees. The raster equivalent is an upper percentile of canopy height aggregated
+to a coarser cell:
+
+```{r}
+q95 <- function(x, ...) quantile(x, 0.95, na.rm = TRUE)
+chm_dom <- aggregate(chm_pitfree, fact = 2, fun = q95)
+
+v  <- terra::extract(chm_dom, vect(ttops))[, 2]
+ok <- !is.na(v)
+
+data.frame(
+  r    = round(cor(ttops$Z[ok], v[ok]), 3),
+  rmse = round(sqrt(mean((ttops$Z[ok] - v[ok])^2)), 2),
+  bias = round(mean(ttops$Z[ok] - v[ok]), 2)
+)
+```
+
+The raster surface tracks the detected tree heights closely but sits about a
+metre high, the negative bias, because a 95th percentile over a cell containing
+several crowns returns something near the tallest of them rather than the mean.
+Upper percentiles are preferred as biomass predictors for exactly this reason:
+they are dominated by the large trees that carry most of the biomass, and they
+are insensitive to the understorey that laser data sees poorly.
+
+## Area-based inventory
+
+Individual-tree methods are appealing and rarely how operational inventory is
+done. The area-based approach instead summarises the point cloud into metrics on
+a grid matching the field plot size, regresses plot-measured biomass on those
+metrics, and applies the model wall to wall.
+
+The metrics are distributional summaries of return heights in each cell:
+
+```{r}
+mega <- readLAS(system.file("extdata", "Megaplot.laz", package = "lidR"),
+                filter = "-drop_z_below 0")
+mega <- normalize_height(classify_ground(mega, csf(sloop_smooth = TRUE, 0.5, 1)),
+                         knnidw())
+
+m <- pixel_metrics(mega, ~list(
+  zmax  = max(Z),
+  zmean = mean(Z),
+  zsd   = sd(Z),
+  zq75  = quantile(Z, 0.75),
+  zq95  = quantile(Z, 0.95),
+  cover = sum(Z > 2) / length(Z)
+), res = 20)
+
+names(m)
+round(as.data.frame(global(m, "mean", na.rm = TRUE)), 2)
+```
+
+Every cell now carries a description of its vertical structure, and this is the
+form in which laser data enters a biomass model. Height percentiles and cover
+fraction carry most of the signal; the mean carries least, because it is dragged
+down by ground and understorey returns.
+
+The reason this matters for verification is coverage. A canopy metric exists for
+every cell in the survey, where field plots sample a fraction of a per cent of
+the area, so laser data turns a few dozen plots into a wall-to-wall map. That
+leverage is also the risk: the model is fitted on the plots and applied
+everywhere, so its error applies everywhere too, and the uncertainty chapter
+treats how that error is estimated and carried into a reported number.
+
+::: {.verification}
+#### Documentation requirements {.unnumbered .unlisted}
+
+Laser-derived inventory is reproducible in principle and frequently not in
+practice. A verifier should require, in writing, the items this chapter has
+shown to change the answer.
+
+The acquisition specification: sensor, date, pulse density, scan angle, and
+stated vertical accuracy. Density sets what can be resolved and the date sets
+what was standing.
+
+The ground classification algorithm and its parameters. The two algorithms
+compared above differed by around ten per cent of returns on the same tile, and
+that difference moves the terrain surface and therefore every canopy height.
+
+The normalisation order. A terrain model built after normalisation is flat, and
+nothing in the output announces it.
+
+The detection method and its calibration. A window function is fitted to a stand
+structure. The one used above, transferred from another forest, overstated stem
+density by roughly an order of magnitude while producing no warning of any kind.
+
+The plot-to-metric model and its validation. Predicted biomass is a model
+output, not a measurement, and a map without a cross-validated error statistic
+carries no defensible uncertainty.
+:::
 
 ## Exercises
 
-1. Rebuild the CHM at 2-metre resolution and describe how the number of detected treetops changes. Why does a finer grid tend to split single crowns into several maxima?
-2. Raise the minimum-height threshold in the detection step from 5 m to 15 m. How does the detected count change, and which trees are you now excluding?
-3. Compute the 25th, 50th, 75th and 95th height percentiles of the CHM. Explain why upper percentiles are better biomass predictors than the mean.
-4. *(Applied.)* You have LiDAR over 10,000 ha and field plots on 30 ha. Describe, in steps, how you would use the plots to calibrate a CHM-based biomass model and produce a wall-to-wall estimate, and where the two main sources of error enter.
+1. Rebuild the canopy height model at 1 m rather than 0.5 m resolution and
+   recount the empty cells under both `p2r()` and `pitfree()`. Explain why
+   coarsening the grid reduces pits and what it costs.
+
+2. Run tree detection with fixed windows of 3, 5, 7 and 11 m and plot detected
+   stems per hectare against window size. At what window does the count
+   stabilise, and what does the shape of that curve tell you about mean crown
+   diameter in this stand?
+
+3. Refit the variable window function so that the detected stem density falls
+   within a plausible range for a mixed conifer stand. State the coefficients you
+   chose and the stand assumption that justifies them.
+
+4. Compute the 25th, 50th, 75th and 95th height percentiles from the pixel
+   metrics above. Explain why upper percentiles outperform the mean as biomass
+   predictors, referring to where biomass sits in the height distribution.
+
+5. *(Applied.)* You have laser coverage of 10,000 ha and field plots on 30 ha.
+   Describe, in steps, how you would calibrate a metric-based biomass model and
+   produce a wall-to-wall estimate, naming the two largest sources of error and
+   where each enters.

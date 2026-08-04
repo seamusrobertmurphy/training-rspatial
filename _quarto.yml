@@ -9,7 +9,7 @@ project:
 
 book:
   title: "Spatial Analysis in R for Forest Carbon Verification"
-  subtitle: "A Practical Training in GIS"
+  subtitle: "A Practical Training in GIS & Carbon Offset Audits"
   author:
     - name: Murphy, S
       url: https://scholar.google.com/citations?hl=en&user=jDGq9I4AAAAJ
@@ -31,17 +31,17 @@ book:
     - 04-terrain-hydrology.qmd
     - 05-lidar-point-clouds.qmd
     - 06-disturbance-risk.qmd
-    - allometry.qmd
-    - emission-factors.qmd
-    - activity-data.qmd
-    - baseline-modelling.qmd
-    - 07-uncertainty.qmd
-    - 08-time-series.qmd
-    - 09-spatial-patterns.qmd
+    - 07-allometry.qmd
+    - 08-emission-factors.qmd
+    - 09-activity-data.qmd
+    - 10-baseline-modelling.qmd
+    - 11-uncertainty.qmd
+    - 12-time-series.qmd
+    - 13-spatial-patterns.qmd
 
   appendices:
-    - AA-statistics.qmd
-    - A-automation-registries.qmd
+    - A1-primers.qmd
+    - A2-automation.qmd
     - references/index.qmd
 
   sidebar:
@@ -74,12 +74,14 @@ format:
     code-tools: true
     code-link: true
     code-overflow: wrap
+    df-print: kable
 
   docx:
     toc: true
     number-sections: true
     highlight-style: github
-    reference-doc: ./references/style.docx
+    reference-doc: ./references/style-formal.docx
+    df-print: kable
 
 engine: knitr
 

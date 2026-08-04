@@ -96,3 +96,6 @@ _backups/
 .claude/
 .claudeprism/
 tasks/
+
+# Regenerated at render time by the terrain chapter
+data/chilwa-hydro/
