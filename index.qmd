@@ -19,7 +19,7 @@ The book is written for two audiences at once, and it is honest about which part
 
 The main text is for anyone who needs the method: graduate students in forestry, environmental science and remote sensing, and analysts moving into carbon work from an adjacent field. It teaches spatial analysis and applied statistics, and it can be read straight through without reference to any crediting standard.
 
-Interleaved with it are **verification tracks**, set off in tinted boxes. These carry the registry-specific material that only practitioners need: what ART-TREES, Verra and the American Carbon Registry require, where their equations are written down, and how each converts a statistic into forgone credits. They are written for analysts and technical staff at project developers and verification bodies, and for national forest monitoring teams.
+Interleaved with it are verification tracks, set off in tinted boxes. These carry the registry-specific material that only practitioners need: what ART-TREES, Verra and the American Carbon Registry require, where their equations are written down, and how each converts a statistic into forgone credits. They are written for analysts and technical staff at project developers and verification bodies, and for national forest monitoring teams.
 
 A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.
 

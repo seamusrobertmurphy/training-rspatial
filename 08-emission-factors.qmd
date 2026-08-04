@@ -30,11 +30,11 @@ The distinction matters more than it looks. An analyst who maps deforestation to
 
 The IPCC organises methods into three tiers, and the tier is a statement about where the numbers came from rather than about how sophisticated the arithmetic is [@ipcc2006gl].
 
-**Tier 1** uses global or regional default factors published in the guidelines, applied through simple equations, with default assumptions about what happens after a land-use change. It requires no local measurement beyond the activity data. It is the fallback when nothing better exists, and its uncertainties are correspondingly wide.
+Tier 1 uses global or regional default factors published in the guidelines, applied through simple equations, with default assumptions about what happens after a land-use change. It requires no local measurement beyond the activity data. It is the fallback when nothing better exists, and its uncertainties are correspondingly wide.
 
-**Tier 2** keeps the Tier 1 equations but substitutes country-specific or region-specific factors derived from local measurement. This is where most credible national inventories sit.
+Tier 2 keeps the Tier 1 equations but substitutes country-specific or region-specific factors derived from local measurement. This is where most credible national inventories sit.
 
-**Tier 3** replaces the equations themselves with models or direct measurement systems, calibrated and validated locally.
+Tier 3 replaces the equations themselves with models or direct measurement systems, calibrated and validated locally.
 
 The tiers are not a quality ladder in the sense that Tier 1 is wrong. A well-applied Tier 1 estimate with an honest uncertainty is more defensible than a Tier 3 model whose calibration nobody can reproduce. What the tiers do determine is the size of the interval you must report, and therefore the deduction you must accept.
 

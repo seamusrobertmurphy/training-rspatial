@@ -26,11 +26,11 @@ It is also the term most likely to be produced by a classification, and therefor
 
 The IPCC distinguishes three ways of collecting activity data, and the distinction is about spatial explicitness rather than accuracy of measurement [@ipcc2006gl].
 
-**Approach 1** uses aggregate area statistics: how much cropland, how much forest, at two points in time. It gives net change and cannot say what became what.
+Approach 1 uses aggregate area statistics: how much cropland, how much forest, at two points in time. It gives net change and cannot say what became what.
 
-**Approach 2** adds transition information: how much forest became cropland, tracked as a matrix, but without locating the transitions.
+Approach 2 adds transition information: how much forest became cropland, tracked as a matrix, but without locating the transitions.
 
-**Approach 3** is spatially explicit: every parcel or pixel carries its own land-use trajectory, so transitions are located as well as counted.
+Approach 3 is spatially explicit: every parcel or pixel carries its own land-use trajectory, so transitions are located as well as counted.
 
 Only Approach 3 supports the parcel-level transition clocks that the emission factors chapter showed are necessary to avoid double counting across overlapping interventions, and only Approach 3 lets you stratify emission factors by anything you can map. It is also the only one that produces a classification, and therefore the only one with classification error to worry about. That is not a drawback. Approaches 1 and 2 have the same errors; they simply have no mechanism for measuring them.
 
@@ -146,7 +146,7 @@ names(prob) <- levels(tr$cover)
 plot(prob, range = c(0, 1))
 ```
 
-Two summaries turn the four surfaces into one uncertainty layer. The **margin** is the difference between the highest and second-highest class probability: it is small where two classes compete. **Entropy**, normalised to a maximum of one, is small where the classifier is confident in any single class and large where probability is spread.
+Two summaries turn the four surfaces into one uncertainty layer. The margin is the difference between the highest and second-highest class probability: it is small where two classes compete. Entropy, normalised to a maximum of one, is small where the classifier is confident in any single class and large where probability is spread.
 
 ```{r}
 pm     <- as.matrix(prob)
@@ -193,8 +193,8 @@ Verra's activity data module sets class-level thresholds rather than an overall
 accuracy figure, and the reasoning is the one demonstrated above.
 
 For a jurisdictional forest cover benchmark map, user's and producer's accuracy
-must **each** be 70 per cent or greater for areas mapped as deforestation over
-the historical reference period, and **each** greater than 90 per cent for areas
+must each be 70 per cent or greater for areas mapped as deforestation over
+the historical reference period, and each greater than 90 per cent for areas
 mapped as forest at the end of that period. Where it is demonstrated that half or
 more of the jurisdiction's forest carries under 50 per cent canopy cover, those
 thresholds relax to 60 and 80 per cent respectively.

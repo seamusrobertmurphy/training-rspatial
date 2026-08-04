@@ -73,7 +73,7 @@ round(c(ratio = max(totals) / min(totals),
         spread_pct = 100 * (max(totals) - min(totals)) / min(totals)), 2)
 ```
 
-The same 84 trees, measured once, weigh between 20 and 97 tonnes depending on which published equation you apply. The largest estimate is **4.75 times** the smallest. No field error, no measurement problem, no disagreement about the data: the entire spread is equation choice.
+The same 84 trees, measured once, weigh between 20 and 97 tonnes depending on which published equation you apply. The largest estimate is 4.75 times the smallest. No field error, no measurement problem, no disagreement about the data: the entire spread is equation choice.
 
 ```{r}
 carbon_ha <- totals * 0.47 / 25.6
@@ -121,7 +121,7 @@ in_range_c <- sapply(which(has_range), function(i) {
 round(summary(in_range_c), 1)
 ```
 
-The median falls from 61 per cent of stems to **44 per cent of biomass**, the weakest quarter of the equations cover under 14 per cent of it, and the worst covers none at all. The reason is structural rather than accidental. Destructive sampling is dominated by small trees because large ones are expensive to fell and rare in the sample, so equations are best supported exactly where the carbon is not. Almost every biomass estimate ever made is an extrapolation over the trees that carry most of its mass.
+The median falls from 61 per cent of stems to 44 per cent of biomass, the weakest quarter of the equations cover under 14 per cent of it, and the worst covers none at all. The reason is structural rather than accidental. Destructive sampling is dominated by small trees because large ones are expensive to fell and rare in the sample, so equations are best supported exactly where the carbon is not. Almost every biomass estimate ever made is an extrapolation over the trees that carry most of its mass.
 
 ```{r}
 big <- max(acer$dbh)

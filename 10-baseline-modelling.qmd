@@ -176,7 +176,7 @@ The project occupies under a quarter of the area and carries just over half the 
 The mechanics differ between programmes and the differences matter for anyone
 reproducing a baseline.
 
-**ART-TREES.** The crediting level is the mean of a five-year reference period,
+ART-TREES. The crediting level is the mean of a five-year reference period,
 recomputed every five calendar years starting with the first year of crediting.
 The reference period may not overlap the crediting period and there may be no gap
 between them. An updated crediting level may not exceed the previous one; the
@@ -185,7 +185,7 @@ five-year reference to be recalculated with it included. Interpolation is allowe
 where data do not fall on the calendar years, provided no bias is introduced in
 selecting the data used.
 
-**Verra, jurisdictional unplanned deforestation.** Historical activity data are
+Verra, jurisdictional unplanned deforestation. Historical activity data are
 estimated over a historical reference period, conservatively discounted for
 statistical uncertainty, annualised, and used to project forward. The validity
 period is six years and the baseline must be updated at the end of each one.
@@ -193,7 +193,7 @@ Four activity data categories must be estimated in every application: historical
 deforestation, stable forest, stable non-forest and forest regrowth.
 
 One provision is worth emphasising because it contradicts a widespread
-assumption. Wall-to-wall mapping is **not required** to estimate the activity
+assumption. Wall-to-wall mapping is not required to estimate the activity
 data. The estimate comes from a probability sample; maps may be used to stratify
 that sample and reduce the effort needed to hit precision targets, but the map is
 not the estimator. This is the same architecture the classification chapter
