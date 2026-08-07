@@ -3,6 +3,13 @@
 Researched 30 July 2026. Verify addresses against the live pages before sending;
 several were decoded from obfuscated mailto links and staff move often.
 
+Status, 7 August 2026: CRC submitted 4 August, declined 7 August by Grubbs on
+market grounds, not quality, with a steer toward forestry and
+environmental-science publishers. Elsevier proposal sent 7 August to Petropoulos
+and Llewellyn; awaiting response. Springer held per its sole-consideration rule
+until Elsevier resolves; its Gmail draft still needs the thirteen-chapter count,
+clean links and the six-month schedule before sending.
+
 ## 1. Chapman & Hall / CRC, The R Series (lead)
 
 The best fit, and the only route verified to allow a permanently free online

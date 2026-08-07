@@ -153,8 +153,8 @@ Current draft: nine chapters, roughly 8,000 words of prose, 66 code chunks and
 
 ## Schedule
 
-Twelve to fifteen months from contract to full manuscript, assuming the drafted
-chapters are expanded first and the new chapters written in the second half. The
+Six months from contract to full manuscript, assuming the drafted chapters are
+expanded first and the new chapters written in the second half. The
 existing Quarto infrastructure means production is largely automated: the source
 generates print and web from one set of files.
 
