@@ -14,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Point clouds
+## Point Clouds
 
 Airborne laser scanning measures the forest in three dimensions. The sensor
 fires pulses and times their returns, and a single pulse passing through a
@@ -58,7 +58,7 @@ table(topo$Classification)
 Elevations here are hundreds of metres above the datum, not heights above
 ground. That distinction is the subject of most of this chapter.
 
-## Ground classification
+## Ground Classification
 
 Separating returns that hit soil from those that hit low vegetation is the
 delicate step, and everything downstream inherits its errors. Two algorithms
@@ -101,7 +101,7 @@ therefore into every canopy height derived from it. A project that does not stat
 which algorithm produced its terrain model, and with what parameters, has not
 described a reproducible method.
 
-## Noise removal
+## Noise Removal
 
 Laser data contains returns that are physically impossible: birds, low cloud,
 multipath reflections, and points hundreds of metres below the ground. Statistical
@@ -120,7 +120,7 @@ consequence is not, because a single spurious high return becomes a spurious
 treetop, and a single spurious low return drags the interpolated ground surface
 down with it across the whole neighbourhood.
 
-## Terrain models
+## Terrain Models
 
 Interpolating the ground returns onto a grid gives the digital terrain model.
 `lidR` offers inverse-distance weighting on the k nearest neighbours, a
@@ -141,7 +141,7 @@ hs <- shade(terrain(dtm, "slope",  unit = "radians"),
 plot(hs, col = grey(0:100 / 100), legend = FALSE, mar = c(2, 2, 2, 2))
 ```
 
-## Height normalisation
+## Height Normalisation
 
 Biomass relates to height above ground, not height above sea level. Normalising
 subtracts the terrain from every point, so a return four metres up a slope at
@@ -173,7 +173,7 @@ Centred, with a spread of a few centimetres. A mean that departs from zero
 indicates a systematic terrain bias, and a spread of metres rather than
 centimetres indicates that ground classification has admitted vegetation.
 
-### Normalisation trap
+### Normalisation Order
 
 The order of operations here is not interchangeable, and getting it wrong fails
 silently. Interpolating a terrain model from an already-normalised cloud
@@ -196,7 +196,7 @@ entirely while continuing to fit, predict and report. The rule is that terrain
 models are built before normalisation, from the classified but un-normalised
 cloud, and there is no exception.
 
-## Canopy models
+## Canopy Height Models
 
 The canopy height model is the surface of the vegetation over the terrain. Built
 from a normalised cloud it is a direct rasterisation of the highest return in
@@ -229,12 +229,12 @@ edge and splits one tree into two.
 plot(chm_pitfree, col = height.colors(50), mar = c(2, 2, 2, 4))
 ```
 
-## Tree detection
+## Individual Tree Detection
 
 Each treetop is a local maximum: a cell higher than every other cell within some
 window. The window size is the entire method, and it is not a detail.
 
-### Window size
+### Window Size
 
 ```{r}
 counts <- sapply(c(3, 5, 11), function(w) nrow(locate_trees(mc, lmf(ws = w))))
@@ -254,7 +254,7 @@ adjacent trees and detects only dominants. The correct window depends on crown
 size, which depends on height, which is why fixed windows are a starting point
 rather than an answer.
 
-### Variable windows
+### Variable Windows
 
 Making the window a function of height is the standard refinement. A linear
 function with a floor is the usual form, and the coefficients are stand-specific:
@@ -287,7 +287,7 @@ tree identifiers collide between tiles and the same tree is counted twice.
 Bitmerge derives the identifier from the tree's coordinates instead, so the
 duplicate resolves to one tree.
 
-## Crown segmentation
+## Crown Segmentation
 
 Detection gives points. Segmentation assigns every return to a tree, which is
 what yields crown area and per-tree metrics. Dalponte and Coomes' algorithm
@@ -320,7 +320,7 @@ plot(chm_pitfree, col = height.colors(50), mar = c(2, 2, 2, 4))
 plot(st_geometry(crowns), add = TRUE, border = "black", lwd = 0.4)
 ```
 
-## Dominant height
+## Dominant Height
 
 Stand height is a mensurational variable with a specific definition, usually the
 mean height of the tallest trees per unit area rather than the mean of all
@@ -348,7 +348,7 @@ Upper percentiles are preferred as biomass predictors for exactly this reason:
 they are dominated by the large trees that carry most of the biomass, and they
 are insensitive to the understorey that laser data sees poorly.
 
-## Area-based inventory
+## Area-Based Inventory
 
 Individual-tree methods are appealing and rarely how operational inventory is
 done. The area-based approach instead summarises the point cloud into metrics on
@@ -389,7 +389,7 @@ everywhere, so its error applies everywhere too, and the uncertainty chapter
 treats how that error is estimated and carried into a reported number.
 
 ::: {.verification}
-#### Documentation requirements {.unnumbered .unlisted}
+#### Documentation Requirements {.unnumbered .unlisted}
 
 Laser-derived inventory is reproducible in principle and frequently not in
 practice. A verifier should require, in writing, the items this chapter has

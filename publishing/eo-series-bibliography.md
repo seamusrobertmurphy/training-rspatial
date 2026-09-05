@@ -116,3 +116,58 @@ the book, not a weakness to hide: a reader of the forest monitoring volume gets
 twenty methods and no worked chain, and a reader of this book gets one chain
 from an image to a reported estimate with a stated interval. Say it in those
 terms, and cite the forest monitoring volume by name when you do.
+
+## Chapter structure, read from the volumes
+
+Added 5 September 2026 from 59 contents-page scans held at
+`Github/mapping-wetland-inundation-lake-chilwa/05.tasks/Earth Observation Series/`.
+The scans cover six volumes: Sensitivity Analysis in Earth Observation Modelling
+(2017), Hyperspectral Remote Sensing (2020), a soil and agriculture volume, the
+Google Earth Engine volume (2025), and Satellite Remote Sensing for Forest and
+Environmental Monitoring (2025). This is what the series actually looks like on
+the page, which no catalogue description gives.
+
+The internal skeleton is fixed and it is the skeleton of a journal article.
+Every chapter runs numbered sections in the order Introduction, Materials and
+methods, Experimental results, Discussion, Conclusions, References, with
+Acknowledgments and sometimes a List of abbreviations between Conclusions and
+References. Some volumes number to three levels, 3.4.2. Subsection headings are
+short noun phrases in sentence case, "Study area", "Data used", "Snow spectra",
+"Soil samples", "Concluding remarks". Not one is a gerund and not one is a
+clipped fragment. The 2017 volume additionally prints a Chapter Outline box on
+the opening page of every chapter, listing every numbered section with its page.
+
+Chapter titles are long descriptive noun phrases, typically eight to eighteen
+words, and a colon subtitle is common. "Sensitivity of Vegetation Phenological
+Parameters From Satellite Sensors to Spatial Resolution and Temporal Compositing
+Period". "Enhanced burnt area mapping across temperate and tropical regions with
+Landsat data and deep learning". "More than ice in ICESat-2: Measuring forests".
+"A view of biological invasions at the landscape scale: a case study of two
+Australian *Acacia* species in Portugal". The formula is a result or a question
+plus the named data that produced it, which is the formula this book's chapter
+titles already follow.
+
+Volumes are divided into named Sections of three to seven chapters. The forest
+volume uses four, "Spaceborne SAR for forest applications", "Spaceborne LiDAR
+for forest applications", "Optical satellites for forest applications" and
+"Satellites for environmental and land cover applications". Sections are named
+by sensor family first and by application second, which is the shape this book's
+part one already has.
+
+### The forestry volume in full
+
+Satellite Remote Sensing for Forest and Environmental Monitoring, 2025, 20
+chapters over 663 pages, so 33 pages a chapter. Its optical section runs fire
+risk around logistic corridors, probabilistic forest fire danger from optical and
+thermal data, hotspot detection and burned area tracking, burnt area mapping with
+Landsat and deep learning, and regional forest mapping from Sentinel-2 with a
+sliding temporal window. Its LiDAR section runs GEDI geolocation error, satellite
+LiDAR fuel mapping, GEDI with SAR and multispectral for land cover, and ICESat-2
+for canopy height, biomass and canopy cover.
+
+Two things follow for the proposal. The volume reaches an application in every
+chapter and never once explains what a reflectance value is, what an index can
+support, or how an uncertainty is computed and deducted, so the gap this book
+claims is visible in the contents page of the closest competitor rather than
+argued from silence. And 33 pages a chapter is the number to plan to, which puts
+seventeen chapters at roughly 560 pages before front matter.

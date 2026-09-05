@@ -16,7 +16,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Factor definition
+## Factor Definition
 
 Almost every greenhouse gas estimate in land use reduces to one multiplication:
 
@@ -26,7 +26,7 @@ Activity data is the extent of something happening: hectares deforested, hectare
 
 The distinction matters more than it looks. An analyst who maps deforestation to the pixel and then multiplies by a factor pulled from a default table has spent all their effort on the term they measured and none on the term they assumed. The factor is usually the larger source of error, and unlike the map it cannot be improved by better imagery.
 
-## Tiers
+## Methodological Tiers
 
 The IPCC organises methods into three tiers, and the tier is a statement about where the numbers came from rather than about how sophisticated the arithmetic is [@ipcc2006gl].
 
@@ -38,7 +38,7 @@ Tier 3 replaces the equations themselves with models or direct measurement syste
 
 The tiers are not a quality ladder in the sense that Tier 1 is wrong. A well-applied Tier 1 estimate with an honest uncertainty is more defensible than a Tier 3 model whose calibration nobody can reproduce. What the tiers do determine is the size of the interval you must report, and therefore the deduction you must accept.
 
-## Default factors
+## Default Factors
 
 The Tier 1 defaults are not conjured. They are meta-analyses of published soil and biomass measurements, and the guidelines publish their sample sizes and confidence limits alongside the means. Reading those columns is the single most useful habit in factor selection, because the stated uncertainty varies by more than an order of magnitude across the same table.
 
@@ -65,7 +65,7 @@ c(worst_to_best_ratio = max(soc_ref$unc_pct) / min(soc_ref$unc_pct))
 
 The stated uncertainty spans eighteenfold within a single table. Factor selection is therefore not a lookup; it is a decision about which of these positions you are willing to defend.
 
-## Fire factors
+## Fire Emission Factors
 
 Combustion is the other place Tier 1 factors are used heavily, and it is
 structurally different from soil. Where soil carbon is a stock difference over
@@ -80,7 +80,7 @@ consumed, and $G_{ef}$ the emission factor in grams of gas per kilogram of dry
 matter burnt. The equation is a chain of four terms, so its uncertainty is the
 quadrature sum of four, and it can be no better than its weakest link.
 
-### Combustion parameters
+### Combustion Parameters
 
 The fuel load and combustion factor come from a single table, stratified by
 vegetation and climate, and for savanna additionally by season
@@ -125,7 +125,7 @@ factor for fires in organic soils, for want of data, and national inventories
 consequently report that cell as zero. Zero and unknown are different things,
 and a table that renders them identically has lost information a verifier needs.
 
-### Unit conversion
+### Unit Conversion
 
 The $10^{-3}$ in the equation is the whole unit chain, and dropping it is the
 most consequential arithmetic error in fire accounting. Working through the
@@ -170,7 +170,7 @@ inventory reporting has used through recent submission cycles. The AR6 values
 are 27.9 and 273. Mixing assessment reports across a time series produces a
 discontinuity that looks like a trend.
 
-### Carbon dioxide
+### Carbon Dioxide
 
 Whether carbon dioxide from a fire is reported at all depends on the land
 category, and the rule is easy to get backwards:
@@ -196,7 +196,7 @@ adding the result to a stock-change inventory that already contains it. The
 factors appear in Table 2.5 for forest, which invites exactly this, and they are
 there as a cross-check rather than as an input.
 
-## Stock-difference method
+## Stock-Difference Method
 
 Soil carbon is the pool where Tier 1 methods have changed most. The 2006 guidelines assumed that converting land oxidised its soil carbon immediately. The 2019 Refinement replaces that with a linear transition to a new equilibrium spread over a default twenty years, computed as a difference between two stock estimates [@ipcc2019refinement, Eq. 2.25]:
 
@@ -224,13 +224,13 @@ round(c(soc_before = socref, soc_after = soc_new,
 
 The chain matters more than any single link. Three multiplicative factors mean three opportunities for a stratification error, and because they multiply, a mistake in any one of them scales the whole result rather than adding to it.
 
-## Gain-loss asymmetry
+## Gain-Loss Asymmetry
 
 Tier 1 does not treat gains and losses alike. Carbon *increases* are spread over the twenty-year transition; carbon *losses* from dead organic matter on conversion are assigned to a single year [@ipcc2019refinement, s.2.3.2]. That asymmetry is deliberate and conservative: it credits slowly and debits fast.
 
 It also has a practical consequence for anyone comparing a project's numbers against an inventory. A project reporting a gain over five years captures a quarter of the eventual stock change, not all of it, and a project reporting a conversion loss books the whole thing at once. Two projects with identical biophysical outcomes and different timings will report very different annual figures, entirely legitimately.
 
-## Uncertainty propagation
+## Uncertainty Propagation
 
 Each factor in the chain carries its own uncertainty, and they combine. For independent terms entering a product, the proportional uncertainties combine in quadrature:
 
@@ -251,7 +251,7 @@ round(100 * u_total, 1)
 
 Seventy-one per cent. That figure is not unusual for a Tier 1 agroforestry estimate, and it is worth sitting with, because it means the honest interval on the claim is wider than the claim itself in one direction.
 
-## Dominant uncertainty
+## Dominant Terms
 
 Quadrature has a property that governs everything about how a project should spend its money, and it is not intuitive. Because the terms are squared before summing, a term's contribution to the total is proportional to its square, so large terms do not merely dominate, they annihilate the small ones.
 
@@ -283,7 +283,7 @@ This is the most actionable result in the chapter, and it cuts against how carbo
 
 The general rule follows from the algebra: rank the terms by $U_i^2$, and work down the list. A term contributing under one per cent of the variance cannot be worth measuring, however cheap, because the total will not move.
 
-## Cost of imprecision
+## Cost of Imprecision
 
 Convert it to credits, which is the language the decision is actually made in:
 
@@ -302,7 +302,7 @@ Reporting against the lower bound, the project claims about 5,300 tonnes where i
 That number is also the budget available for reducing it. If halving the growth-rate uncertainty costs less than the value of the credits it recovers, the measurement pays for itself, and this calculation is how you find out before commissioning the fieldwork rather than after.
 
 ::: {.verification}
-#### Double counting {.unnumbered .unlisted}
+#### Double Counting {.unnumbered .unlisted}
 
 The twenty-year transition creates a bookkeeping hazard that catches experienced
 practitioners. A parcel that changes management in year one is still accruing its
@@ -323,7 +323,7 @@ matrices of IPCC Approach 3 over the aggregate statistics of Approach 1.
 :::
 
 ::: {.verification}
-#### Registry acceptance {.unnumbered .unlisted}
+#### Registry Acceptance {.unnumbered .unlisted}
 
 Standards differ on how much a project may lean on defaults. In general, a Tier 1
 default is acceptable where it is conservative for the claim being made, and not

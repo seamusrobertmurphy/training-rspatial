@@ -14,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Geometry types
+## Geometry Types
 
 Vector data represent the world as discrete shapes. The simple-features standard, which `sf` implements, defines a small family of geometry types built from coordinates: a point is a single location, a linestring an ordered path, a polygon an enclosed area, and each has a *multi* form for features made of several parts. Almost everything an auditor handles is one of these: stems and plot centres are points, streams and roads are lines, stands and ownership parcels are polygons.
 
@@ -34,7 +34,7 @@ stems <- st_transform(stems, 32617)
 st_bbox(stems)          # now in metres
 ```
 
-## sf anatomy
+## Simple Feature Anatomy
 
 An `sf` object is a table whose rows are features and whose last column, of class `sfc`, holds the geometry. Because it is a data frame first and spatial second, the whole `dplyr` grammar applies and the geometry is carried along automatically:
 
@@ -48,7 +48,7 @@ stems |>
 
 `st_drop_geometry()` turns the layer back into an ordinary table when you want a plain summary, and `st_geometry()` extracts just the shapes when you want to plot outlines with no attribute shading.
 
-## Building polygons
+## Polygon Construction
 
 Analysis usually needs areas, not just points. We divide the plot into 100-metre quadrats with `st_make_grid()`, the standard way to impose a regular sampling frame, and keep only the cells that cover the stems:
 
@@ -59,7 +59,7 @@ grid <- grid[lengths(st_intersects(grid, stems)) > 0, ]
 nrow(grid)
 ```
 
-## Spatial joins
+## Spatial Joins
 
 A spatial join attaches attributes by location rather than by a shared key. `st_join()` labels each stem with the quadrat that contains it, after which the counting is ordinary `dplyr`:
 
@@ -76,7 +76,7 @@ head(per_quadrat)
 
 This point-in-polygon join is the workhorse of inventory: it is how you assign field stems to strata, plots to ownership parcels, or detections to management units.
 
-## Support
+## Spatial Support
 
 An attribute value stands in a particular relationship to the geometry it is attached to, and getting that relationship wrong is one of the most common and least visible errors in spatial analysis. The support of an attribute is the area over which it was measured or to which it applies. A stem count has each quadrat as its support; a per-hectare density refers to a hectare. Two numbers can look identical yet mean different things because their support differs.
 
@@ -98,7 +98,7 @@ Summing a density, or averaging a total, is simply wrong, and it is exactly how 
 plot(grid_join["stems_ha"], main = "Stem density (stems/ha)")
 ```
 
-## Area checks
+## Area Verification
 
 The applied heart of vector GIS in verification work is the area check: confirming that the area a project *claims* matches the area its geometry actually encloses, and that its parcels do not overlap or leave gaps. Overstated area is overstated crediting, so this is often the first quantitative finding in an audit. The tools are exactly those above, `st_area`, `st_is_valid`, `st_intersection`, applied to the project's own polygons.
 

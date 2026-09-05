@@ -14,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Elevation models
+## Digital Elevation Models
 
 Terrain is the covariate behind almost everything else in a forest. It drives
 productivity, access, erosion, and where water collects. It arrives as a digital
@@ -59,7 +59,7 @@ dim(dem)
 global(dem, range, na.rm = TRUE)
 ```
 
-### Projection distortion
+### Projection Distortion
 
 One property of the grid has to be settled before any area is quoted, because
 it silently corrupts every hydrological number that follows.
@@ -81,7 +81,7 @@ a great deal of published hydrological code. This chapter uses `cellSize()`
 throughout and reports areas after reprojection to UTM zone 36S (EPSG:32736),
 which is equal-area enough at this scale to serve as truth.
 
-## Terrain derivatives
+## Terrain Derivatives
 
 Elevation is rarely the variable of interest. What it implies, slope, aspect and
 ruggedness, is. `terrain()` derives these directly. Slope and aspect need a
@@ -111,7 +111,7 @@ plot(st_geometry(lake),  add = TRUE, border = "steelblue", lwd = 2)
 plot(st_geometry(basin), add = TRUE, border = "orangered", lwd = 1.5)
 ```
 
-## Hydraulic conditioning
+## Hydrological Conditioning
 
 Water moves downhill, so a DEM already encodes drainage. It does not encode it
 cleanly. Every DEM contains spurious depressions: cells with no lower neighbour,
@@ -141,7 +141,7 @@ hundreds of metres below its spillover point. No threshold on depth alone
 separates real basins from interpolation pits, because the two overlap in size:
 the deepest single pit in this grid is an artefact, not the lake.
 
-### Stochastic depressions
+### Stochastic Depressions
 
 Depth cannot make the distinction, but uncertainty can. A DEM cell is an
 estimate with an error, and a depression that survives being perturbed by that
@@ -185,7 +185,7 @@ be conditioned away. Running this before conditioning, rather than assuming a
 depth threshold will separate signal from noise, is the difference between a
 defensible endorheic analysis and a lucky one.
 
-### Depression breaching
+### Depression Breaching
 
 Two families of algorithm exist. Filling raises the floor of a depression until
 it overflows, which is simple but destroys the depression. Breaching carves a
@@ -227,7 +227,7 @@ unbounded.
 That asymmetry is easy to miss, and it is the single most consequential
 behaviour in this chapter.
 
-### Depression filling
+### Depression Filling
 
 A second pass with a filling algorithm normally follows, to clear whatever the
 breaching step could not reach. Wang and Liu's scan-line method
@@ -249,7 +249,7 @@ second pass is redundant here. It is retained because it costs seconds and
 because it is not redundant after a pure breaching algorithm, but the honest
 report is that it changed nothing.
 
-### Endorheic cost
+### Endorheic Basins
 
 If the conditioned surface has no depressions left, then it has no Lake Chilwa.
 The stochastic analysis established that the lake is a real basin with
@@ -295,7 +295,7 @@ depth, inundation extent and any stage-area relationship, uses the raw DEM. Both
 surface is a silent and total error: the basin whose flooding is being modelled
 has already been filled.
 
-## Flow routing
+## Flow Routing
 
 The D8 algorithm [@o1984extraction] sends all water from a cell to whichever of
 its eight neighbours lies steepest downhill. Applied across the grid it yields a
@@ -316,7 +316,7 @@ round(t_flow[["elapsed"]], 1)
 global(acc, "max", na.rm = TRUE)[1, 1]
 ```
 
-### Reading accumulation
+### Flow Accumulation
 
 The maximum accumulation on the grid is a little over 1.15 million cells. It is
 tempting to read that as the size of the Chilwa catchment, and to convert it to
@@ -354,7 +354,7 @@ outlet_xy   <- xyFromCell(lake_acc, outlet_cell)
 outlet_acc
 ```
 
-## Watershed delineation
+## Watershed Delineation
 
 That cell is the terminal pour point: the single location on which the whole
 endorheic system converges. Delineation traces the pointer raster upstream from
@@ -375,7 +375,7 @@ ws_km2  <- sum(as.numeric(st_area(ws_poly))) / 1e6
 round(ws_km2, 1)
 ```
 
-### Independent comparison
+### Independent Comparison
 
 A delineated catchment is a claim, and claims get checked. HydroSHEDS publishes
 an independent global product, HydroBASINS, derived from a different DEM by a
@@ -411,7 +411,7 @@ plot(st_geometry(basin), add = TRUE, border = "black", lwd = 1.5, lty = 2)
 plot(st_geometry(lake),  add = TRUE, col = "steelblue", border = NA)
 ```
 
-## Stream networks
+## Stream Networks
 
 A stream is a cell whose accumulation exceeds a threshold. The threshold is a
 choice, not a property of the landscape: lower it and ephemeral gullies appear,
@@ -467,7 +467,7 @@ for cartographic legibility. Neither is wrong. The comparison is only meaningful
 once both are cut to the same threshold, and a project quoting stream length
 without quoting its extraction threshold has quoted nothing.
 
-### Wetness index
+### Wetness Index
 
 Flow accumulation says how much water arrives at a cell. Slope says how fast it
 leaves. The topographic wetness index combines them as the log of the ratio, and
@@ -511,7 +511,7 @@ plot(st_geometry(st_transform(ws_poly, 3857)), add = TRUE,
 plot(st_geometry(lake), add = TRUE, col = "steelblue", border = NA)
 ```
 
-## Inundation mapping
+## Inundation Mapping
 
 Wetland accounting asks a direct question of a DEM: given a water level, what
 land floods? For Chilwa the question is not academic. The lake's area is the
@@ -523,7 +523,7 @@ delineated above, and then to the connected depression that actually contains
 the lake, found by labelling connected components. Without both, the threshold
 floods every unrelated valley in the raster.
 
-### Anchoring the datum
+### Vertical Datum
 
 The level to sweep around has to come from somewhere, and the obvious choice is
 wrong. Taking the minimum elevation inside the lake polygon gives this:
@@ -551,7 +551,7 @@ surface_m
 Six hundred and twenty-three metres, which is the elevation Lake Chilwa is
 conventionally given.
 
-### Stage and area
+### Stage and Area
 
 ```{r}
 dem_ws <- mask(dem, ws)
@@ -626,7 +626,7 @@ Confirming a predicted extent requires a water mask from imagery acquired on a
 known date, which is the subject of the activity data chapter.
 
 ::: {.verification}
-#### Under wetland methodologies {.unnumbered .unlisted}
+#### Under Wetland Methodologies {.unnumbered .unlisted}
 
 A project claiming wetland area from a DEM threshold has to defend three things,
 and a verifier should ask for all three in writing.
@@ -649,7 +649,7 @@ the threshold is a model.
 :::
 
 ::: {.verification}
-#### Alternative implementations {.unnumbered .unlisted}
+#### Alternative Implementations {.unnumbered .unlisted}
 
 `WhiteboxTools` is not the only route. The `flowdem` package wraps RichDEM
 [@barnes2014priority], whose priority-flood algorithms take almost no parameters

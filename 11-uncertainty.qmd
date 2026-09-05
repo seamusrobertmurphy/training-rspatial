@@ -16,11 +16,11 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Uncertainty rationale
+## Why Uncertainty Matters
 
 Every estimate in this book is wrong by some amount, and the discipline of verification is knowing by how much. A carbon figure without an uncertainty is not conservative, it is simply incomplete, and the crediting standards, ART-TREES, VCS, ACR, all deduct credits in proportion to how uncertain the estimate is. Reducing uncertainty is therefore worth real money, and quantifying it honestly is the auditor's core duty. This chapter builds the estimate, then its error, on the running stem data.
 
-## Carbon estimate
+## Carbon Estimate
 
 We convert diameters to aboveground biomass with a published generic hardwood equation [@jenkins2003biomass], apply the IPCC default carbon fraction of 0.47 [@ipcc2006gl], and scale to the plot area:
 
@@ -40,7 +40,7 @@ round(c(total_MgC = total_C, MgC_per_ha = C_per_ha), 1)
 
 That point estimate is the easy part. Three distinct sources of error sit beneath it: sampling error from measuring plots rather than the whole population, model error in the allometric equation, and parameter error in constants like the carbon fraction.
 
-## Sampling error
+## Sampling Error
 
 Divide the plot into quadrats and each becomes a sample of carbon density. The variation among them is the sampling uncertainty of the plot mean, summarised by the standard error and a confidence interval. If the distinction between a standard deviation and a standard error is not immediate, the [statistical primers appendix](A1-primers.qmd) covers it before you go further:
 
@@ -60,7 +60,7 @@ round(c(mean = m, se = se, lower = ci[1], upper = ci[2]), 1)
 
 The half-width relative to the mean is the number the standards care about: the wider it is, the deeper the deduction.
 
-## Measuring error
+## Measurement Error
 
 Sampling error assumed the per-tree biomass was right and asked only how well the plot represents the stand. The other half of the problem is the model itself, and to quantify that you need trees whose biomass was actually measured rather than predicted. The `tree_measurements` file holds 6,681 harvested trees across six coastal species, each with diameter, height and observed aboveground biomass, so predictions can be checked against truth.
 
@@ -128,7 +128,7 @@ round(metrics(tm$agb_kg, pred_sp), 3)
 
 Fitting one equation per species halves the relative RMSE, from about 22 per cent to about 11. Under the crediting arithmetic below, that difference is worth real money, and it required no new field data, only refusing to pool species that scale differently.
 
-## Cross-validation
+## Cross-Validation
 
 Every number in the previous section is optimistic, because the model was scored on the same trees that determined its coefficients. Out-of-sample error is what a prediction on a new tree will actually cost, and cross-validation estimates it by repeatedly holding data back [@hastie2009esl].
 
@@ -188,7 +188,7 @@ round(quantile(mc[, "rel_rmse"], c(0.025, 0.975)), 2)
 The mean relative RMSE agrees with the ten-fold figure, but the spread across repetitions is the extra information: the estimate is itself uncertain, and quoting it to three significant figures from a single split would overstate what is known. That distribution is the honest input to a deduction, and it is what the standards are asking for when they require an uncertainty estimate rather than a residual statistic.
 
 ::: {.verification}
-#### Metric to deduction {.unnumbered .unlisted}
+#### Metric to Deduction {.unnumbered .unlisted}
 
 The crediting standards each convert a relative error into forgone credits, and
 they do it differently. ART-TREES scales the half-width of a 90 per cent interval:
@@ -212,7 +212,7 @@ be understating its own deduction.
 That is the loop this chapter has been building: a metric, estimated honestly out of sample, converted into a quantity of carbon that the project does not get paid for. The arithmetic differs between registries but the logic does not, and the comparison is drawn out at the end of the chapter.
 
 ::: {.verification}
-#### Model eligibility {.unnumbered .unlisted}
+#### Model Eligibility {.unnumbered .unlisted}
 
 Where a carbon estimate comes from a remotely sensed model rather than a field
 tally, ACR's Framework for Remotely Sensed Quantification of Forest Carbon
@@ -271,7 +271,7 @@ plots were drawn. Eligibility is a random variable, and a project that installs
 the minimum viable number of plots is buying a coin toss.
 :::
 
-## Monte Carlo propagation
+## Monte Carlo Propagation
 
 Sampling error is only part of the story; the allometric model and the carbon fraction are uncertain too, and their errors compound. When error propagates through a non-linear function like $a\,D^{b}$, the clean way to combine sources is Monte Carlo simulation: draw the uncertain inputs from their distributions many times, recompute the whole estimate each time, and read the spread of results [@ipcc2006gl]. The [statistical primers appendix](A1-primers.qmd) sets out why the algebraic alternative, combining relative errors in quadrature, is the special case rather than the general rule, and how many iterations the simulation needs.
 
@@ -295,7 +295,7 @@ hist(sim, breaks = 40, col = "grey80", border = "white",
 abline(v = mc_ci, col = "firebrick", lwd = 2, lty = 2)
 ```
 
-## Conservative estimates
+## Conservative Estimates
 
 The standards translate uncertainty into a deduction. A common rule is that when the half-width of the 90% or 95% interval exceeds a threshold (often 15% of the mean), credits are issued against the conservative lower bound rather than the mean. Computing the uncertainty percentage and the conservative estimate is a few lines:
 
@@ -309,7 +309,7 @@ round(c(uncertainty_pct = unc_pct,
 
 If the uncertainty percentage clears the threshold, the gap between the mean and the conservative figure is credit the project forgoes for being imprecise, the direct financial incentive to measure better.
 
-## Area-adjusted accuracy
+## Area-Adjusted Estimation
 
 The Bolivia land-cover work raises the same question for areas rather than carbon: a class area read straight off a map inherits the map's classification errors, and good practice adjusts it and attaches a confidence interval [@olofsson2014gpg]. This is the LULC counterpart of the carbon deduction, and it uses the confusion matrix from the disturbance chapter. We take mapped forest and non-forest areas and an error matrix, and compute the area-adjusted estimate:
 
@@ -335,7 +335,7 @@ round(c(mapped_forest_ha  = A["forest"],
 
 The adjusted area differs from the mapped area because the map commits and omits forest at rates the reference sample reveals, and the confidence interval is the honest precision of the figure. A project that reports only the mapped area, with no adjustment and no interval, has reported a number no auditor can accept. The full Bolivia workflow applies this class by class across the national legend; the estimator is the one above.
 
-## Reported against adjusted
+## Reported and Adjusted
 
 One year in isolation understates what this correction does. A crediting period runs for a decade, the adjustment is applied every year, and the interesting quantity is the gap between what a project reports and what it can defend. We run the same estimator across an eight-year record of mapped forest loss. Each year has its own reference sample and its own error rates, and both degrade towards the present, because recent imagery has had less interpretation effort and the map is harder to validate close to the reporting date.
 
@@ -396,7 +396,7 @@ Over the whole period the reported total overstates the defensible total by arou
 
 Notice which of the two is easier to fix. The bias is corrected by the estimator itself, at the cost of running a reference sample, and once corrected it is gone. The interval width is set by how many reference points sit in each stratum, and it narrows only as the square root of that effort. The widening band in the last two years is not a modelling failure; it is a direct readout of thin reference data, and the only remedy is more interpretation. This is the whole argument of the chapter in one picture. Uncertainty is not a statistical afterthought appended to a result. It is a budget, it has line items, and each line has a known price.
 
-## Registry deductions
+## Registry Deductions
 
 You now have an uncertainty percentage estimated honestly. What it costs depends entirely on which registry the project is going to, and the differences are larger than most practitioners expect. Three rules cover most of the market.
 
@@ -439,7 +439,7 @@ round(uu[which(acr_ifm(uu) > art_trees(uu))[1]], 2)   # where ACR becomes the ha
 Below about fifteen per cent uncertainty ACR is the most forgiving of the three and ART the least; above it the ordering reverses and ACR becomes much the harshest. A project choosing a registry on the strength of its uncertainty deduction needs to know which side of that line it sits on, and a verifier reading a comparison written by a project developer should check which side the developer assumed.
 
 ::: {.verification}
-#### Rule sources {.unnumbered .unlisted}
+#### Rule Sources {.unnumbered .unlisted}
 
 Check the version before relying on any of this. Registry documents move, and
 several of these were revised in the last two years.
@@ -473,7 +473,7 @@ remain live inside Verra at the same time.
 :::
 
 ::: {.verification}
-#### Sampling versus counting {.unnumbered .unlisted}
+#### Sampling and Counting {.unnumbered .unlisted}
 
 VM0048 sets a resolution rule that looks odd until you see the reasoning. The
 wall-to-wall forest cover benchmark map must be at 30 m or finer and *must not

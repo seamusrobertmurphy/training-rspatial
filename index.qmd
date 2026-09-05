@@ -13,7 +13,7 @@ Carbon projects are audited on numbers that come out of a geographic information
 
 This book is written to close that gap. It teaches the spatial and statistical methods that forest carbon measurement and verification actually rests on, from reading a shapefile to reporting an area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly. It assumes an introductory course in statistics and no prior GIS.
 
-## Target audience {.unnumbered}
+## Intended Readership {.unnumbered}
 
 The book is written for two audiences at once, and it is honest about which parts belong to whom.
 
@@ -23,7 +23,7 @@ Interleaved with it are verification tracks, set off in tinted boxes. These carr
 
 A reader who skips every verification track still gets a complete book. Nothing in the main narrative depends on what is inside them. A reader who wants only the compliance material can read the tracks alone, though the methods will be less use without the chapters around them.
 
-## Chapter outline {.unnumbered}
+## Book Structure {.unnumbered}
 
 The first six chapters build the spatial toolkit, each teaching a foundational concept and closing on a worked problem from a real verification project.
 
@@ -49,7 +49,7 @@ The last three quantify and close.
 
 An appendix covers the surrounding discipline: reproducible runtimes, spatial-data protocols, and registry practice.
 
-## Input datasets {.unnumbered}
+## Input Datasets {.unnumbered}
 
 One plot anchors the book: the Smithsonian ForestGEO census at the Conservation Biology Institute in Front Royal, Virginia, recording 38,517 living stems across 39 genera in a 400 by 640 metre footprint, each identified to species and measured for diameter. It carries the vector, allometry, biomass and error chapters.
 
@@ -66,7 +66,7 @@ The spatial patterns chapter runs on the published coordinates of a post-fire co
 Published allometric equations and a set of oaks with biomass computed five ways support the allometry chapter, because the cost of choosing an equation cannot be shown without several equations.
 
 ::: callout-note
-## Secondary sources
+## Secondary Sources
 
 Every dataset above is real and is committed to the repository, and two scripts under `data-raw/` rebuild the derived ones from their sources. Within-plot coordinates for the ForestGEO stems were generated across the real footprint because the source census table omitted them, so those maps are representative rather than a survey of record; this is stated again where they are used.
 
@@ -75,7 +75,7 @@ A small number of illustrative surfaces are constructed rather than observed, in
 The keystone closings and verification tracks describe workflows from real verification projects, and reproduce their analytical core on this shared data.
 :::
 
-## User guides {.unnumbered}
+## User Guides {.unnumbered}
 
 Each chapter is a self-contained lesson that builds on the last. Code is shown in full and is meant to be run; the fastest way to learn is to work through it line by line and then attempt the exercises.
 

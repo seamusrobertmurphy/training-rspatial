@@ -16,13 +16,13 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Extent term
+## The Extent Term
 
 The emission factors chapter dealt with the greenhouse gas consequence per hectare. This chapter deals with the hectares. Activity data is the extent and location of whatever the factor is being applied to: land deforested, land converted, land brought under a new management regime. It is the term spatial analysis is actually for.
 
 It is also the term most likely to be produced by a classification, and therefore the term that inherits a classifier's errors. The disturbance chapter built a two-class change map and validated it. Real activity data is rarely two classes, the classes of interest are usually rare, and both of those facts change the problem in ways that a binary example conceals.
 
-## Three approaches
+## Three Approaches
 
 The IPCC distinguishes three ways of collecting activity data, and the distinction is about spatial explicitness rather than accuracy of measurement [@ipcc2006gl].
 
@@ -34,7 +34,7 @@ Approach 3 is spatially explicit: every parcel or pixel carries its own land-use
 
 Only Approach 3 supports the parcel-level transition clocks that the emission factors chapter showed are necessary to avoid double counting across overlapping interventions, and only Approach 3 lets you stratify emission factors by anything you can map. It is also the only one that produces a classification, and therefore the only one with classification error to worry about. That is not a drawback. Approaches 1 and 2 have the same errors; they simply have no mechanism for measuring them.
 
-## Scene classification
+## Scene Classification
 
 We build a four-class scene over the plot footprint: forest, a cleared block, a patch of regrowth, and water along the southern edge. Four spectral bands are simulated with deliberate overlap between forest and regrowth, because that is where real classifiers fail and a scene with separable classes teaches nothing.
 
@@ -76,7 +76,7 @@ round(100 * table(cls) / ncell(r), 1)
 
 Regrowth covers under five per cent of the scene. That is the situation activity data is almost always in: the class you are being paid to detect is the rare one, and the class that dominates the accuracy statistics is the one nobody is asking about.
 
-## Rare-class trap
+## Rare Class Sampling
 
 The obvious way to collect training data is to sample the scene at random, which gives each class a share proportional to its area.
 
@@ -107,7 +107,7 @@ Ninety-seven per cent overall accuracy, which in a project report would look lik
 
 This is why the standards require class-level accuracies rather than an overall figure, and why they require *both* user's and producer's accuracy to clear the threshold. A single number can always be gamed by a class that is common and easy.
 
-## Reweighting limits
+## Limits of Reweighting
 
 The standard response is to stratify: sample equally from each class so the rare one is properly represented. Compare four designs, holding the classifier fixed.
 
@@ -129,7 +129,7 @@ Only the last row passes. What fixed it was not a cleverer allocation of the sam
 
 The dual threshold in the standards exists precisely to prevent the trade. A project may not buy producer's accuracy with user's accuracy, because a map that over-calls deforestation is as unusable as one that misses it, just in the opposite fiscal direction.
 
-## Probability surfaces
+## Probability Surfaces
 
 A classifier that returns only a label discards most of what it knows. Asking for probabilities gives a surface per class, and the shape of those surfaces is where the useful diagnostics live.
 
@@ -171,7 +171,7 @@ round(100 * sum(!correct & margin <= quantile(margin, 0.1)) / sum(!correct), 1)
 
 Correct pixels carry a mean margin close to twice that of incorrect ones, and more than three quarters of all errors fall in the lowest-margin tenth of the scene. The margin is therefore a usable predictor of error without any reference data at all, which is what makes the next step possible.
 
-## Sample allocation
+## Sample Allocation
 
 If errors concentrate where the margin is low, then the most informative place to collect another training point is where the classifier is least sure. This is active learning, and in an operational setting it is the difference between a validation campaign that improves the map and one that merely measures it.
 
@@ -187,7 +187,7 @@ round(100 * table(cls[candidates]) / length(candidates), 1)
 The three hundred least-certain pixels are heavily enriched in regrowth relative to its share of the scene. A crew sent to those locations returns labels for the class the map is failing on, which is exactly what a proportional random sample would not have delivered. Note that these points are useful for *training* and are not a valid basis for *accuracy assessment*: a sample chosen because it is difficult is not representative, and using it to estimate accuracy would understate the map's quality. Accuracy needs a probability sample, which is the subject of the uncertainty chapter.
 
 ::: {.verification}
-#### VM0048 map requirements {.unnumbered .unlisted}
+#### VM0048 Map Requirements {.unnumbered .unlisted}
 
 Verra's activity data module sets class-level thresholds rather than an overall
 accuracy figure, and the reasoning is the one demonstrated above.
@@ -214,7 +214,7 @@ Sources: VMD0055 v1.1, accuracy assessment of the jurisdictional FCBM.
 :::
 
 ::: {.verification}
-#### Operational stack {.unnumbered .unlisted}
+#### Operational Stack {.unnumbered .unlisted}
 
 Production activity data work is rarely done with a raster and a random forest in
 memory. The `sits` package organises satellite time series into regularised data

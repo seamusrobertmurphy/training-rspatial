@@ -1,5 +1,5 @@
 ---
-title: "Repducibility & Version Controls"
+title: "Reproducibility and Version Control"
 aliases:
   - A-automation-registries.html
 execute:
@@ -11,11 +11,11 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Beyond analysis
+## Beyond Analysis
 
 A defensible result is only half the job. The other half is the discipline around it: making the work reproducible, governing the data to a recognised standard, and delivering credits into a registry that will accept them. This appendix sketches that surrounding practice. Its code is illustrative and is not run at render time.
 
-## Reproducible runtimes
+## Reproducible Runtimes
 
 The analysis in this book runs today; the test is whether it runs in three years, on another machine, for a reviewer who was not there. Two habits carry most of that weight. Pin your package versions so an update cannot silently change a result, and script the whole pipeline end to end so there are no undocumented manual steps.
 
@@ -35,7 +35,7 @@ source("02-process.R")      # projection, extraction, modelling
 source("03-report.R")       # render outputs with quarto::quarto_render()
 ```
 
-## Data protocols
+## Data Protocols
 
 Every number inherits the quality of the survey that produced it. Standardised digital capture, enforced schemas, and a logged accuracy estimate on every GPS fix are what let an auditor trust a plot table at all. The governing reference is the geospatial data-quality framework of the ISO 19100 series, which defines the quality elements, completeness, logical consistency, positional accuracy, thematic accuracy, an auditor should expect to see documented. In practice this means a QA/QC step that checks geometry validity, coordinate ranges, attribute domains, and duplicate records before any analysis begins.
 
@@ -52,6 +52,6 @@ stopifnot(
 
 ART-TREES, Verra (VCS), and ACR each publish methodologies, uncertainty and accuracy requirements, and validation and verification procedures that a project must meet before issuance. The analytical chapters of this book map directly onto their requirements: the area check onto boundary and area rules, the accuracy assessment onto the mandatory confusion matrix, the Monte Carlo onto the uncertainty deduction, the fire-emissions chain onto the reporting equations. Knowing which registry a project targets, and reading its methodology as the specification the analysis must satisfy, is the final piece of the auditor's craft.
 
-## Additional resources
+## Additional Resources
 
 The workflows referenced here, standard operating procedures, demonstration repositories with `renv` and version control, safeguards and QA/QC templates, and data-service automation, are where the habits of this book become an operational system. The analysis is the visible part; the reproducibility, governance, and registry alignment are what make it hold up under scrutiny.

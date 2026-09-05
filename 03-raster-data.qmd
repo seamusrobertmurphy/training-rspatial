@@ -14,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Raster model
+## Raster Data Model
 
 A raster represents a surface as a grid of equal cells, each holding one value. Where vector data draw discrete objects, rasters describe things that vary continuously across space, elevation, reflectance, temperature, canopy height, and the things we derive from imagery: land cover, disturbance, biomass. The data model is nothing more than a matrix plus the georeferencing that ties cell (1,1) to a place and fixes the cell size. `terra` is the modern package for it [@hijmans2024terra].
 
@@ -38,7 +38,7 @@ ba
 
 The printout is the raster data model made concrete: rows and columns, cell size, extent, CRS, and the value range. Each 10-metre cell now holds the total stem basal area within it, a crude but genuine biomass proxy.
 
-## Inspecting rasters
+## Raster Inspection
 
 The same handful of accessors describe any raster:
 
@@ -49,7 +49,7 @@ global(ba, c("min", "max", "mean"))            # value range
 plot(ba, main = "Basal area per 10 m cell (m²)")
 ```
 
-## Raster algebra
+## Map Algebra
 
 Because a raster is a grid of numbers, arithmetic on rasters is arithmetic on cells. This is map algebra, and it is why continuous surfaces are so easy to work with. Converting basal area to an aboveground-carbon proxy is one expression applied to every cell at once:
 
@@ -79,7 +79,7 @@ levels(zones) <- data.frame(id = 1:3, class = c("sparse", "moderate", "dense"))
 plot(zones, main = "Stocking classes")
 ```
 
-## Extraction
+## Value Extraction
 
 The bridge from raster back to field data is extraction: reading the raster value at each point location. `terra::extract()` samples the surface wherever a plot, a tree, or a sample sits, which is how gridded covariates enter a plot-level model:
 
@@ -90,7 +90,7 @@ extract(ba, pts)
 
 Extraction and reclassification are the two operations that connect the raster and vector worlds, and everything applied in the rest of the book uses one or both.
 
-## Area accounting
+## Area Accounting
 
 Remote-sensing verification turns imagery into a land-use / land-cover (LULC) map and then reasons about it: how much forest, how much converted, how the classes change through time. The Bolivia national land-cover work does this at country scale, and the mechanics are the reclassification and area accounting shown here, which we later carry into the uncertainty chapter to attach a confidence interval to each class area.
 

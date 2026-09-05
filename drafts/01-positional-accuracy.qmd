@@ -22,7 +22,7 @@ library(sf)
 library(dplyr)
 ```
 
-## Finding a system
+## Coordinate Reference Systems
 
 *Argument. A coordinate is a claim about a model of the Earth, not a fact about
 the ground. Kept short and concrete: look one up, read one, change one, and know
@@ -49,7 +49,7 @@ st_bbox(stems_utm)
 *Beat: epsg.io as the lookup. What the `.prj` sidecar holds, which is one system
 in well-known text, the present one, and never a history.*
 
-## The shape underneath
+## Geoid and Ellipsoid
 
 *Argument. Every planar measurement is a projection of a curved surface onto a
 flat one, with a distortion you chose. The geoid is the visual aid that carries
@@ -65,7 +65,7 @@ a datum is and it earns its space, but it does not get more than a page.*
 WGS 84 ensemble carries a stated accuracy of about two metres that almost nobody
 reads.*
 
-## Measuring an area
+## Area Measurement
 
 *Argument. This is the applied core. A claimed area and a mapped area disagree,
 and the disagreement is the lesson.*
@@ -92,13 +92,13 @@ first question is not whether the survey is wrong but whether the thing being
 measured is the boundary or a box drawn round it, because that choice alone moved
 the answer by more than a hectare.*
 
-## Checking a submission
+## Boundary Verification
 
 *Argument. Area non-compliance is the most common finding an auditor raises and
 it is raised before any carbon is calculated.*
 
 ::: callout-warning
-## Data not yet committed
+## Pending Data
 
 This section runs on the a public dataset ACR submission in
 `training/area-verification`, which is outside this repository. Before this chapter can
@@ -127,7 +127,7 @@ boundary, stratum and harvest unit, then test the difference against materiality
 Area and overlap operations on an invalid polygon return nonsense without
 erroring, which is why validation precedes measurement and not the reverse.*
 
-## Overlap and ownership
+## Overlap and Ownership
 
 *Argument. Nine submissions in ten fail this on the first pass. Any positive
 intersection is land claimed twice.*
@@ -150,7 +150,7 @@ unions instead readmits every excluded parcel, because a pixel excluded by the
 slope mask survives in the roads residual, and the belt comes out larger in a
 direction that suits the project.*
 
-## The inheritance path
+## Transformation Provenance
 
 *Argument. The chain of reprojections is lost because nobody writes it down, not
 because the container cannot hold it. That is the defensible version.*
@@ -162,7 +162,7 @@ polygon against multipolygon ambiguity. Its `gpkg_metadata` table can hold ISO
 19115 records, and ISO 19115-1:2014 does define a lineage element. But lineage is
 only there if somebody writes it, and almost nobody does.*
 
-## The library underneath
+## Geometry Engines
 
 *Argument. Two analysts measure the same polygon and get different areas. A
 reported area without its software environment stated is not reproducible.*
@@ -177,7 +177,7 @@ introduced the datum ensemble and made late-binding the default, which is why th
 same request can resolve differently across versions. This is why the
 area-verification workflow ends on a runtime log rather than on a number.*
 
-## Plot centres
+## Plot Monumentation
 
 *Argument. Positional accuracy connects to the carbon number here, and it scales.*
 
@@ -187,7 +187,7 @@ relocate a centre and sets up three metres away measures a different set of
 trees. Because plot means are extrapolated across the whole project, that error
 does not stay on the plot, it multiplies by the expansion factor.*
 
-## Assessing a fix
+## GNSS Accuracy Assessment
 
 *Argument. Report a positional accuracy as a distribution, not as a single
 number.*
@@ -197,7 +197,7 @@ correction does and what it costs. How to run a check against a known control
 point. Source material in `GPS-training-material`, `survey-tools` and the
 KoBoToolbox deployment.*
 
-## What ground truth costs
+## Reference Data
 
 *Argument. Interpreted ground reference points are the most valuable and least
 glamorous data product in remote sensing.*
@@ -208,7 +208,7 @@ twelve secondary classes, built at Boston University under Woodcock and Friedl
 and published in Scientific Data in 2023. Why it took years and a large team, and
 why that effort is the foundation of every accuracy statement later in this book.*
 
-## The plane you compute on
+## Planar and Spherical
 
 *Argument. Closing caveat and the hinge into the rest of the book.*
 
@@ -249,7 +249,7 @@ thread this book follows to the cube. See `publishing/book-spine.md`.*
 *To be written. Six to eight, each closing on a number a verifier would accept.*
 
 ::: callout-note
-## Open decisions
+## Open Decisions
 
 **Does this chapter split?** Ten sections runs 35 to 45 printed pages, at the top
 of the series range. The clean line is after "The library underneath", leaving

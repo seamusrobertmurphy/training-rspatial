@@ -65,3 +65,59 @@ write.csv(val[, c("id", "cover", "longitude", "latitude")],
 
 cat("wrote", nrow(val), "validation points and",
     nrow(legend), "legend classes\n")
+
+# ---------------------------------------------------------------------------
+# Multi-band Sentinel-2 surface reflectance over the same 20LMR window, added
+# 5 September 2026 for the optical chapter, which needs the bands an index is
+# built from and not only the finished index.
+#
+# Two dates, both Level 2A surface reflectance, both stored as signed integers
+# scaled by 10,000 exactly as the NDVI is.
+#
+#   2022-07-16  the clear dry-season reference date the committed NDVI is from
+#   2022-09-02  the same ground under biomass-burning smoke, which raises the
+#               blue band 3.6-fold while leaving the near infrared almost
+#               unchanged, so every index built on the visible bands moves
+#               without anything happening on the ground
+#
+# Ten bands are kept and the three sits ships as finished indices are not, since
+# the chapter computes those itself. Band centres and native ground sample
+# distances follow the Sentinel-2 MSI specification and are written to
+# data/sentinel2_bands.csv so the chapter can state support rather than assert
+# it. The 20 m grid here is the sits harmonisation, not the native resolution.
+
+s2_bands <- c("B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12")
+
+s2_dates <- c("2022-07-16", "2022-09-02")
+
+for (d in s2_dates) {
+  files <- sd_path("extdata/Rondonia-20LMR",
+                   sprintf("SENTINEL-2_MSI_20LMR_%s_%s.tif", s2_bands, d))
+  stopifnot(all(file.exists(files)))
+  stack <- rast(files)
+  names(stack) <- s2_bands
+  out <- sprintf("data/rondonia_s2_%s.tif", d)
+  writeRaster(stack, out, overwrite = TRUE, datatype = "INT2S",
+              gdal = c("COMPRESS=DEFLATE", "PREDICTOR=2", "ZLEVEL=9",
+                       "TILED=YES", "NUM_THREADS=ALL_CPUS"))
+  cat("wrote", out, round(file.size(out) / 1e6, 1), "MB\n")
+}
+
+# Band metadata. Centre wavelength and full width at half maximum were read on
+# 5 September 2026 from the Microsoft Planetary Computer STAC collection
+# description for sentinel-2-l2a, field eo:bands, which serves the ESA MSI
+# values in micrometres and is converted to nanometres here. gsd_m is the native
+# ground sample distance of the band, which is not the 20 m grid these files sit
+# on: sits resampled every band to a common 20 m raster, so the 10 m bands were
+# coarsened and nothing was sharpened.
+bands <- data.frame(
+  band      = s2_bands,
+  name      = c("Blue", "Green", "Red", "Red edge 1", "Red edge 2",
+                "Red edge 3", "NIR", "NIR narrow", "SWIR 1", "SWIR 2"),
+  centre_nm = c(490, 560, 665, 704, 740, 783, 842, 865, 1610, 2190),
+  fwhm_nm   = c(98, 45, 38, 19, 18, 28, 145, 33, 143, 242),
+  gsd_m     = c(10, 10, 10, 20, 20, 20, 10, 20, 20, 20))
+
+write.csv(bands, "data/sentinel2_bands.csv", row.names = FALSE)
+
+cat("wrote data/sentinel2_bands.csv,", nrow(bands), "bands\n")

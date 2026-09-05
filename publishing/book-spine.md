@@ -108,3 +108,49 @@ The author has sourced two ebooks that present geospatial data objects
 effectively without overwhelming the reader, and wants chapter 1 aligned with
 them. Neither was supplied with the dictation. Names or paths needed before the
 alignment can be done.
+
+## Amendment, 5 September 2026
+
+Dictated while chapter 2 was being drafted. The thread above is unchanged and
+still runs from chapter 1 to the cube. What changes is the terminus.
+
+The closing message of the book is **disturbance ecology**, and the cube is the
+instrument that makes it arguable rather than the destination. By the final part
+the reader has a spatio-temporal data cube fit for spatial modelling, and the
+question the book then asks of it is whether a forest carbon landscape has
+states, whether it can pass between them, and whether a monitoring system built
+from these observations could tell. That takes the argument into bifurcation and
+tipping behaviour, regime shift in ecosystem change and forest carbon flux, and
+Markov chain Monte Carlo as the machinery for inference about a dynamical system
+observed with error.
+
+That does not displace the design-based against model-based distinction after
+Pebesma. It subsumes it. Asking whether a system has changed regime is a
+question about what the data can support, and the honest answer needs the
+inferential frame the earlier chapters built. The final part therefore closes on
+both, and the sentence the reader should be able to say at the end is that they
+know the geometry, the support, the inferential frame, and what all three
+together permit them to claim about whether the forest is the same forest.
+
+The seed is planted in chapter 2, section 2.8, where the beetle and fire
+signatures are introduced as measurements and the closing debate is named
+without being attempted. Every disturbance chapter between there and the end
+inherits the obligation to keep that thread live.
+
+Two consequences follow for the outline and both need the author's decision.
+
+The book's own library already holds the material. `chaos-in-beetle-outbreaks`
+attempts an empirical bifurcation diagram for mountain pine beetle across eight
+British Columbia regions spanning 6.7 degrees Celsius of mean annual
+temperature, built from 1.17 million aerial survey polygons since 1961, and its
+central result is that the archive supplies two period levels at 32.5 and 21.7
+years whose ratio is 1.5, so a cascade needing at least three levels in ratios
+near two is not detectable in 65 annual observations. That is an argument about
+support seen from the temporal side and it belongs to this book's spine
+exactly.
+
+And the seventeen-chapter outline as briefed has no chapter that carries the
+dynamical-systems argument. It is currently distributed across chapters 12, 13
+and the final part. Either one of the last chapters takes it explicitly, or the
+subtitle and the outline going to Elsevier promise something the manuscript does
+not deliver.

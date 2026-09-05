@@ -14,7 +14,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Disturbance screening
+## Disturbance Screening
 
 A verifier's central remote-sensing task is to find where the forest changed
 between two dates, and to decide what caused it. The screening is not a
@@ -52,7 +52,7 @@ The NDVI rasters store the index multiplied by ten thousand, which is why the
 division appears above. Reading them raw yields indices in the thousands and
 every threshold in this chapter silently fails to fire.
 
-## Spectral indices
+## Spectral Indices
 
 Three indices carry most operational disturbance screening, and they answer
 different questions.
@@ -81,7 +81,7 @@ convention of the Monitoring Trends in Burn Severity programme. There is no deep
 reason for the inconsistency; it is historical, and it has to be checked against
 the source of any published threshold before that threshold is applied.
 
-## Threshold selection
+## Threshold Selection
 
 Published severity breaks exist for each index. The ones in operational use,
 drawn from the burn severity literature and from forest health screening
@@ -97,7 +97,7 @@ These are defaults, not constants. Treating them as constants is the most
 common failure in disturbance screening, and the way to see why is to measure
 what a threshold actually catches.
 
-### Class separation
+### Class Separability
 
 The land-cover map labels each pixel, so the NDVI distribution of each class can
 be read directly. This is the empirical basis a threshold ought to rest on:
@@ -163,7 +163,7 @@ a falling false-positive rate on forest, from 2.5 per cent down to 0.5. That is
 a real gain, and it is why the tight thresholds are popular: they produce clean
 maps. Clean is not the same as correct.
 
-### Histogram diagnostic
+### Distributional Diagnostics
 
 Since defaults cannot be trusted, the threshold has to be read off the data. The
 diagnostic is the histogram of the difference image, and it supports three
@@ -191,7 +191,7 @@ cloud shadow, senescence, or view-angle effects. The correct response is to
 rebuild the composite with a tighter cloud filter or a shifted date window, not
 to classify it.
 
-## Composite construction
+## Composite Construction
 
 The threshold problem is downstream of a compositing problem, and three
 practical rules do more for accuracy than any amount of threshold tuning.
@@ -214,7 +214,7 @@ without harmonising propagates a spurious index difference of around 0.04 across
 the entire project area, which is a third of the way to the low severity break
 before any real change has occurred.
 
-## Attribution
+## Agent Attribution
 
 Detecting loss is half the task. Deciding its cause determines whether it is a
 reversal the project must account for, a natural disturbance that may be
@@ -232,7 +232,7 @@ The third row is the one most often over-read. Moisture stress on its own is not
 disturbance, and classifying it as such without corroboration produces the false
 positives described above.
 
-### Edge geometry
+### Edge Geometry
 
 The most reliable attribution cue is the shape of the patch. Anthropogenic
 clearing follows property and operational boundaries, so it has straight edges,
@@ -283,7 +283,7 @@ being averaged, and a screening workflow that automates it into a threshold will
 find nothing. Geometry raises or lowers a prior on a specific polygon. Records
 settle it.
 
-## Risk mapping
+## Risk Mapping
 
 Where disturbance is *likely* is a different question from where it happened,
 and it is the one that drives a baseline. Under VM0048 and the associated
@@ -314,7 +314,7 @@ risk_clear <- 1 - normalise(dist_clear)
 Both are inverted, because risk rises as distance falls. Forgetting the
 inversion produces a map that is exactly wrong and looks entirely plausible.
 
-### Index weights
+### Index Weighting
 
 The covariates are combined as a weighted sum. A published implementation uses
 these weights:
@@ -349,7 +349,7 @@ global(risk, quantile, probs = c(0.05, 0.5, 0.95), na.rm = TRUE)
 plot(risk, col = hcl.colors(50, "Inferno"), mar = c(2, 2, 2, 4))
 ```
 
-### Risk allocation
+### Risk Allocation
 
 The risk surface is relative, not absolute. It becomes a baseline only when a
 quantity of expected loss is distributed across it. The allocation rule assigns
@@ -384,7 +384,7 @@ will be lost, and if the totals do not close the implementation is broken.
 Everything about *how much* comes from the historical rate, which the baseline
 chapter treats, and everything about *where* comes from the risk index above.
 
-## Leakage belts
+## Leakage Belts
 
 Activity displaced outside a project boundary is leakage, and it is assessed on a
 belt drawn around the project. The rules are prescriptive: a belt of a stated
@@ -421,7 +421,7 @@ direction that suits the project. A verifier reproducing a leakage area should
 check the set operation before checking the arithmetic.
 
 ::: {.verification}
-#### Standards divergence {.unnumbered .unlisted}
+#### Standards Divergence {.unnumbered .unlisted}
 
 Two families of requirement apply to the material in this chapter, and they rest
 on different philosophies. Treating them as interchangeable misrepresents both.

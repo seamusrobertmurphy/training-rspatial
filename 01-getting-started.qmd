@@ -14,13 +14,13 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Reproducibility
+## Reproducible Analysis
 
 An audit stands or falls on whether someone else can reproduce the number. A spreadsheet built with forty manual clicks cannot be re-run, cannot be reviewed line by line, and cannot be trusted a year later when the inputs have changed. A script can. This is the reason to do spatial work in R: every decision, from the projection you chose to the buffer distance you applied, is written down and repeatable.
 
 R is a free, open-source language with a mature ecosystem for geographic data. In one session you can read a shapefile a surveyor sent you, pull an elevation model from an open server, overlay the two, extract terrain at your field plots, fit a model, and export a map, without leaving the environment or paying for a licence. For a forest-carbon or agriculture auditor that means the whole chain from raw data to reported estimate lives in one reviewable document. This course uses the modern R-spatial stack, built on two packages that have become the standard tools of the field [@pebesma2018sf; @hijmans2024terra].
 
-## Software stack
+## Software Environment
 
 You will meet these packages throughout the book. Install them once before you begin.
 
@@ -54,7 +54,7 @@ library(dplyr)
 
 The messages `sf` and `terra` print on loading name the versions of GDAL, GEOS and PROJ you are linked against. Note them: a projection or geometry result can occasionally differ between library versions.
 
-## Projects
+## Project Organisation
 
 Before loading data, put your work in an RStudio Project, a folder with an `.Rproj` marker. It fixes two things that otherwise cause endless confusion: it sets the working directory to the project root, and it lets you refer to data with short relative paths like `data/scbi_stems.csv` instead of a full path tied to your machine. A tidy layout looks like:
 
@@ -68,12 +68,12 @@ training-rspatial/
 
 With a project open, every path in this book that begins with `data/` resolves correctly.
 
-## Course dataset
+## Anchor Dataset
 
 One dataset runs through the whole course: a mapped forest-dynamics plot, modelled on the Smithsonian ForestGEO plot at the Conservation Biology Institute in Front Royal, Virginia. Every stem in a 400 by 640 metre plot is stem-mapped, identified to species, and measured for diameter. It is an ideal teaching set because it is large, real in structure, and every tree carries a location.
 
 ::: callout-note
-## Data provenance
+## Data Provenance
 
 The stem list (species, diameter) follows the published ForestGEO census used in the companion uncertainty book. The within-plot coordinates were generated across the real plot footprint because the source census table omitted them, so the map is representative rather than a survey of record. Terrain, imagery and LiDAR layers in later chapters are simulated over the same footprint for a clean, always-runnable progression, and every synthetic layer says so where it is built.
 :::
@@ -99,11 +99,11 @@ stems |>
 
 Diameters run from saplings at 1 cm to canopy trees near a metre, and a handful of genera dominate the stem count. That is the size and composition structure every biomass and carbon calculation later in the book will rest on.
 
-## Vector and raster
+## Vector and Raster
 
 Spatial data come in two great families, and knowing which you hold is the first decision in any analysis. Vector data represent discrete objects by their geometry: a tree is a point, a road a line, a stand boundary a polygon, each carrying attributes in a table. Raster data represent a continuous surface as a grid of equal cells, each holding one value: elevation, reflectance, canopy height. Our stems are vector; the elevation and imagery we bring in later are raster. Most real analysis moves between the two, and the middle chapters of this book are about doing that cleanly.
 
-## First map
+## First Map
 
 The CSV knows nothing about geography yet: `lon` and `lat` are just numbers. `sf` turns them into geometry by naming the coordinate columns and the coordinate reference system, here WGS 84 longitude/latitude, whose EPSG code is 4326:
 
@@ -124,7 +124,7 @@ plot(canopy["dbh"], pch = 19, cex = 0.5, main = "Stems ≥ 20 cm DBH")
 
 There is the plot: canopy trees scattered across the footprint, shaded by diameter. From here the course is about doing this properly.
 
-## Coordinate checks
+## Coordinate Checks
 
 The first thing to do on any real project is not analysis but a coordinate sanity check. A layer whose CRS is wrong, or missing, will silently misplace every downstream result, and the error is invisible on a plot that looks fine on its own axes. Two questions answer it: does the layer declare a CRS, and does it land where it should on Earth?
 

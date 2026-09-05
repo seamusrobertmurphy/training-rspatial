@@ -16,7 +16,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Counterfactual accounting
+## Baseline Accounting
 
 Every chapter so far has measured something. This one does not, and that is the difficulty. A carbon credit is issued for the difference between what happened and what would have happened otherwise, and the second term is a counterfactual: a quantity that by construction cannot be observed, and against which the project's performance is scored.
 
@@ -24,7 +24,7 @@ The baseline is that counterfactual, expressed as a rate. It is the single most 
 
 That combination, high leverage and unfalsifiability, explains almost every feature of how the standards handle baselines. Read the rules as a forecasting method and they look crude. Read them as anti-gaming devices and they are carefully built.
 
-## Baseline versus forecast
+## Baseline and Forecast
 
 The temptation is to treat baseline construction as a prediction problem: model historical deforestation, extrapolate, and call the projection the baseline. Every major standard declines to do this, and the reason is worth demonstrating rather than asserting.
 
@@ -83,7 +83,7 @@ A proponent free to fit a trend and choose the window has been handed a dial. No
 
 Mandating an average removes the dial. It is a worse forecast and a far better rule, and the distinction between those two things is the whole of baseline design.
 
-## Standard requirements
+## Standard Requirements
 
 Two of the major programmes, arrived at independently, converge on almost the same structure.
 
@@ -91,7 +91,7 @@ Under ART-TREES, the crediting level is the mean of a five-year historical refer
 
 Neither fits a curve. Both fix the window length in advance so it cannot be chosen after the fact. Both require the reference period to end before crediting begins.
 
-## Ratchet mechanism
+## Ratchet Mechanism
 
 ART adds a device that is easy to miss and does a great deal of work. An updated crediting level may not be higher than the one it replaces. If the recomputed five-year mean comes out above the previous level, the previous level stands.
 
@@ -111,7 +111,7 @@ In the second period the recomputed mean rises to 4,192 and the ratchet holds th
 
 This is not a statistical adjustment and does not pretend to be. It is a one-way valve, and its purpose is to prevent a jurisdiction from being rewarded for a bad five years. Without it, a period of high deforestation raises the counterfactual and every subsequent year of ordinary performance looks like an achievement.
 
-## Discounting for uncertainty
+## Uncertainty Discounting
 
 Verra's module requires the historical estimate to be conservatively discounted for its own statistical uncertainty before it becomes a baseline. This is a different use of uncertainty from the crediting deduction of the uncertainty chapter, and it points the same way: the less precisely the historical rate is known, the lower the baseline a project may claim against.
 
@@ -127,7 +127,7 @@ The incentive this creates runs the opposite way from the crediting deduction, a
 
 Note also which quantity is discounted. The uncertainty here is on the *activity data*, the hectares, which is the term the classification chapter was about. A jurisdiction whose historical map fails the accuracy thresholds does not merely have a caveat attached to its baseline; it has a materially lower one.
 
-## Jurisdictional allocation
+## Jurisdictional Allocation
 
 A jurisdictional baseline is a rate for a whole territory, and a project occupies a fraction of it. Allocating the jurisdictional rate to project areas cannot be done by area alone, because deforestation is not spatially uniform: a project on a road frontage faces very different pressure from one in the interior.
 
@@ -171,7 +171,7 @@ round(c(project_share_of_area = 100 * mean(project),
 The project occupies under a quarter of the area and carries just over half the baseline, because it sits where the pressure is. That asymmetry is the entire reason risk allocation exists, and it is also where the arguments happen: the risk model's covariates and decay parameters are chosen by someone, and they determine how many credits the project may claim. A verifier who accepts a jurisdictional rate without interrogating the allocation has checked the easy half.
 
 ::: {.verification}
-#### Reference periods {.unnumbered .unlisted}
+#### Reference Periods {.unnumbered .unlisted}
 
 The mechanics differ between programmes and the differences matter for anyone
 reproducing a baseline.
@@ -205,7 +205,7 @@ ART provisions are from the published Standard.
 :::
 
 ::: {.verification}
-#### Verifier questions {.unnumbered .unlisted}
+#### Verifier Questions {.unnumbered .unlisted}
 
 Four questions, in the order they usually expose problems.
 

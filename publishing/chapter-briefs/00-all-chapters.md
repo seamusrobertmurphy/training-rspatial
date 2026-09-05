@@ -16,31 +16,36 @@ on and what support the answer has.
 
 ### 2. Reading Reflectance, and What an Index Can Support
 
+**Drafted 5 September 2026.** This chapter now has its own brief at
+`02-reflectance.md` and a full draft at `drafts/02-reflectance.qmd`, both of
+which supersede the page that stood here. The summary below is kept so the arc
+reads continuously.
+
 **Question.** What claim can a spectral index actually carry, and where does it
 fail without saying so?
 
-**Entry.** A sensor counts photons in a band. Leaves scatter near infrared hard
-because of the cell wall structure inside them and absorb red because chlorophyll
-does, so the contrast between two bands is a physical measurement of living
-tissue rather than a convention. Landsat 1 opened the record in 1972 and it has
-not stopped, which makes it the longest continuous measurement of the land
-surface that exists.
+**Entry.** Chlorophyll absorbs the red and leaf structure scatters the near
+infrared, so the contrast between two bands is a physical measurement of living
+tissue. Landsat 1 opened the record in 1972 and it has not stopped.
 
-**Edge.** Clear cut with regrowth has a median index of 0.79, inside the forest
-distribution, so no threshold separates two-year-old clearing from forest. The
-Sentinel-2 processing baseline offset introduced in January 2022 propagates a
-spurious difference of about 0.04 across a whole project, a third of the way to
-the low severity break before anything has happened. Surface reflectance is a
-retrieval with its own uncertainty, not a measurement.
+**Edge.** Measured on the committed Rondonia scene, the four indices rank in the
+reverse of the order projects reach for them on separating forest from clear-cut
+regrowth, the burn ratio at 0.823 balanced accuracy and the vegetation index at
+0.739, and under biomass-burning smoke on 2 September 2022 the vegetation index
+moves 0.283 on forest against the burn ratio's 0.021. The index that separates
+worst also breaks worst.
 
 **Owes the spine.** A pixel has support. A 30 metre cell and a 10 metre cell are
-not the same measurement of the same ground.
+not the same measurement of the same ground, and an atmospheric state is a
+support condition on a value in the same way a cell size is.
 
-**Sources.** `training-rspatial/03-raster-data` (Rondonia, committed), `VM0048`,
-`VT0007-deforestation-map`, `sits`.
+**Boundaries.** Chapter 2 owns one observation. Chapter 10 owns the label and the
+confusion matrix. Chapter 11 owns the difference between two dates and its
+cause. Chapter 12 owns the time axis. Anything needing a second date to make its
+point is not chapter 2.
 
-**Missing.** The preprocessing chain in front of the committed product. Sensors,
-atmospheric correction, cloud masking, compositing.
+**Sources.** `03-raster-data` (retires on promotion), `data/rondonia_s2_*`,
+Murphy et al. (2026), `woolly-adelgid-signatures`, VM0048, VT0007.
 
 ---
 
@@ -478,3 +483,33 @@ Chilwa already has a multi-date stack with a clear-observation raster.
 
 **Clearance for audit material.** Blocks chapters 1, 11 and 17, each of which
 rests on a named engagement.
+
+---
+
+## The disturbance ecology thread
+
+Added 5 September 2026 with the spine amendment. The closing message of the book
+is disturbance ecology, so the chapters that observe disturbance carry an
+obligation beyond their own result and each must hand something forward.
+
+Chapter 2 introduces the beetle and fire signatures as measurements and names the
+closing debate without attempting it. Chapter 11 dates and attributes change and
+is where a detection first becomes an event. Chapter 12 builds the cube and is
+where a series of events first becomes a trajectory. Chapter 13 admits spatial
+dependence and is where the count of observations stops being the amount of
+information. The final part asks whether the system has states, whether it moved
+between them, and whether a record of this length could tell, which is the same
+support question the book opened with, asked along the time axis.
+
+The library already holds the material for that closing. `chaos-in-beetle-outbreaks`
+reads mountain pine beetle damage across eight British Columbia regions spanning
+6.7 degrees Celsius from 1.17 million aerial survey polygons since 1961, and
+finds two period levels at 32.5 and 21.7 years whose ratio is 1.5, so a
+period-doubling cascade needing three levels in ratios near two is not
+detectable in 65 annual observations. That is the strongest support argument in
+the whole corpus and it belongs at the end of this book.
+
+Two decisions are open. Whether one of the last chapters carries the
+dynamical-systems argument explicitly, since the seventeen-chapter outline as
+briefed spreads it across three. And whether the subtitle going to Elsevier
+names it.

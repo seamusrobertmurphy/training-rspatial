@@ -20,7 +20,7 @@ appendix is where to repair it. It is deliberately short and it teaches only wha
 the book actually uses. Nothing here is a substitute for a statistics course, and
 nothing in the chapters depends on reading it first.
 
-## Spread and intervals
+## Spread and Intervals
 
 Start with a distinction that inventory reports get wrong more often than any
 other. The standard deviation and the standard error are not the same quantity
@@ -133,7 +133,7 @@ reason large trees dominate inventory design: the skew does not stop the
 mathematics working, but it does mean a sample that misses the big stems misses
 most of the carbon.
 
-## Combining uncertainties
+## Combining Uncertainties
 
 Carbon estimates are built by multiplying uncertain things together. Area times
 carbon density gives stock. Activity data times an emission factor gives
@@ -185,7 +185,7 @@ they are correlated, quadrature understates the total. And the combination must
 be roughly linear over the range of the errors. When either fails, stop
 propagating algebraically and simulate.
 
-## Monte Carlo methods
+## Monte Carlo Methods
 
 Monte Carlo simulation replaces the algebra with brute force. Draw each uncertain
 input from its distribution, recompute the whole estimate, and repeat until the

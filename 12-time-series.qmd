@@ -16,7 +16,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Data cubes
+## Data Cubes
 
 Everything so far has been a snapshot. Monitoring is about change, and change lives in time, so the capstone data structure is the space-time cube: a stack of raster layers sharing one grid, indexed by date. A pixel is no longer a single value but a time series, and the questions become temporal, is this pixel trending down, when did it drop, how fast is it recovering.
 
@@ -62,7 +62,7 @@ terra::time(mcube) <- dates
 c(layers = nlyr(mcube), cells = ncell(mcube))
 ```
 
-## Two planes
+## Cube Geometry
 
 A cube can only be looked at one slice at a time, and there are two ways to cut it. Fix a date and you get the spatial plane: a map, every pixel at one instant, the view every earlier chapter of this book has used. Fix a pixel and you get the temporal plane: a profile, one location across every date, the view that makes change visible. Neither is complete. A map cannot tell you whether a low value is a burn scar or simply February, and a profile cannot tell you whether a decline is one pixel or the whole stand.
 
@@ -162,7 +162,7 @@ legend("bottomleft", c("undisturbed", "burned 2021"),
 
 The saw-tooth is the seasonal cycle, present in both pixels throughout. The step down in the red line during 2021 is the fire. Note how much larger the annual swing is than the trend it rides on: the disturbance is obvious because it is abrupt, but the slow decline underneath is nearly invisible against the seasonality.
 
-## Seasonality and randomness
+## Seasonality and Noise
 
 That last observation is the central problem of the temporal plane, and it is worth quantifying rather than asserting. A time series of this shape is conventionally treated as three additive parts: a trend, the slow directional movement; a seasonal component, the oscillation that repeats each year; and a remainder, what is left when both have been removed. Seasonal-trend decomposition by loess separates them without assuming the seasonal shape is a fixed sine [@cleveland1990stl]. Base R implements it in `stl()`, which needs the profile declared as a regular series with twelve observations per cycle:
 
@@ -184,7 +184,7 @@ Seasonality accounts for almost all of the variance in the record. The trend, th
 
 This is the distinction the whole chapter turns on. The seasonal component is nature's oscillation: deterministic, repeating, and therefore removable, either by decomposition or simply by always comparing like with like. The remainder is nature's randomness together with sensor error: irreducible, and the honest floor on how precisely any single observation can be known. Confusing the two is expensive. Seasonality mistaken for randomness inflates the error bars you report and costs credits to the uncertainty deduction. Seasonality mistaken for trend invents change that never happened.
 
-## Sampling and aliasing
+## Sampling and Aliasing
 
 The practical consequence appears the moment you reduce a monthly record to an annual one, which every monitoring programme does. If each year is represented by an observation taken at the same point in the season, the seasonal component is a constant offset and cancels out of the comparison. If the dates drift, the seasonal component leaks into the difference between years and is indistinguishable from real change. Signal processing calls this aliasing. In forest monitoring it is the reason cloud cover biases change estimates, because the dates you can see are not a random sample of the dates you wanted [@hansen2013forest].
 
@@ -218,7 +218,7 @@ More than a third of the time, an analyst sampling this way would report a pixel
 
 This is where the chapter connects back to the previous one. The uncertainty chapter propagated error through an equation, taking the input distributions as given. Here the input distribution is itself a product of a design decision. Compositing to a fixed seasonal window before any comparison is not data cleaning, it is uncertainty reduction, and it is the cheapest available: it costs nothing but discipline and it removes a variance component that dwarfs the quantity being estimated.
 
-## Annual compositing
+## Annual Compositing
 
 So we reduce the monthly cube to one layer per year, taking a consistent mid-summer window rather than an annual mean, which would average leaf-on against leaf-off and discard the contrast that makes disturbance visible. This is the temporal normalisation step that operational cube software performs with cloud-ranked compositing:
 
@@ -233,7 +233,7 @@ names(cube) <- paste0("y", years)
 nlyr(cube)
 ```
 
-## Temporal reduction
+## Temporal Reduction
 
 A cube is reduced along time the way a single raster is summarised along space. `app()` applies a function to each pixel's time series. The mean over years is the baseline surface; the standard deviation flags where the record is unstable:
 
@@ -245,7 +245,7 @@ plot(c(mean_ndvi, sd_ndvi), main = c("Mean index", "Temporal SD"))
 
 High temporal SD is the signature of disturbance: stable forest barely varies year to year once the season is controlled, so the burned block lights up.
 
-## Trends
+## Trend Estimation
 
 The direction and rate of change per pixel is the slope of index against year, a linear trend fitted independently at every location. `app()` carries the regression across the cube:
 
@@ -260,7 +260,7 @@ plot(slope, main = "Per-pixel trend (index / year)")
 
 Strong negative slopes mark sustained loss. This is the engine of trend-based monitoring: a whole landscape of time series reduced to one map of who is gaining and who is losing.
 
-## Event detection
+## Event Detection
 
 A trend says a pixel declined; monitoring needs to know *when*. Differencing consecutive years isolates the step. The fire year is the layer where the largest drop occurs, and thresholding the year-on-year change delineates the burned area:
 
@@ -272,7 +272,7 @@ burned_ha <- global(burned, "sum", na.rm = TRUE)[1, 1] * cell_ha
 round(burned_ha, 2)                                # hectares burned in 2021
 ```
 
-## Tier 1 emissions
+## Tier 1 Emissions
 
 The capstone joins the whole book: a time series detects a fire, the burned area is measured, and IPCC Tier 1 methods turn that area into an emission. The IPCC-wildfire-emissions workflow runs this chain from burn-area mapping through to emission factors, and the governing equation is the same one every fire inventory uses [@ipcc2006gl]:
 

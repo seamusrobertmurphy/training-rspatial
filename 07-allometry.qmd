@@ -16,7 +16,7 @@ bibliography: ./references/references.bib
 csl: ./references/apa.csl
 ---
 
-## Indirect measurement
+## Indirect Measurement
 
 Every carbon number in this book rests on a step that is easy to miss. Nobody weighs a standing tree. Field crews measure diameter, sometimes height, and a statistical model converts those measurements into biomass. That model is an allometric equation, and it was fitted somewhere else, on other trees, by someone who cut them down and weighed them.
 
@@ -24,7 +24,7 @@ This is the largest single source of error in most forest carbon estimates, and 
 
 The chapter is about that choice: what an allometric equation is, how to select one, what it costs to select badly, and how to carry the resulting uncertainty forward.
 
-## Equation form
+## Equation Form
 
 Tree biomass scales with diameter as a power law. A tree twice as wide is far more than twice as heavy, because mass grows roughly with the square of diameter for cross-sectional area and again with height. The canonical form is
 
@@ -36,7 +36,7 @@ $$\ln(AGB) = \ln(a) + b\,\ln(D) + \varepsilon$$
 
 Fitting on that scale is standard practice, but it introduces a trap. Exponentiating a prediction from log space returns the median rather than the mean of the distribution, which systematically underestimates biomass. The correction is a multiplicative factor $\exp(\hat{\sigma}^2/2)$ [@baskerville1972], and it is used throughout this book. The uncertainty chapter shows what it does to the error statistics, and the [statistical primers appendix](A1-primers.qmd) shows the skew that makes the correction necessary.
 
-## Equation selection
+## Equation Selection
 
 There are thousands of published equations. Choosing among them is the analyst's judgement, and the metadata that governs the choice is more informative than the coefficients. The `eq_tab_acer` table holds published equations for maples, with the fields a careful selection actually needs:
 
@@ -59,7 +59,7 @@ summary(eq$sample_size)
 
 The median equation here was fitted on thirteen trees. That is not unusual and not a scandal, because destructive harvest is expensive and slow, but it should calibrate how much confidence a single published equation deserves.
 
-## Selection cost
+## Selection Cost
 
 The abstract argument becomes concrete when you apply several defensible equations to the same trees. The `scbi_quercus` file holds 84 oak stems with aboveground biomass computed five ways: a species-specific equation, a genus-level one, the pantropical models of @chave2014 and its 2005 predecessor, and an older generic equation.
 
@@ -95,7 +95,7 @@ legend("topleft", c("species-specific", "Chave 2014", "Brown 1997"),
 
 On log axes the equations are near-parallel lines separated by a constant factor. The divergence is not a subtle disagreement about form; it is a straightforward difference in level that persists across every tree in the stand and therefore does not average out.
 
-## Extrapolation risk
+## Extrapolation Risk
 
 An equation is only evidence over the diameters it was fitted on. Outside that range it is an extrapolated power law, and power laws extrapolate badly. Check the maple equations against the maples actually in the plot:
 
@@ -132,7 +132,7 @@ c(largest_stem_cm = round(big, 1),
 
 One equation out of twenty-three remains valid at the largest maple in the plot, a stem of 70 centimetres. A project that reports a single point estimate from a single equation is concealing that.
 
-## Generic equations
+## Generic Equations
 
 When no local equation exists, the usual recourse is a generic model with wood density as a covariate, on the reasoning that density carries much of the between-species variation in mass per unit volume. The `scbi_quercus` file includes the density used:
 
@@ -143,7 +143,7 @@ knitr::kable(unique(q[, c("species", "WD")]), row.names = FALSE)
 
 Five oak species carry four distinct density values, spanning 0.56 to 0.65, a range of about sixteen per cent. Since biomass is roughly proportional to density in these models, getting the species wrong costs less than getting the equation wrong, which is the argument for generic models: they trade one kind of error for another, being applicable far more widely and less accurate anywhere in particular. Note too that the densities are themselves look-ups from a reference database rather than measurements from these trees, so the covariate that is supposed to absorb between-species variation carries its own error.
 
-## Stand aggregation
+## Stand Aggregation
 
 Scaling is arithmetic, and the arithmetic is where units go wrong. Biomass per stem sums to biomass per plot, divides by plot area for density, and multiplies by the carbon fraction to become carbon:
 
@@ -159,7 +159,7 @@ round(c(stems = length(agb_kg),
 The carbon fraction of 0.47 is itself a default with its own uncertainty, and it multiplies everything above it. The uncertainty chapter propagates that.
 
 ::: {.verification}
-#### Registry requirements {.unnumbered .unlisted}
+#### Registry Requirements {.unnumbered .unlisted}
 
 Standards do not usually mandate a particular equation. They constrain how you
 justify one and what you must report about it, which is a more demanding
