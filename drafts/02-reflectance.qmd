@@ -425,8 +425,8 @@ plotRGB(clear[[c("B04", "B03", "B02")]], stretch = "lin", main = "16 July 2022")
 plotRGB(smoke[[c("B04", "B03", "B02")]], stretch = "lin", main = "2 September 2022")
 ```
 
-The atmospheric correction ran on both scenes and reported success on both. What
-it left behind is measurable band by band.
+Both scenes are Level-2A, so an atmospheric correction ran on both and neither
+was withheld. What the correction left behind is measurable band by band.
 
 ```{r smoke-bands}
 # global() returns a data frame whose row names carry the band, so the means are
