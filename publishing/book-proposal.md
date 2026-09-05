@@ -1,7 +1,7 @@
 # Book Proposal
 
-**Working title:** Spatial Analysis in R for Forest Carbon Verification
-**Subtitle:** A Practical Training in GIS
+**Working title:** Remote Sensing for Forest Carbon Accounting
+**Subtitle:** Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory
 **Author:** Seamus Murphy (ORCID 0000-0002-1792-0351)
 **Format:** Quarto book, HTML and print co-edition
 **Status:** Course taught and drafted; full manuscript to be written under contract

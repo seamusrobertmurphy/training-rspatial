@@ -8,8 +8,8 @@ project:
     - TUVSUD_Training_R-Spatial-for-Forest-Carbon-Verifier_07172026.docx
 
 book:
-  title: "Spatial Analysis in R for Forest Carbon Verification"
-  subtitle: "A Practical Training in GIS & Carbon Offset Audits"
+  title: "Remote Sensing for Forest Carbon Accounting"
+  subtitle: "Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory"
   author:
     - name: Murphy, S
       url: https://scholar.google.com/citations?hl=en&user=jDGq9I4AAAAJ

@@ -1,8 +1,10 @@
-# Spatial Analysis in R for Forest Carbon Verification
+# Remote Sensing for Forest Carbon Accounting
 
-A practical training in GIS and applied statistics for forest carbon measurement and verification, written by Dr Seamus
-Murphy. Thirteen chapters run from reading a shapefile to reporting an area-adjusted emission with a defensible
-interval, entirely in R and entirely reproducibly.
+**Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory**
+
+A practical course in remote sensing, forest mensuration and applied statistics for forest carbon measurement and
+verification, written by Dr Seamus Murphy. Thirteen chapters run from reading a shapefile to reporting an
+area-adjusted emission with a defensible interval, entirely in R and entirely reproducibly.
 
 <p align="center">
   <img src="images/01_stem_map.png" alt="SCBI stem map" width="760">

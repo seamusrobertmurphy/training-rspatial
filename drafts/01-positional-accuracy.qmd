@@ -1,0 +1,262 @@
+---
+title: "Coordinate Systems and the Hectare That Moves"
+subtitle: "Chapter 1 skeleton, 4 September 2026"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+::: callout-important
+## Skeleton, not a draft
+
+Section headings, the argument each section has to make, and the code that
+carries it. Prose is written only where the argument is settled. Two decisions
+are open and are marked where they bite. Brief at
+`publishing/chapter-briefs/01-positional-accuracy.md`.
+:::
+
+```{r setup}
+library(sf)
+library(dplyr)
+```
+
+## Finding a system
+
+*Argument. A coordinate is a claim about a model of the Earth, not a fact about
+the ground. Kept short and concrete: look one up, read one, change one, and know
+why you must.*
+
+```{r first-look}
+stems <- read.csv("../data/scbi_stems.csv") |>
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+st_crs(stems)$epsg
+st_crs(stems)$Name
+st_bbox(stems)
+```
+
+*Beat: the bounding box should land over Front Royal, Virginia, near 78.1 west
+and 38.9 north. If it landed at the origin the coordinates were never
+georeferenced, and the map would look fine on its own axes.*
+
+```{r reproject}
+stems_utm <- st_transform(stems, 32617)   # UTM zone 17N, metres
+st_bbox(stems_utm)
+```
+
+*Beat: epsg.io as the lookup. What the `.prj` sidecar holds, which is one system
+in well-known text, the present one, and never a history.*
+
+## The shape underneath
+
+*Argument. Every planar measurement is a projection of a curved surface onto a
+flat one, with a distortion you chose. The geoid is the visual aid that carries
+the whole chapter. Ellipsoid, geoid and terrain as three different surfaces, and
+why height is the harder coordinate.*
+
+*Beat, one page maximum. Eratosthenes with a stick and a well. Latitude solvable
+from a horizon and a table, longitude waiting on a clock that kept time at sea.
+The Board of Longitude paid for that clock. This is the fastest route into what
+a datum is and it earns its space, but it does not get more than a page.*
+
+*Beat: Clarke 1866 to NAD 83 to WGS 84, and the metres that moved with each. The
+WGS 84 ensemble carries a stated accuracy of about two metres that almost nobody
+reads.*
+
+## Measuring an area
+
+*Argument. This is the applied core. A claimed area and a mapped area disagree,
+and the disagreement is the lesson.*
+
+```{r area-two-ways}
+claimed_ha <- 25.6
+
+bbox_ha <- as.numeric(st_area(st_as_sfc(st_bbox(stems_utm)))) / 1e4
+hull_ha  <- as.numeric(st_area(st_convex_hull(st_union(stems_utm)))) / 1e4
+
+data.frame(
+  geometry      = c("bounding box", "convex hull"),
+  measured_ha   = round(c(bbox_ha, hull_ha), 2),
+  difference_ha = round(c(bbox_ha, hull_ha) - claimed_ha, 2),
+  pct_error     = round(100 * (c(bbox_ha, hull_ha) - claimed_ha) / claimed_ha, 1)
+)
+```
+
+*Beat: the plot grid runs about 1.8 degrees off UTM north. A bounding box is
+axis-aligned by construction so it wraps a tilted rectangle inside a larger
+upright one. The hull follows the stems and recovers the nominal area. Neither
+figure is a survey error. When a claimed area and a mapped area disagree, the
+first question is not whether the survey is wrong but whether the thing being
+measured is the boundary or a box drawn round it, because that choice alone moved
+the answer by more than a hectare.*
+
+## Checking a submission
+
+*Argument. Area non-compliance is the most common finding an auditor raises and
+it is raised before any carbon is calculated.*
+
+::: callout-warning
+## Data not yet committed
+
+This section runs on the a public dataset ACR submission in
+`training/area-verification`, which is outside this repository. Before this chapter can
+render offline the following have to be copied into `data/` and cleared for
+publication: the submitted boundary, the strata, the harvest units, and the
+`slivers` and `artifacts` outputs. Anonymise the client if TÜV SÜD clearance is
+not in hand.
+:::
+
+```{r area-check, eval=FALSE}
+# Sequence as run in training/area-verification/area-verification.qmd
+sf_use_s2(FALSE)                                  # configure the geometric plane
+st_layers("../data/submission.gpkg")              # what arrived
+bdry <- st_read("../data/submission.gpkg", "boundary", quiet = TRUE)
+
+all(st_is_valid(bdry))                            # validate before measuring
+bad  <- bdry[!st_is_valid(bdry), ]                # extract the artefacts
+bdry <- st_make_valid(bdry)
+
+bdry$area_ha <- as.numeric(st_area(bdry)) / 1e4   # hectares, by feature
+```
+
+*Beat: the workflow is set the plane, unpack, summarise the layers, validate,
+extract the invalid artefacts, calculate hectares, break the total down by
+boundary, stratum and harvest unit, then test the difference against materiality.
+Area and overlap operations on an invalid polygon return nonsense without
+erroring, which is why validation precedes measurement and not the reverse.*
+
+## Overlap and ownership
+
+*Argument. Nine submissions in ten fail this on the first pass. Any positive
+intersection is land claimed twice.*
+
+```{r overlap}
+e  <- st_bbox(stems_utm)
+x0 <- unname(e["xmin"]); y0 <- unname(e["ymin"])
+a <- st_as_sfc(st_bbox(c(xmin = x0,       xmax = x0 + 250,
+                        ymin = y0,        ymax = y0 + 400), crs = 32617))
+b <- st_as_sfc(st_bbox(c(xmin = x0 + 200, xmax = x0 + 450,
+                        ymin = y0,        ymax = y0 + 400), crs = 32617))
+
+round(as.numeric(st_area(st_intersection(a, b))) / 1e4, 2)   # ha claimed twice
+```
+
+*Beat: test against federal land, adjacent private parcels, national parks and
+neighbouring ownership. Then the set-operation trap. The valid area is the ground
+surviving every exclusion, which is an intersection of the residuals. Chaining
+unions instead readmits every excluded parcel, because a pixel excluded by the
+slope mask survives in the roads residual, and the belt comes out larger in a
+direction that suits the project.*
+
+## The inheritance path
+
+*Argument. The chain of reprojections is lost because nobody writes it down, not
+because the container cannot hold it. That is the defensible version.*
+
+*Beat: the shapefile family has no lineage mechanism at all. GeoPackage is an OGC
+encoding standard, not an ISO one, and it fixes the real shapefile defects, the
+two gigabyte ceiling, the ten-character field names, the 255-column limit and
+polygon against multipolygon ambiguity. Its `gpkg_metadata` table can hold ISO
+19115 records, and ISO 19115-1:2014 does define a lineage element. But lineage is
+only there if somebody writes it, and almost nobody does.*
+
+## The library underneath
+
+*Argument. Two analysts measure the same polygon and get different areas. A
+reported area without its software environment stated is not reproducible.*
+
+```{r versions}
+sf_extSoftVersion()[c("GEOS", "GDAL", "proj.4")]
+```
+
+*Beat: ArcGIS runs its own engine over GDAL. GDAL ships in many versions. PROJ 6,
+released 2019, moved the canonical representation from proj4 strings to WKT2,
+introduced the datum ensemble and made late-binding the default, which is why the
+same request can resolve differently across versions. This is why the
+area-verification workflow ends on a runtime log rather than on a number.*
+
+## Plot centres
+
+*Argument. Positional accuracy connects to the carbon number here, and it scales.*
+
+*Beat: permanent sample plots in North America are marked with rebar, and public
+inventory programmes use markers built to survive decades. A crew that cannot
+relocate a centre and sets up three metres away measures a different set of
+trees. Because plot means are extrapolated across the whole project, that error
+does not stay on the plot, it multiplies by the expansion factor.*
+
+## Assessing a fix
+
+*Argument. Report a positional accuracy as a distribution, not as a single
+number.*
+
+*Beat: GPS is one constellation, GNSS is the family. What real-time kinematic
+correction does and what it costs. How to run a check against a known control
+point. Source material in `GPS-training-material`, `survey-tools` and the
+KoBoToolbox deployment.*
+
+## What ground truth costs
+
+*Argument. Interpreted ground reference points are the most valuable and least
+glamorous data product in remote sensing.*
+
+*Beat: the Global Land Cover Estimation training database holds close to two
+million training units for 1984 to 2020, at 30 metres, across seven primary and
+twelve secondary classes, built at Boston University under Woodcock and Friedl
+and published in Scientific Data in 2023. Why it took years and a large team, and
+why that effort is the foundation of every accuracy statement later in this book.*
+
+## The plane you compute on
+
+*Argument. Closing caveat and the hinge into the rest of the book.*
+
+```{r s2}
+sf_use_s2(TRUE)
+sph <- as.numeric(st_area(st_convex_hull(st_union(stems)))) / 1e4
+sf_use_s2(FALSE)
+ell <- as.numeric(st_area(st_convex_hull(st_union(stems)))) / 1e4
+
+data.frame(engine = c("s2, sphere", "GeographicLib, ellipsoid"),
+           area_ha = round(c(sph, ell), 4),
+           rel_diff = c(NA, round((ell - sph) / sph, 8)))
+```
+
+*Beat: a traditional geographic information system represents the world as a flat
+projection, the way a paper map does. S2 represents it on a sphere, the way a
+globe does, and the name is the notation for the unit sphere. No seams, so a
+polygon crossing the antimeridian is ordinary. No singularities, so the poles
+behave like everywhere else. What it buys is fast in-memory indexing, robust
+constructive operations through snap rounding, and efficient nearest-neighbour
+queries.*
+
+*Beat, and this is the honest framing. The area difference is around 6.4e-05, so
+two thirds of a hectare on ten thousand. That is small against the 6.6 per cent
+the bounding box and the hull disagreed by earlier in this chapter, and saying so
+teaches the reader to rank error sources rather than fear them equally. The real
+gain is that a planar intersection of two nearly coincident boundaries
+manufactures slivers, which is what `slivers layer` in the area-verification outputs
+contains, and exact spherical predicates do not.*
+
+*Closing rule: an area reported without its geometry engine, its library versions
+and its geometry setting is not reproducible, whatever its magnitude. And the
+question of which plane you compute on, and what support the answer has, is the
+thread this book follows to the cube. See `publishing/book-spine.md`.*
+
+## Exercises
+
+*To be written. Six to eight, each closing on a number a verifier would accept.*
+
+::: callout-note
+## Open decisions
+
+**Does this chapter split?** Ten sections runs 35 to 45 printed pages, at the top
+of the series range. The clean line is after "The library underneath", leaving
+projection and area as chapter 1 and plot centres, GNSS and ground truth as
+chapter 2.
+
+**Which two ebooks?** The author wants the geospatial data objects section
+aligned to two ebooks that present them without overwhelming the reader. Neither
+was supplied. Names or paths needed.
+:::

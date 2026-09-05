@@ -1,0 +1,44 @@
+# Standalone project for drafting one chapter at a time.
+#
+# The book at the repository root renders only the files listed under
+# book.chapters, so nothing in here is visible to it and nothing in here can
+# touch _book. Render a single draft with:
+#
+#   quarto render drafts/01-positional-accuracy.qmd
+#
+# which produces HTML and docx beside the source in drafts/_out. When a chapter
+# is approved it moves into the book proper and the old file retires.
+
+project:
+  type: default
+  output-dir: _out
+
+bibliography: ../references/references.bib
+csl: ../references/apa.csl
+citeproc: true
+number-sections: true
+
+execute:
+  freeze: auto
+  error: true
+
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+    dev: "png"
+    dpi: 300
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: right
+    theme: ../styles.scss
+    code-overflow: wrap
+    df-print: kable
+    embed-resources: true
+  docx:
+    toc: true
+    reference-doc: ../references/style-formal.docx
+    df-print: kable
