@@ -547,29 +547,46 @@ its regression diagnostics against field reference plots.
 
 Their accuracy assessment is the most useful thing in this chapter for a reader
 who has to decide whether to believe a map. The moisture index classification
-reached an overall accuracy of 0.824, which would pass most reporting
-thresholds without comment. Its commission error on the red-attack class itself
-was 0.750. Three in four cells called red attack were not red attack. Overall
-accuracy was dominated by the large, easy, undisturbed class, and the class the
-study was actually about was found at a false alarm rate that no operational
-user would accept if it were stated in those words. The kappa statistic, 0.166,
-says the same thing and is routinely ignored.
+reached an overall accuracy of 0.824 and a kappa of 0.750, kappa being the
+agreement left once the agreement expected by chance is removed. On the
+red-attack class itself the commission error was 0.198 and the omission error
+0.199, so about one cell in five called red attack was not, and about one in
+five of the real red attack was missed. The study describes those rates as
+acceptable and selects the moisture index on them.
 
-That is what an index can support, and it is why the classification chapter
-exists.
+That is a good result, and it is worth being exact about what a good result
+buys. One cell in five is fine for showing where an outbreak is. It is not fine
+for a project claiming payment on the difference between two years, because a
+twenty per cent false alarm rate on the disturbed class is comparable in size to
+the change many projects are trying to detect. The figure that decides whether a
+map is usable is never the overall accuracy. It is the error on the class the
+project is paid to find, and that is why the classification chapter exists.
 
 ### Fire
 
 Fire is the mirror case and the easier one. Combustion removes canopy water and
 leaves char, and both effects push the shortwave infrared up hard while the near
 infrared falls, so the normalised burn ratio moves further and more reliably than
-any visible-band index. The same study tested five candidate indices against 85
-field and photo-interpreted plots scored on a composite burn index, a
-field protocol that rates fire effects across substrate, ground shrubs,
-understorey and overstorey on a scale from 0 to 10. The burn ratio had the
-highest correlation with the field scores, at an R-squared of 0.879, and it was
-the only index significant across every individual severity class as well as
-overall.
+any visible-band index. The same study tested five candidate indices against 94 burn
+plots, 9 of them field plots established immediately after the fire in 2015 and
+resampled in 2020, and 85 scored from aerial photographs. Every plot carried a
+composite burn index, a field protocol that rates fire effects across substrate,
+ground shrubs, understorey and overstorey on a scale from 0.00 to 10.00, with
+below 2.50 counted as no change and above 7.50 as high severity. The burn ratio
+had the highest correlation with the field scores, at an R-squared of 0.879
+against 0.584 for the next best index.
+
+Its classification reached an overall accuracy of 0.872 and a kappa of 0.792,
+the best figures anywhere in the study, and the per-class errors are where the
+lesson is. On the high severity class the burn ratio missed 4 per cent. On the
+low severity class it missed 55 per cent, and 22 per cent of the cells it called
+low severity were something else. The headline figure is carried by the classes
+that were easy, the unburned ground and the severe burns, and it conceals a
+class the index can barely see, because a fire that scorches the understorey and
+leaves the canopy standing changes very little of what the sensor measures. An
+overall accuracy is an average over classes weighted by how common they are, so
+it rewards a classifier for getting the easy majority right. Read the per-class
+errors first and the overall accuracy last.
 
 One detail of that field design belongs to this book's spine rather than to fire
 ecology. Plots were located at the centre of areas of uniform disturbance within

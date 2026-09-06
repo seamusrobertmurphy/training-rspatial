@@ -132,15 +132,22 @@ sapwood and foliar moisture decline alongside the reddening, so which index to
 use is an empirical question. Murphy et al. (2026) answered it by measurement,
 selecting the normalised difference moisture index over the wetness, greenness
 and brightness components of the tasselled cap transform to map red-stage attack
-in the southern Selkirk Mountains. Its
-overall accuracy of 0.824 in that study sits beside a commission error of 0.750
-on the red-attack class itself, which is the whole of what this chapter has to
-say about what an index can support: a headline accuracy dominated by the large
-easy class, and three false alarms in four on the class the study was about.
-Fire is the mirror case: the burn ratio was the strongest of five candidate
-indices against field composite burn index scores, at an R-squared of 0.879,
-because combustion removes canopy water and chars the surface, and both effects
-move the shortwave infrared hard. The section closes by naming where the book is
+in the southern Selkirk Mountains. That classification reached an overall
+accuracy of 0.824 and a kappa of 0.750, with a commission error of 0.198 and an
+omission error of 0.199 on the red-attack class itself, so about one cell in
+five called red attack was not and about one in five of the real red attack was
+missed, and the study describes those rates as acceptable. The chapter is exact
+about what a good result buys, because one cell in five is fine for showing
+where an outbreak is and is not fine for a project claiming payment on the
+difference between two years, a twenty per cent false alarm rate on the
+disturbed class being comparable in size to the change many projects are trying
+to detect. Fire is the mirror case, in that the burn ratio was the strongest of
+five candidate indices against field composite burn index scores at an R-squared
+of 0.879, because combustion removes canopy water and chars the surface and both
+effects move the shortwave infrared hard, and its own classification reached an
+overall accuracy of 0.872 and a kappa of 0.792 while missing 55 per cent of the
+low burn severity class, which is where the argument about a headline accuracy
+hiding a bad class actually holds. The section closes by naming where the book is
 going. A disturbance is an event in a system that has states, and the last part
 of the book returns to these signatures as observations of a dynamical system
 rather than as maps, taking up bifurcation and tipping behaviour, regime shift

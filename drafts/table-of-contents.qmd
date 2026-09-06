@@ -1,0 +1,301 @@
+---
+title: "Remote Sensing for Forest Carbon Accounting"
+subtitle: "Proposed table of contents, 6 September 2026"
+number-sections: false
+format:
+  docx:
+    reference-doc: ../references/style-formal.docx
+    number-sections: false
+    toc: false
+---
+
+Seventeen chapters in four parts, one part for each phrase of the subtitle, *Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory*.
+
+Chapter titles were rewritten on 5 September 2026 against the contents pages of *Satellite Remote Sensing for Forest and Environmental Monitoring* (Elsevier Earth Observation Series, 2025), where every title opens on the operation rather than the topic, names the sensor, and lands a result. Section headings were rewritten the same day into the same register, Title Case noun phrases of at most three words. Neither set has been written into the manuscript, and both are here for review.
+
+At this revision 11 of the seventeen chapters are drafted and 159 sections are written. Sections marked *track* are verification tracks, unnumbered and unlisted in the book itself, and a reader who skips every one of them still gets a complete book. At the pace of the comparable series volume, 20 chapters over 663 pages, seventeen chapters runs to about 560 pages before front matter.
+
+# Part 1. Data
+
+*Applications of lidar, radar and optical data*
+
+## 1. Identification and correction of positional error in forest carbon project boundaries
+
+*Source ready. Owes the spine, Geometry. Which plane the arithmetic ran on.*
+
+1.1 Coordinate Reference Systems  
+1.2 Geoid and Ellipsoid  
+1.3 Area Measurement  
+1.4 Boundary Verification  
+1.5 Overlap and Ownership  
+1.6 Transformation Provenance  
+1.7 Geometry Engines  
+1.8 Plot Monumentation  
+1.9 GNSS Accuracy Assessment  
+1.10 Reference Data  
+1.11 Planar and Spherical  
+1.12 Exercises
+
+## 2. Reading surface reflectance with Sentinel-2 data: what a spectral index can and cannot support
+
+*Drafted. Owes the spine, Support. What one reflectance value describes, and the atmosphere above it.*
+
+2.1 Introduction  
+2.2 Spectral Response  
+2.3 Reflectance Retrieval  
+2.4 Band Support  
+2.5 Index Construction  
+2.6 Class Separability  
+2.7 Atmospheric Sensitivity  
+2.8 Disturbance Signatures  
+  2.8.1 Insect Attack  
+  2.8.2 Fire  
+  2.8.3 Where This Leads  
+2.9 Conclusions  
+2.10 Exercises
+
+## 3. Estimating forest biomass with synthetic aperture radar and the saturation ceiling of C-band and L-band
+
+*Gap. Owes the spine, Support. Backscatter integrates over a resolution cell that is not its pixel.*
+
+Sections not yet drafted. Planned scope. Synthetic aperture radar, polarisation, speckle, and canopy penetration where cloud defeats optical sensing.
+
+## 4. Deriving canopy height from airborne laser scanning: how much is the sensor and how much the analyst
+
+*Drafted. Owes the spine, Support. A height metric's support is the cell it was aggregated to.*
+
+4.1 Point Clouds  
+4.2 Ground Classification  
+4.3 Noise Removal  
+4.4 Terrain Models  
+4.5 Height Normalisation  
+  4.5.1 Normalisation Order  
+4.6 Canopy Height Models  
+4.7 Individual Tree Detection  
+  4.7.1 Window Size  
+  4.7.2 Variable Windows  
+4.8 Crown Segmentation  
+4.9 Dominant Height  
+4.10 Area-Based Inventory  
+  *track* Documentation Requirements  
+4.11 Exercises
+
+## 5. Conditioning a digital elevation model for hydrological routing and what depression removal destroys
+
+*Drafted. Owes the spine, Geometry. Cell area under Web Mercator, and a surface whose depressions are gone.*
+
+5.1 Digital Elevation Models  
+  5.1.1 Projection Distortion  
+5.2 Terrain Derivatives  
+5.3 Hydrological Conditioning  
+  5.3.1 Stochastic Depressions  
+  5.3.2 Depression Breaching  
+  5.3.3 Depression Filling  
+  5.3.4 Endorheic Basins  
+5.4 Flow Routing  
+  5.4.1 Flow Accumulation  
+5.5 Watershed Delineation  
+  5.5.1 Independent Comparison  
+5.6 Stream Networks  
+  5.6.1 Wetness Index  
+5.7 Inundation Mapping  
+  5.7.1 Vertical Datum  
+  5.7.2 Stage and Area  
+  *track* Under Wetland Methodologies  
+  *track* Alternative Implementations  
+5.8 Exercises
+
+\newpage
+
+# Part 2. Forest Mensuration
+
+*Measuring trees and scaling to the stand*
+
+## 6. Designing a field plot network for forest carbon inventory: stratification, sample size and what the next plot buys
+
+*Source ready. Owes the spine, Support. A plot has it and a stand does not inherit it for free.*
+
+Sections not yet drafted. Planned scope. Plot design, stratification, sample size, permanent against temporary plots, and the positional accuracy of a fix.
+
+## 7. Selecting an allometric equation and how model choice propagates into a reported carbon stock
+
+*Drafted. Owes the spine, Support. An equation applied outside its calibration range is a mismatch wearing a coefficient.*
+
+7.1 Indirect Measurement  
+7.2 Equation Form  
+7.3 Equation Selection  
+7.4 Selection Cost  
+7.5 Extrapolation Risk  
+7.6 Generic Equations  
+7.7 Stand Aggregation  
+  *track* Registry Requirements  
+7.8 Exercises
+
+## 8. Scaling biomass from plot to landscape and ranking the terms in the error budget
+
+*Source ready. Owes the spine, Support. Extensive quantities sum, intensive quantities average.*
+
+Sections not yet drafted. Planned scope. Tree to plot to stand, wood density, the carbon fraction, and where units silently go wrong.
+
+## 9. Predicting biomass wall to wall from lidar and optical metrics under spatially blocked cross-validation
+
+*Source ready. Owes the spine, Inference. Where design-based and model-based first separate.*
+
+Sections not yet drafted. Planned scope. Calibrating a plot-to-metric model, applying it wall to wall, and validating it against independently located plots.
+
+\newpage
+
+# Part 3. Landscape Monitoring
+
+*Cover, change and pattern through time*
+
+## 10. Classifying land cover for deforestation reporting and the rare class problem in accuracy assessment
+
+*Drafted. Owes the spine, Support. A class label's support is the pixel, and the minimum mapping unit states it.*
+
+10.1 The Extent Term  
+10.2 Three Approaches  
+10.3 Scene Classification  
+10.4 Rare Class Sampling  
+10.5 Limits of Reweighting  
+10.6 Probability Surfaces  
+10.7 Sample Allocation  
+  *track* VM0048 Map Requirements  
+  *track* Operational Stack  
+10.8 Exercises
+
+## 11. Detecting change and attributing its agent with multispectral time series: bark beetle, wildfire and harvest
+
+*Drafted. Owes the spine, Support. A change detected at one support is not a change at another.*
+
+11.1 Disturbance Screening  
+11.2 Spectral Indices  
+11.3 Threshold Selection  
+  11.3.1 Class Separability  
+  11.3.2 Distributional Diagnostics  
+11.4 Composite Construction  
+11.5 Agent Attribution  
+  11.5.1 Edge Geometry  
+11.6 Risk Mapping  
+  11.6.1 Index Weighting  
+  11.6.2 Risk Allocation  
+11.7 Leakage Belts  
+  *track* Standards Divergence  
+11.8 Exercises
+
+## 12. Building a spatio-temporal data cube from optical records: phenological aliasing and the drifting acquisition date
+
+*Drafted. Owes the spine, The terminus. A cell has support in space and in time at once.*
+
+12.1 Data Cubes  
+12.2 Cube Geometry  
+12.3 Seasonality and Noise  
+12.4 Sampling and Aliasing  
+12.5 Annual Compositing  
+12.6 Temporal Reduction  
+12.7 Trend Estimation  
+12.8 Event Detection  
+12.9 Tier 1 Emissions  
+12.10 Exercises
+
+## 13. Analysing disturbance as a spatial point pattern and the information a clustered dataset actually holds
+
+*Drafted. Owes the spine, Support seen from the inference side, as effective sample size.*
+
+13.1 Point Patterns  
+13.2 Complete Spatial Randomness  
+13.3 Species Maps  
+13.4 Intensity Estimation  
+13.5 Nearest Neighbour Distances  
+13.6 Ripley's K Function  
+13.7 Seedling Patterns  
+13.8 Pattern and Process  
+13.9 Covariates  
+13.10 Covariate Screening  
+13.11 Bandwidth Selection  
+13.12 Cluster Processes  
+13.13 Corrected Standard Errors  
+13.14 Residual Diagnostics  
+13.15 Published Comparison  
+  *track* Model Interrogation  
+13.16 Exercises
+
+\newpage
+
+# Part 4. Greenhouse Gas Inventory
+
+*From extent and factor to the audited estimate*
+
+## 14. Estimating activity data from a probability sample where the classified map is a stratifier
+
+*Source ready. Owes the spine, Design-based inference in its purest form. The map stratifies, the sample estimates.*
+
+Sections not yet drafted. Planned scope. The three IPCC approaches, spatially explicit transitions, area estimation from a probability sample, and the map as stratifier.
+
+## 15. Selecting emission factors across IPCC tiers and finding which term deserves the next measurement
+
+*Drafted. Owes the spine, Support governs which factor applies, by depth, climate zone or stratum.*
+
+15.1 Factor Definition  
+15.2 Methodological Tiers  
+15.3 Default Factors  
+15.4 Fire Emission Factors  
+  15.4.1 Combustion Parameters  
+  15.4.2 Unit Conversion  
+  15.4.3 Carbon Dioxide  
+15.5 Stock-Difference Method  
+15.6 Gain-Loss Asymmetry  
+15.7 Uncertainty Propagation  
+15.8 Dominant Terms  
+15.9 Cost of Imprecision  
+  *track* Double Counting  
+  *track* Registry Acceptance  
+15.10 Exercises
+
+## 16. Constructing a deforestation baseline with fixed reference periods, the ratchet and risk-weighted allocation
+
+*Drafted. Owes the spine, Support across time. A reference period is a decision about temporal extent.*
+
+16.1 Baseline Accounting  
+16.2 Baseline and Forecast  
+16.3 Standard Requirements  
+16.4 Ratchet Mechanism  
+16.5 Uncertainty Discounting  
+16.6 Jurisdictional Allocation  
+  *track* Reference Periods  
+  *track* Verifier Questions  
+16.7 Exercises
+
+## 17. Quantifying uncertainty and its cost: Monte Carlo propagation, registry deductions and the limits of a short record
+
+*Drafted. Owes the spine, The close. Geometry, support and inferential frame, and whether the forest is the same forest.*
+
+17.1 Why Uncertainty Matters  
+17.2 Carbon Estimate  
+17.3 Sampling Error  
+17.4 Measurement Error  
+17.5 Cross-Validation  
+  *track* Metric to Deduction  
+  *track* Model Eligibility  
+17.6 Monte Carlo Propagation  
+17.7 Conservative Estimates  
+17.8 Area-Adjusted Estimation  
+17.9 Reported and Adjusted  
+17.10 Registry Deductions  
+  *track* Rule Sources  
+  *track* Sampling and Counting  
+17.11 Exercises
+
+\newpage
+
+# Notes on this revision
+
+**Chapter 2** was drafted on 5 September 2026 and renders in both formats. Nine sections, 3,814 words of prose, and every number in the prose is computed by a chunk on the page. It retires the existing raster chapter when promoted.
+
+**Chapter 1** exists as a skeleton, carrying its section headings and the argument each must make, with prose only where the argument is settled.
+
+**Chapter 3** is the only gap. Nothing in the library carries radar, the title promises it, and it is the largest single piece of new writing in the book.
+
+**Chapters 6, 8, 9 and 14** are new chapters whose source material exists elsewhere in the library and has never been written up as teaching.
+
+The spine was amended on 5 September 2026. The closing message of the book is disturbance ecology, and the spatio-temporal data cube is the instrument that makes it arguable rather than the destination. The final part takes up bifurcation and tipping behaviour, regime shift in forest carbon flux, and Markov chain Monte Carlo as the machinery for inference about a dynamical system observed with error. No chapter yet owns that argument, and that is the first of four open decisions recorded on the chapter board.
