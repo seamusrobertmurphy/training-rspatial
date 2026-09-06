@@ -97,18 +97,107 @@ credits with compliance instruments. Section 3.5.1(b)(1) adds that a project
 terminates automatically if an unintentional reversal takes standing live tree
 carbon below the baseline.
 
-**The definitions themselves are not in the protocol.** The protocol defers to
-section 95802 of the Cap-and-Trade Regulation for the definitions and section
-95983 for the disposition of a project after a reversal. Neither section is in
-the library. Four attempts to retrieve the Regulation from the Air Resources
-Board site on 6 September 2026 returned nothing, so the wording of both
-definitions is **unconfirmed** and must not be quoted until the Regulation is
-obtained. The nearest confirmed wording in the protocol is its definition of an
-Intentional Back Burn, at paragraph (29), which turns on a fire beginning on
-another property "through no negligence, gross negligence, or willful misconduct
-of the forest owner". That triple, negligence, gross negligence and willful
-misconduct, is very likely the test the reversal definitions also use, but that
-is an inference and is flagged as one.
+**The definitions themselves are not in the 2015 protocol**, which defers to
+section 95802 of the California Cap-and-Trade Regulation. They were obtained on
+6 September 2026 from a second document, below, and are no longer open.
+
+### The Washington revisions, 21 January 2026
+
+`references/standards/CARB/US Protocol Revisions.pdf`, 23 pages, supplied by the
+author. It is the Washington Department of Ecology's proposed revision of its
+adopted US Forest Offset protocol under the Climate Commitment Act Program Rule,
+WAC 173-446, and it supersedes part of what is written above. Nineteen revisions
+are proposed. Three bear on this subject.
+
+**The definitions, confirmed verbatim.** Revision 12 quotes WAC 173-446-020,
+Washington's own codification of the California wording.
+
+> "Unintentional reversal" means any reversal, including wildfires or disease,
+> that is not the result of the forest owner's negligence, gross negligence, or
+> willful intent.
+
+> "Intentional reversal" means any reversal which is caused by a forest owner's
+> negligence, gross negligence, or willful intent, including harvesting,
+> development, and harm to the area within the offset project boundary, or
+> caused by approved growth models overestimating carbon stocks.
+
+A back burn set by a fire agency against a fire that began on another property,
+through no negligence, gross negligence or willful misconduct of the owner, is
+unintentional. Under WAC 173-446-570 an unintentional reversal is compensated
+from the shared buffer pool, while an intentional one is compensated by the
+operator and triggers a full verification with a site visit within one year,
+with compliance instruments surrendered within six months of notification.
+
+Two things in that wording matter for this book. The line is drawn by **who
+caused it**, not by what monitoring was done beforehand, so a project that never
+mapped its beetle risk and then loses a stand to beetles has suffered an
+unintentional reversal and the buffer pays. And the one clause that does turn on
+the analyst's own work is the last one: a reversal **caused by approved growth
+models overestimating carbon stocks is intentional**. Model error is the owner's
+liability. Field and remote sensing error, arriving as a disturbance, is the
+pool's. That asymmetry is a chapter's worth of argument on its own.
+
+**A third category.** Revision 12 adopts *computational reversals* from the
+Climate Action Reserve's protocol 5.1. These arise from the protocol's own
+required calculations rather than from any action or site change, typically when
+confidence deductions and secondary-effects accounting leave a period's growth
+not significantly greater than the modelled baseline. They need no extra
+verification, are checked at the next scheduled one, and are compensated by
+deducting the reversed quantity from the offsets about to be issued; where growth
+has not covered it, compliance instruments are surrendered as for an intentional
+reversal. So an uncertainty deduction can itself create a reversal.
+
+**Risk mapping becomes a quantified, spatial, mandatory input.** Revision 6 is
+the substantive change and it replaces the flat rates in Appendix D. Ecology
+states that the current protocol assumes a default 4 per cent wildfire and 3 per
+cent disease risk rating "assessed equally for all projects, regardless of
+location or forest type", reading those as the probability that a credit is
+reversed over its hundred-year life. It has contracted Spatial Informatics Group
+to localise both. Wildfire risk is estimated at the HUC-10 watershed scale by
+simulating forest carbon loss with FVS-FFE under severe wildfire scenarios and
+linking the result to likelihood categories from the United States Forest Service
+Annual Burn Probability layer; severity and likelihood midpoints are multiplied
+into a wildfire risk multiplier and scaled to a buffer percentage, capped at 12
+per cent because the estimate is relative rather than absolute. Biotic risk
+compares basal area mortality projections from the National Insect and Disease
+Risk Map against a defined project failure threshold, converted through HUC-10
+lookup tables and capped at 8 per cent. TreeMap 2022 is the third named input.
+The datasets can be updated without a rulemaking.
+
+The aggregate effect is stated plainly. The maximum total buffer contribution
+could exceed **30 per cent** for the highest-risk projects, against **19 per
+cent** today, and the reduction available for verified risk mitigation work grows
+in proportion. Alignment is given as ACR Reversal Risk Tool 2.0 in part, CAR 5.1
+in part, and a novel approach.
+
+**Boundary reductions.** Revision 10 adopts section 4.3 of CAR 5.1, allowing a
+project to shrink its boundary and treating the reduction as an intentional
+reversal, with credits equal to the associated stock decrease surrendered within
+four months of verification approval.
+
+**One monitoring threshold worth noting.** Revision 9 allows desk verification in
+place of a site visit where no credits are requested, except that a site visit is
+required if canopy cover has declined by more than 5 per cent in the project area
+or if a reversal has occurred. That is a remote sensing measurement written into
+a rule as a verification trigger, which is precisely the kind of clause this book
+exists to explain.
+
+### What this does to the author's hypothesis
+
+The hypothesis was that the revisions make the intentional against unintentional
+distinction depend on whether the project monitored for disturbance beforehand
+and how it attributed disturbance in its reporting. **That is not what the
+document says.** The line is unchanged and still turns on negligence, gross
+negligence or willful intent. The words "due diligence" do not appear, and
+nothing conditions the classification on prior monitoring or on attribution in a
+monitoring report.
+
+The intuition is nonetheless pointing at something real, in three places. Prior
+work on risk now changes the money, through the buffer contribution rather than
+the classification, and changes it far more than before. Analytical failure does
+create liability, but through the growth model clause rather than through
+disturbance mapping. And a measured canopy decline now triggers a verification
+obligation directly.
 
 ### Where it goes
 
@@ -252,8 +341,13 @@ is nil and the cost of adding them after peer review is high.
 2. Does disaggregation become a chapter, and if so does it take the
    dynamical-systems close, which would settle the first decision already on the
    board?
-3. The Cap-and-Trade Regulation sections 95802 and 95983 are not in the library
-   and could not be retrieved. Someone has to obtain them before the reversal
-   definitions can be quoted.
+3. Closed 6 September 2026. The definitions were obtained from WAC 173-446-020
+   as quoted in the Washington Ecology revisions document. The California
+   Regulation itself is still not in the library, and should be obtained so the
+   two wordings can be compared, but the definitions are no longer blocking.
+5. The Washington revisions are a proposal dated 21 January 2026, not a rule.
+   Confirm their status before the book cites them as anything but proposed, and
+   obtain Climate Action Reserve protocol 5.1, which they draw on repeatedly and
+   which is not in the library.
 4. The VM0048 index weights sum to 0.9. Confirm the intended weights before the
    file is taught from.
