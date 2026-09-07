@@ -1,6 +1,6 @@
 ---
 title: "Coordinate Systems and the Hectare That Moves"
-subtitle: "Chapter 1 skeleton, 4 September 2026"
+subtitle: "Chapter 1, restructured 6 September 2026"
 execute:
   eval: true
   echo: true
@@ -8,73 +8,78 @@ execute:
   message: false
 ---
 
-::: callout-important
-## Skeleton, not a draft
+::: callout-note
+## Restructure
 
-Section headings, the argument each section has to make, and the code that
-carries it. Prose is written only where the argument is settled. Two decisions
-are open and are marked where they bite. Brief at
-`publishing/chapter-briefs/01-positional-accuracy.md`.
+The prose of the 6 September redraft is kept wherever its section survives. What
+changed is the order and the content, integrating
+`drafts/CH01/ch01-reproducibility-notes-v3.md`. Four sections are new:
+conversion against transformation, straight lines that are not, projection
+distortion measured, and what an auditor can say. The area failure now arrives
+second, before any theory, and the three surfaces close the chapter as its
+contract with the reader.
+
+Two claims in the notes were tested on this machine and did not survive. Both
+corrections are in the text and marked.
 :::
 
 ```{r setup}
 library(sf)
 library(dplyr)
+library(lwgeom)
 ```
 
-## Coordinate Reference Systems
+## The plot
 
-*Argument. A coordinate is a claim about a model of the Earth, not a fact about
-the ground. Kept short and concrete: look one up, read one, change one, and know
-why you must.*
+Twenty-five point six hectares of oak and hickory sit on a hillside outside
+Front Royal, Virginia, and every tree on them has been measured. The plot is a
+rectangle 400 metres across and 640 metres up the slope, its corners surveyed,
+its stems mapped on a local grid that starts at zero in one corner. Somebody
+walked it, tagged it, and wrote down where each stem stood.
 
 ```{r first-look}
 stems <- read.csv("../data/scbi_stems.csv") |>
   st_as_sf(coords = c("lon", "lat"), crs = 4326)
 
 st_crs(stems)$epsg
-st_crs(stems)$Name
 st_bbox(stems)
 ```
 
-*Beat: the bounding box should land over Front Royal, Virginia, near 78.1 west
-and 38.9 north. If it landed at the origin the coordinates were never
-georeferenced, and the map would look fine on its own axes.*
-
-```{r reproject}
-stems_utm <- st_transform(stems, 32617)   # UTM zone 17N, metres
-st_bbox(stems_utm)
+```{r plot-facts, echo=FALSE}
+raw <- read.csv("../data/scbi_stems.csv")
+n_stems <- nrow(raw)
+n_spp   <- length(unique(raw$species))
+w_m     <- diff(range(raw$gx, na.rm = TRUE))
+h_m     <- diff(range(raw$gy, na.rm = TRUE))
+claimed_ha <- 25.6
 ```
 
-*Beat: epsg.io as the lookup. What the `.prj` sidecar holds, which is one system
-in well-known text, the present one, and never a history.*
+The file holds `r format(n_stems, big.mark = ",")` stems of `r n_spp` species.
+The local grid runs `r w_m` metres in one direction and `r h_m` in the other, so
+the plot covers `r claimed_ha` hectares by construction, and that is the number
+the plot is known by.
 
-## Geoid and Ellipsoid
+Hold onto that figure. Before the next page is out the same plot will have three
+different areas, none of them a survey error.
 
-*Argument. Every planar measurement is a projection of a curved surface onto a
-flat one, with a distortion you chose. The geoid is the visual aid that carries
-the whole chapter. Ellipsoid, geoid and terrain as three different surfaces, and
-why height is the harder coordinate.*
+The bounding box above should land over Front Royal, near 78.1 degrees west and
+38.9 north. If it had landed at zero the coordinates would never have been
+georeferenced at all, and here is the trap in that. A map of the stems would
+still have looked perfectly sensible, because the plotting would have used the
+plot's own axes and the trees would have sat in their proper arrangement
+relative to each other. Nothing on the screen tells you the whole thing is
+sitting in the Gulf of Guinea.
 
-*Beat, one page maximum. Eratosthenes with a stick and a well. Latitude solvable
-from a horizon and a table, longitude waiting on a clock that kept time at sea.
-The Board of Longitude paid for that clock. This is the fastest route into what
-a datum is and it earns its space, but it does not get more than a page.*
+## The hectare that moves
 
-*Beat: Clarke 1866 to NAD 83 to WGS 84, and the metres that moved with each. The
-WGS 84 ensemble carries a stated accuracy of about two metres that almost nobody
-reads.*
-
-## Area Measurement
-
-*Argument. This is the applied core. A claimed area and a mapped area disagree,
-and the disagreement is the lesson.*
+The plot claims `r claimed_ha` hectares. Measure it two ways and neither answer
+is that.
 
 ```{r area-two-ways}
-claimed_ha <- 25.6
+stems_utm <- st_transform(stems, 32617)   # UTM zone 17N, metres
 
 bbox_ha <- as.numeric(st_area(st_as_sfc(st_bbox(stems_utm)))) / 1e4
-hull_ha  <- as.numeric(st_area(st_convex_hull(st_union(stems_utm)))) / 1e4
+hull_ha <- as.numeric(st_area(st_convex_hull(st_union(stems_utm)))) / 1e4
 
 data.frame(
   geometry      = c("bounding box", "convex hull"),
@@ -84,179 +89,738 @@ data.frame(
 )
 ```
 
-*Beat: the plot grid runs about 1.8 degrees off UTM north. A bounding box is
-axis-aligned by construction so it wraps a tilted rectangle inside a larger
-upright one. The hull follows the stems and recovers the nominal area. Neither
-figure is a survey error. When a claimed area and a mapped area disagree, the
-first question is not whether the survey is wrong but whether the thing being
-measured is the boundary or a box drawn round it, because that choice alone moved
-the answer by more than a hectare.*
+```{r area-numbers, echo=FALSE}
+box_pct  <- 100 * (bbox_ha - claimed_ha) / claimed_ha
+hull_pct <- 100 * (hull_ha - claimed_ha) / claimed_ha
+rot_fit  <- lm(st_coordinates(stems_utm)[, 1] ~ raw$gx + raw$gy)
+rot_deg  <- abs(atan2(coef(rot_fit)[3], coef(rot_fit)[2]) * 180 / pi)
+```
 
-## Boundary Verification
+The bounding box gives `r round(bbox_ha, 2)` hectares, which is
+`r round(box_pct, 1)` per cent more than the plot has. The convex hull gives
+`r round(hull_ha, 2)`, which is `r round(abs(hull_pct), 1)` per cent under and
+is effectively the right answer.
 
-*Argument. Area non-compliance is the most common finding an auditor raises and
-it is raised before any carbon is calculated.*
+The cause is a rotation of `r round(rot_deg, 1)` degrees. The plot was laid out
+along the slope, not along the grid, so its long axis runs
+`r round(rot_deg, 1)` degrees off UTM north. A bounding box is axis-aligned by
+definition, so wrapping one round a tilted rectangle is like putting a tilted
+book into an upright box. The box has to be bigger than the book, and the more
+the book is tilted the more air you buy.
 
-::: callout-warning
-## Pending Data
+Now put a price on it, because that is what the rest of this book is for.
 
-This section runs on the a public dataset ACR submission in
-`training/area-verification`, which is outside this repository. Before this chapter can
-render offline the following have to be copied into `data/` and cleared for
-publication: the submitted boundary, the strata, the harvest units, and the
-`slivers` and `artifacts` outputs. Anonymise the client if TÜV SÜD clearance is
-not in hand.
+```{r area-cost}
+c_density <- 150          # tonnes of carbon per hectare, a plausible temperate figure
+co2_ratio <- 44 / 12      # molecular mass of carbon dioxide over carbon
+
+phantom_ha  <- bbox_ha - hull_ha
+phantom_co2 <- phantom_ha * c_density * co2_ratio
+
+round(c(phantom_hectares = phantom_ha, phantom_tonnes_co2e = phantom_co2), 1)
+```
+
+```{r cost-numbers, echo=FALSE}
+ph_ha <- phantom_ha; ph_co2 <- phantom_co2
+```
+
+`r round(ph_ha, 2)` hectares of ground that does not exist, and about
+`r format(round(ph_co2), big.mark = ",")` tonnes of carbon dioxide equivalent
+that could be claimed on it. On a plot you can walk across in ten minutes, and
+before a single tree has been mismeasured.
+
+Neither number is a survey error. Both are correct measurements of different
+things. When a claimed area and a mapped area disagree, the first question is
+not whether the survey is wrong. It is whether the thing being measured is the
+boundary or a box drawn round it.
+
+The rest of this chapter is about the other ways that question can be answered
+wrongly, and it works upward from the coordinate itself.
+
+## What a coordinate claims
+
+A coordinate is not a fact about the ground. It is a claim about a model of the
+Earth **and about a date**, and it is only as good as both of those.
+
+The number 38.9 means nothing on its own. It means something once you say it is
+degrees of latitude on WGS 84, a particular mathematical model of the Earth's
+shape. A *coordinate reference system*, meaning the pairing of that model with
+the rules for turning positions on it into numbers, is what makes a coordinate
+readable. Every one in common use carries a code from the EPSG registry.
+
+The date is the half that almost every dataset omits, and it is not optional
+metadata. The ground moves. On the Pacific coast of North America the crust
+drifts one to two centimetres a year relative to the whole-Earth frame, so a
+latitude and longitude without a date is an incomplete statement in the same way
+that a share price without a date is incomplete. Two different dates are
+involved and confusing them is common. The *frame reference epoch* is the date
+at which the reference frame itself is defined, and ITRF2014 has one of 2010.0.
+The *coordinate epoch* is the date at which your particular measurement was
+valid, so a post surveyed in June 2016 has a coordinate epoch of 2016.47. To
+compare two coordinates you need both frames and both epochs. Moving a
+coordinate between epochs within one frame is a *point motion operation*, done
+with a velocity model.
+
+That distinction is why two national frames drift apart. A *dynamic* frame is
+fixed to the whole Earth, so the coordinates of a fixed post change over time. A
+*static*, or plate-fixed, frame moves with the tectonic plate, so the
+coordinates of that post stay roughly constant within the plate and drift
+relative to the globe. The International Terrestrial Reference Frame is dynamic.
+The Canadian realisation of the North American Datum of 1983 is plate-fixed.
+They differ by more than a metre on the west coast and the gap widens every
+year.
+
+The EPSG registry holds over ten thousand definitions, which is not a useful
+number. What is useful is that they come in a small number of kinds, and only
+three of them appear in most forest carbon work. **Geocentric** systems give
+three Cartesian numbers measured from the Earth's centre of mass, and that is
+what a satellite receiver actually solves for. **Geographic** systems give
+latitude and longitude on an ellipsoid, and that is the storage and exchange
+convention. **Projected** systems give a flat grid in metres, and that is for
+display and for legacy area computation. Two more matter as soon as height is
+involved, **vertical** systems quoting height above a defined surface and
+**compound** systems bolting a horizontal and a vertical together. Errors enter
+at the junctions between these, not inside any one of them.
+
+```{r crs-lookup}
+codes <- c(4326, 32617, 3005, 3157)
+data.frame(
+  epsg = codes,
+  name = vapply(codes, function(x) st_crs(x)$Name, character(1)),
+  units = vapply(codes, function(x) {
+    u <- st_crs(x)$units_gdal; if (is.null(u)) NA_character_ else u }, character(1))
+)
+```
+
+The data above declares 4326, longitude and latitude in degrees. Degrees are a
+poor unit for measuring anything, because a degree of longitude is 111
+kilometres at the equator and nothing at all at the pole, so the first move in
+almost any analysis is to change the system. Which brings us to the distinction
+the rest of the chapter rests on.
+
+## Conversion and transformation
+
+These two words are used interchangeably in ordinary speech and they name
+completely different operations. ISO 19111 draws the line precisely, and it is
+the single most useful distinction in this chapter.
+
+A **conversion** changes the coordinate system and not the datum. Latitude and
+longitude on WGS 84 to Universal Transverse Mercator zone 17 north on WGS 84 is
+a conversion. It is defined by an exact formula, it is reversible to the limits
+of floating point arithmetic, and it has no uncertainty of its own. Nothing
+moves on the ground.
+
+A **transformation** changes the datum. The Canadian realisation of the North
+American Datum of 1983 to WGS 84 realisation G1762 is a transformation. It is
+*estimated from observations*, so it carries a published accuracy. It is *not
+unique*, so several valid transformations exist between the same pair of datums
+and they give different answers. It often depends on a *grid shift file*, an
+external data product with its own version. Things move on the ground, by
+metres.
+
+Both are called *coordinate operations* when you need a word for the pair.
+
+The practical test is one line. **If the operation has an accuracy figure
+attached, it is a transformation, and you must record which one you used. If it
+does not, it is a conversion, and it is not your problem.**
+
+```{r conversion-vs-transformation}
+# A hundred stems is enough, and st_distance needs by_element or it builds
+# a full n by n matrix, which on 38,000 points does not finish.
+sample <- stems[seq(1, nrow(stems), length.out = 100), ]
+
+# A conversion. Same datum, new grid. Round-trip and see what is lost.
+back <- st_transform(st_transform(sample, 32617), 4326)
+conv_max_m <- max(st_distance(sample, back, by_element = TRUE))
+
+# A transformation. Different datum. Coordinates move.
+nad83 <- st_transform(sample, 4269)          # NAD83 geographic
+trans_max_m <- max(st_distance(sample, st_transform(nad83, 4326),
+                               by_element = TRUE))
+
+round(c(conversion_roundtrip_m = as.numeric(conv_max_m),
+        transformation_shift_m = as.numeric(trans_max_m)), 6)
+```
+
+```{r cvt-numbers, echo=FALSE}
+cm <- as.numeric(conv_max_m); tm <- as.numeric(trans_max_m)
+```
+
+The conversion round-trip loses `r format(signif(cm, 2), scientific = TRUE)`
+metres, which is floating point noise. Whether the transformation moves anything depends on which
+operation the software selected, and that is the point of the next two sections.
+Ask which one was used, not whether one was used.
+
+## Ellipsoid, geoid and the ensemble
+
+Every flat measurement is a curved surface pressed onto a plane, and the
+flattening is a choice with consequences you can compute.
+
+The physical Earth is lumpy, so three surfaces stand in for it and they are not
+interchangeable. The *ellipsoid* is a smooth squashed sphere chosen to fit the
+planet as a whole, a pure mathematical object with no physical existence. The
+*geoid* is the surface at which gravity has the same value everywhere, roughly
+the shape the oceans would settle into if they ran under the continents, and it
+undulates by tens of metres because rock is denser in some places than others.
+The *terrain* is the ground you actually stand on. Horizontal position is quoted
+against the ellipsoid and height against the geoid, which is why height is the
+harder coordinate and why an elevation that does not name its vertical datum is
+close to meaningless.
+
+The oldest version of this problem was solved with a stick. Eratosthenes,
+measuring the shadow at Alexandria at the moment the sun stood directly over a
+well at Syene, got the circumference of the Earth to within a few per cent
+around 240 BC. Latitude yields to that kind of observation, because the sun and
+the stars tell you how far north you are from anywhere with a clear horizon and
+a table. Longitude does not. Longitude is a question about time, in that knowing
+how far east you are means knowing what the hour is somewhere else at the same
+instant, and that required a clock that would keep time on a rolling deck
+through months of salt and temperature swing. The British Board of Longitude
+offered a prize for it in 1714 and the prize took a lifetime to claim. That is
+the shortest route into what a datum is, which is an agreement about where zero
+is and what shape the Earth has, arrived at because the alternative was ships
+hitting rocks.
+
+A datum has two parts, and only the second one is interesting. First a
+**shape**, almost always an ellipsoid with a stated semi-major axis and
+flattening. Second an **anchoring** of that shape to the physical planet,
+historically by a marked monument and now by the coordinates and velocities of a
+global station network. The shape alone is not a datum. WGS 84 and the North
+American Datum of 1983 use ellipsoids that are nearly identical in size, and
+they differ because they are anchored differently. That is why the offset
+between them is over a metre while the difference between their ellipsoids is
+below a millimetre.
+
+Now the part that damages a carbon inventory. WGS 84 as most software resolves
+it is not one datum at all. It is an **ensemble**, a bundle of successive
+realisations treated as interchangeable for approximate work, and the register
+states its accuracy in the definition itself. Do not take that on trust. Print
+what your own machine returns.
+
+```{r ensemble}
+wkt <- st_crs(4326)$wkt
+members <- gsub('MEMBER\\["|"$', "",
+                regmatches(wkt, gregexpr('MEMBER\\["[^"]+"', wkt))[[1]])
+accuracy <- regmatches(wkt, regexpr("ENSEMBLEACCURACY\\[[0-9.]+\\]", wkt))
+
+length(members)
+members
+accuracy
+sf_extSoftVersion()[c("GEOS", "GDAL", "proj.4")]
+```
+
+```{r ensemble-numbers, echo=FALSE}
+n_mem <- length(members)
+proj_v <- unname(sf_extSoftVersion()["proj.4"])
+```
+
+`r n_mem` members, and an accuracy of two metres, on PROJ `r proj_v`.
+
+Print that on a different machine and you may get a different count. The
+standard's own published example listed six. Registers in circulation during
+2024 listed seven. This machine lists `r n_mem`, having gained the most recent
+realisation. **That is not a flaw in the demonstration, it is the demonstration.**
+The definition of the most widely used coordinate reference system on Earth
+changes underneath the software, and the number of realisations bundled into it
+is a property of the version you happen to be running.
+
+So what does the modern well-known text notation buy? It cannot remove the
+ambiguity, because the ambiguity is real. What it does is **convert a silent
+error into a declared uncertainty**, by writing the ensemble and its accuracy
+into the definition where a machine can read them. A silent error cannot be
+audited. A declared two metres can be tested against a materiality threshold,
+reported with a confidence statement, and either accepted or raised as a
+corrective action. The notation does not fix the problem. It turns the problem
+into evidence.
+
+The fix itself is a specification rather than a piece of software, and it has
+five parts. Require the **realisation** and not the family, so WGS 84 (G1762)
+rather than WGS 84. Require the **coordinate epoch** as a decimal year. Require
+the **transformation by its EPSG code**, with its published accuracy, not by
+prose. Store the result in a container that can hold all of that, which a
+shapefile's `.prj` sidecar cannot and a GeoPackage can. And **pin the software**,
+meaning the PROJ version, the EPSG database version and the grid file versions.
+
+One line to carry out of this section. WGS 84 is not a datum. It is a two-metre
+agreement to stop arguing, and that agreement is fine for navigation and fatal
+for a hectare-accurate inventory.
+
+## Straight lines that are not
+
+Everything so far has been about the numbers at the corners. This section is
+about what the software assumes lies between them, and it is the assumption
+nobody declares.
+
+Underneath every geographic information system sits a data model called Simple
+Features, and it is a data model rather than a file format. It answers two
+questions. What counts as a shape, and what may you ask about shapes. The
+vocabulary is seven types, point, line, polygon and their plural forms plus a
+collection. The word *simple* is technical rather than a claim about ease, and
+it means a geometry that does not cross itself. The questions you may ask are a
+fixed set of predicates, whether one shape intersects, contains, touches,
+crosses or is within another. In a database every one of these carries the
+prefix `ST_`, and when you see `ST_Area` you are looking at Simple Features.
+
+Here is the assumption. A line is defined by its vertices **plus an implicit
+rule about what lies between them**, and ISO 19125-1 fixes that rule as linear
+interpolation. Straight lines. And "straight" is defined in whatever number
+space the coordinates happen to live in.
+
+The model was designed for a plane, for metres on a survey grid. Nothing stops
+you putting degrees into it, and everyone does. When you do, "straight" quietly
+means straight in a grid of degrees, which is an equirectangular projection you
+never chose, never declared and cannot see.
+
+Simple Features is a grammar for shapes. It tells you what a well-formed
+sentence looks like. It does not tell you which language you are speaking, and
+fed degrees it parses perfectly and means something other than you intended.
+
+What that costs is measurable. Take two vertices a hundred kilometres apart at
+the same latitude, and ask where the line between them actually runs.
+
+```{r linear-interpolation}
+edge <- st_sfc(st_linestring(rbind(c(-126.0, 50), c(-124.6, 50))), crs = 4326)
+
+# the great-circle path between the same two vertices, densified
+gc  <- st_cast(st_segmentize(edge, dfMaxLength = 1000), "POINT")
+co  <- st_coordinates(gc)
+mid <- co[round(nrow(co) / 2), c("X", "Y")]
+
+c(simple_features_midpoint_lat = 50,
+  great_circle_midpoint_lat    = round(mid[["Y"]], 5),
+  divergence_metres            = round((mid[["Y"]] - 50) * 111320, 1))
+```
+
+```{r si-numbers, echo=FALSE}
+sf_div <- round((mid[["Y"]] - 50) * 111320, 1)
+```
+
+The two vertices agree exactly. Halfway along, the two interpretations of the
+line between them are `r sf_div` metres apart. The Simple Features edge runs due
+west at a constant latitude. The path a surveyor would walk, and the path a
+spherical geometry engine computes, bows north. On a boundary made of long
+east-west edges, and on any boundary at high latitude, that difference changes
+the enclosed area.
+
+This is the reason the next chapters insist on spherical predicates, and the
+reason is not accuracy. It is that a spherical library uses exact arithmetic for
+its predicates, so the answer to whether a plot lies inside a jurisdiction is
+identical on every machine and every version. Determinism is the win.
+
+## Projection distortion, measured
+
+A projection distorts. Every book says so and almost none of them says by how
+much, in hectares, on ground the reader works on. Two demonstrations, both
+computed here.
+
+### The block that moves across a zone
+
+Universal Transverse Mercator cuts the world into sixty north-south strips six
+degrees wide. Each strip has a central meridian where the scale factor is
+0.9996, deliberately less than one, so that the error at the strip's edge is
+about equal and opposite to the error at its middle. Take one 500 hectare block
+and slide it from the central meridian to the zone edge.
+
+```{r utm-sweep}
+square_500ha <- function(lon, lat, ha = 500) {
+  d <- sqrt(ha * 1e4)
+  dlat <- d / 111320
+  dlon <- d / (111320 * cos(lat * pi / 180))
+  st_sfc(st_polygon(list(rbind(c(lon, lat), c(lon + dlon, lat),
+                               c(lon + dlon, lat + dlat), c(lon, lat + dlat),
+                               c(lon, lat)))), crs = 4326)
+}
+
+sweep <- lapply(c(-123, -124, -125, -126), function(lon) {
+  p <- square_500ha(lon, 49.5)
+  g <- as.numeric(st_geod_area(p)) / 1e4
+  u <- as.numeric(st_area(st_transform(p, 32610))) / 1e4
+  data.frame(deg_from_central_meridian = abs(lon + 123),
+             geodesic_ha = round(g, 3), utm_ha = round(u, 3),
+             error_ha = round(u - g, 3), error_pct = round(100 * (u - g) / g, 3))
+}) |> bind_rows()
+
+sweep
+```
+
+```{r utm-numbers, echo=FALSE}
+e_cm   <- sweep$error_ha[sweep$deg_from_central_meridian == 0]
+e_edge <- sweep$error_ha[sweep$deg_from_central_meridian == 3]
+swing  <- e_edge - e_cm
+```
+
+On the central meridian the block **shrinks** by `r sprintf('%.2f', abs(e_cm))`
+hectares. At the zone edge it **grows** by `r sprintf('%.2f', e_edge)`. The full swing across one zone is
+`r round(swing, 2)` hectares on 500, and the sign flips on the way. Nothing
+about the block changed.
+
+::: callout-important
+## A correction to the working notes
+
+The notes for this chapter proposed teaching this through a cutblock straddling
+the boundary at 126 degrees west, measured in zone 9 and again in zone 10, on
+the expectation that the two zones would disagree. They do not.
+
+```{r zone-straddle}
+p <- square_500ha(-126.02, 49.5)
+z9  <- as.numeric(st_area(st_transform(p, 32609))) / 1e4
+z10 <- as.numeric(st_area(st_transform(p, 32610))) / 1e4
+alb <- as.numeric(st_area(st_transform(p, 3005)))  / 1e4
+geo <- as.numeric(st_geod_area(p)) / 1e4
+
+data.frame(basis = c("geodesic on the ellipsoid", "UTM zone 9N",
+                     "UTM zone 10N", "BC Albers, equal area"),
+           ha = round(c(geo, z9, z10, alb), 3),
+           error_ha = round(c(0, z9, z10, alb) - c(0, geo, geo, geo), 3))
+```
+
+```{r straddle-numbers, echo=FALSE}
+z_gap <- abs(z9 - z10)
+```
+
+The two zones differ by `r signif(z_gap, 2)` hectares, which is nothing. The
+reason is worth more than the original example. A block sitting on a zone
+boundary is three degrees from **both** central meridians, so both projections
+distort it identically. Choosing the zone is a red herring. What matters is the
+distance from whichever central meridian you chose, which is what the sweep
+above measures. And the equal-area projection reproduces the geodesic area to
+three decimal places, which is what an equal-area projection is for.
 :::
 
-```{r area-check, eval=FALSE}
-# Sequence as run in training/area-verification/area-verification.qmd
-sf_use_s2(FALSE)                                  # configure the geometric plane
-st_layers("../data/submission.gpkg")              # what arrived
-bdry <- st_read("../data/submission.gpkg", "boundary", quiet = TRUE)
+### The buffer that is not five kilometres
 
-all(st_is_valid(bdry))                            # validate before measuring
-bad  <- bdry[!st_is_valid(bdry), ]                # extract the artefacts
-bdry <- st_make_valid(bdry)
+Web Mercator stretches distance by one over the cosine of the latitude, so a
+metre on its grid is less than a metre on the ground, and increasingly so as you
+go north. Buffering is one of the most frequent operations in this field and one
+of the least checked, and leakage belts, reference regions and exclusion zones
+are all defined by it.
 
-bdry$area_ha <- as.numeric(st_area(bdry)) / 1e4   # hectares, by feature
+```{r buffer-latitude}
+buffer_check <- lapply(c(49, 60, 68), function(lat) {
+  pt <- st_sfc(st_point(c(-120, lat)), crs = 4326)
+  planar   <- st_transform(st_buffer(st_transform(pt, 3857), 5000), 4326)
+  geodesic <- st_buffer(pt, 5000)          # s2, 5000 metres on the ground
+  data.frame(latitude = lat,
+             web_mercator_ha = round(as.numeric(st_area(planar)) / 1e4, 0),
+             geodesic_ha     = round(as.numeric(st_area(geodesic)) / 1e4, 0),
+             fraction        = round(as.numeric(st_area(planar)) /
+                                     as.numeric(st_area(geodesic)), 2))
+}) |> bind_rows()
+
+buffer_check
 ```
 
-*Beat: the workflow is set the plane, unpack, summarise the layers, validate,
-extract the invalid artefacts, calculate hectares, break the total down by
-boundary, stratum and harvest unit, then test the difference against materiality.
-Area and overlap operations on an invalid polygon return nonsense without
-erroring, which is why validation precedes measurement and not the reverse.*
-
-## Overlap and Ownership
-
-*Argument. Nine submissions in ten fail this on the first pass. Any positive
-intersection is land claimed twice.*
-
-```{r overlap}
-e  <- st_bbox(stems_utm)
-x0 <- unname(e["xmin"]); y0 <- unname(e["ymin"])
-a <- st_as_sfc(st_bbox(c(xmin = x0,       xmax = x0 + 250,
-                        ymin = y0,        ymax = y0 + 400), crs = 32617))
-b <- st_as_sfc(st_bbox(c(xmin = x0 + 200, xmax = x0 + 450,
-                        ymin = y0,        ymax = y0 + 400), crs = 32617))
-
-round(as.numeric(st_area(st_intersection(a, b))) / 1e4, 2)   # ha claimed twice
+```{r buffer-numbers, echo=FALSE}
+f49 <- buffer_check$fraction[buffer_check$latitude == 49]
+f68 <- buffer_check$fraction[buffer_check$latitude == 68]
+a68 <- buffer_check$web_mercator_ha[buffer_check$latitude == 68]
+g68 <- buffer_check$geodesic_ha[buffer_check$latitude == 68]
 ```
 
-*Beat: test against federal land, adjacent private parcels, national parks and
-neighbouring ownership. Then the set-operation trap. The valid area is the ground
-surviving every exclusion, which is an intersection of the residuals. Chaining
-unions instead readmits every excluded parcel, because a pixel excluded by the
-slope mask survives in the roads residual, and the belt comes out larger in a
-direction that suits the project.*
+At 49 degrees north the planar buffer encloses `r f49` of the ground it should.
+At 68 degrees north, ordinary boreal forest, it encloses `r f68`, which is
+`r format(a68, big.mark = ",")` hectares where
+`r format(g68, big.mark = ",")` were intended. The error is a smooth function of
+latitude rather than an edge case at the pole, which is why it is so rarely
+noticed and so often wrong.
 
-## Transformation Provenance
+## Where a coordinate comes from
 
-*Argument. The chain of reprojections is lost because nobody writes it down, not
-because the container cannot hold it. That is the defensible version.*
+Everything above treats the coordinate as given. It is worth one section on
+where it came from, because the order of operations explains why the ellipsoid
+is negotiable and the measurement is not.
 
-*Beat: the shapefile family has no lineage mechanism at all. GeoPackage is an OGC
-encoding standard, not an ISO one, and it fixes the real shapefile defects, the
-two gigabyte ceiling, the ten-character field names, the 255-column limit and
-polygon against multipolygon ambiguity. Its `gpkg_metadata` table can hold ISO
-19115 records, and ISO 19115-1:2014 does define a lineage element. But lineage is
-only there if somebody writes it, and almost nobody does.*
+A navigation satellite broadcasts a signal saying, in effect, that it is at a
+stated place and sent this at a stated instant. The receiver picks up several
+such signals, works out how long each took to arrive, multiplies by the speed of
+light to get a distance, and finds the one point in space consistent with all of
+those distances at once. Four satellites are the minimum, because there are four
+unknowns, three for position and one for the receiver's own clock error. The
+technique is called *multilateration*, meaning position from multiple distances.
 
-## Geometry Engines
+The answer comes out as three plain numbers in metres from the Earth's centre of
+mass, called *Earth-centred, Earth-fixed*. There is no sphere here and no flat
+map. **The measurement itself is not made on any map, on any ellipsoid or on any
+sphere.** All of those come afterwards and all of them are conventions.
 
-*Argument. Two analysts measure the same polygon and get different areas. A
-reported area without its software environment stated is not reproducible.*
+Latitude, longitude and height are then *computed from* those three numbers by
+choosing an ellipsoid and asking where the point falls on it. Height needs one
+step more, because the ellipsoid is smooth and sea level is not, so converting
+an ellipsoidal height into the height above sea level a forester recognises
+requires a geoid model.
+
+So the order is measurement, then convention. The Cartesian solution is what the
+physics produced. The ellipsoid is a choice made in software afterwards, and the
+sphere used by a spherical geometry library is a further approximation applied
+after that. Which is also why no clever choice of geometry downstream can
+improve a position. It can only fail to damage it.
+
+The vocabulary is used loosely and is worth fixing. GPS is one constellation,
+operated by the United States. *GNSS* is the family, and a modern receiver
+listens to the American, Russian, European and Chinese systems at once, which is
+why it fixes faster and holds position better under canopy than a receiver from
+fifteen years ago. All four are aligned to the International Terrestrial
+Reference Frame at centimetre level, which is why mixing them works. *Real-time
+kinematic* correction adds a second receiver at a known point that measures the
+error at that instant and sends a correction to the first, taking a handheld
+from a few metres to a few centimetres, at the cost of a base station and a
+working data link.
+
+The way to know what your own equipment does is to measure it. Occupy a
+published control point, record a few hundred fixes, and report the distribution
+of the distances from truth, including the tail. A receiver that is accurate to
+two metres most of the time and to twenty metres under a closed canopy in
+December is not a two-metre receiver, and the plots that matter are the ones
+under canopy.
+
+That matters because of what a plot centre is. Permanent sample plots in North
+America are marked with rebar driven into the ground, and national inventory
+programmes use markers built to survive decades of frost and logging and fire.
+A field crew returning after five years has to stand where the last crew stood,
+because the plot is defined as the trees within a fixed radius of a point, and a
+crew that sets up three metres away measures a partly different set of trees.
+Three metres sounds forgivable and it is not, because plot measurements are
+multiplied by an expansion factor, meaning the number of hectares each plot is
+taken to represent, and scaled across the project. A plot standing for four
+hundred hectares carries its error four hundred times over into the reported
+total. The error does not stay on the plot. Nothing does.
+
+## The engines and the chain
+
+Two analysts measure the same polygon and get different areas. Neither has made
+a mistake, and this is not a rare event.
 
 ```{r versions}
 sf_extSoftVersion()[c("GEOS", "GDAL", "proj.4")]
 ```
 
-*Beat: ArcGIS runs its own engine over GDAL. GDAL ships in many versions. PROJ 6,
-released 2019, moved the canonical representation from proj4 strings to WKT2,
-introduced the datum ensemble and made late-binding the default, which is why the
-same request can resolve differently across versions. This is why the
-area-verification workflow ends on a runtime log rather than on a number.*
+Underneath almost every geographic information system sit the same three open
+source libraries. GEOS does the geometry, meaning intersections, unions and
+validity. GDAL reads and writes the formats. PROJ does the coordinate
+operations. Commercial desktop packages run their own engine over GDAL. R and
+Python and QGIS call the same libraries directly, and each ships whichever
+versions it was built against.
 
-## Plot Monumentation
+The versions matter because the architecture changed twice, and both changes
+altered numbers rather than only interfaces.
 
-*Argument. Positional accuracy connects to the carbon number here, and it scales.*
+Before 2018, PROJ was a projection engine with datum handling bolted on
+afterwards. It used **early binding**, meaning a datum shift was baked into the
+definition of each system and every operation pivoted through WGS 84 as a hub.
+That is how a definition string could silently carry a seven-parameter shift
+nobody had chosen. PROJ 5 introduced an explicit transformation pipeline, so an
+operation became something you could write down and re-execute. PROJ 6, in 2019,
+was the break that matters. The EPSG dataset was imported into PROJ itself as a
+database, so definitions stopped being scattered across disagreeing files.
+Well-known text version 2 arrived, so a system could be written and read without
+loss. **Late binding** replaced early binding, so PROJ now looks up candidate
+operations in the register, each with its own accuracy and area of validity, and
+picks one at run time. And axis order began following the authority, which meant
+a great deal of code that had assumed longitude first silently swapped
+coordinates. PROJ 7 moved grid files to a format that can be fetched on demand
+from a network, which is convenient and is bad for reproducibility unless you
+pin.
 
-*Beat: permanent sample plots in North America are marked with rebar, and public
-inventory programmes use markers built to survive decades. A crew that cannot
-relocate a centre and sets up three metres away measures a different set of
-trees. Because plot means are extrapolated across the whole project, that error
-does not stay on the plot, it multiplies by the expansion factor.*
+**Here is the consequence, and it is the paragraph to remember.** Two analysts
+running the identical command on the identical file can get different numbers,
+because the operation is chosen at run time from a database whose version, and
+from a grid collection whose contents, differ between their machines. That is
+not a bug. It is the design. It is also why "I reprojected to WGS 84" is not a
+reproducible statement.
 
-## GNSS Accuracy Assessment
+Which is why the chain of operations a boundary has been through is worth
+recording, and why almost nobody records it. By the time a boundary reaches an
+auditor it has usually been through four or five systems. Collected on a
+handheld in WGS 84, brought into a desktop package in a state plane system,
+reprojected to a national grid for a client, exported for a subcontractor, and
+reprojected back. Each step is reversible alone. The chain is not.
 
-*Argument. Report a positional accuracy as a distribution, not as a single
-number.*
+The tempting explanation is that the file formats cannot record it, and that
+explanation is wrong. The shapefile genuinely cannot, having no lineage
+mechanism of any kind and a `.prj` sidecar that holds the present system and
+nothing else. But the shapefile is no longer the only option. GeoPackage fixes
+the real shapefile defects, which are a two gigabyte ceiling, field names
+truncated to ten characters, a limit of 255 columns, and an ambiguity between
+polygon and multipolygon that makes counting features unreliable. It also
+carries a metadata table able to hold ISO 19115 records, and that standard
+defines a lineage element intended for exactly this. So the container can hold
+the chain. The chain is missing because nobody writes it, which is a working
+practice rather than a technical limit.
 
-*Beat: GPS is one constellation, GNSS is the family. What real-time kinematic
-correction does and what it costs. How to run a check against a known control
-point. Source material in `GPS-training-material`, `survey-tools` and the
-KoBoToolbox deployment.*
+An audit-ready submission therefore has seven items in it, and they belong in a
+data product specification as conformance criteria rather than in an email as
+requests.
 
-## Reference Data
+1. The **realisation**, not the family. WGS 84 (G1762) or NAD83(CSRS), never
+   plain WGS 84.
+2. The **coordinate epoch**, as a decimal year.
+3. The **transformation used**, by EPSG code, with its published accuracy.
+4. **Software versions**, meaning PROJ, the EPSG database, and any grid files.
+5. The **edge rule**, planar or geodesic.
+6. The **measurement basis**, meaning the method and the ellipsoid the area was
+   computed on.
+7. A **checksum** over the geometry.
 
-*Argument. Interpreted ground reference points are the most valuable and least
-glamorous data product in remote sensing.*
+## What an auditor can say
 
-*Beat: the Global Land Cover Estimation training database holds close to two
-million training units for 1984 to 2020, at 30 metres, across seven primary and
-twelve secondary classes, built at Boston University under Woodcock and Friedl
-and published in Scientific Data in 2023. Why it took years and a large team, and
-why that effort is the foundation of every accuracy statement later in this book.*
+Suppose a boundary arrives without most of that. The question is not whether to
+accept or reject it, which is a false choice. The question is what can be
+written down.
 
-## Planar and Spherical
+Four questions, from the auditing standard ISO 19011, apply to the metadata and
+not only to the geometry. Is the information complete, correct, consistent and
+current? A projection file with no epoch fails "complete", and it fails for a
+structural reason rather than because anyone withheld anything. The same
+standard says that only information which can be verified to some degree counts
+as audit evidence, and that where verifiability is low the auditor must use
+professional judgement about how much to rely on it. A boundary whose
+realisation is unknown is low-verifiability evidence. Say so in the file rather
+than silently recomputing and hoping.
 
-*Argument. Closing caveat and the hinge into the rest of the book.*
+The vocabulary for the finding comes from ISO 19157, the standard on data
+quality, and it is more useful than it looks because positional accuracy is not
+one thing. *Absolute external accuracy* is how far the data are from truth.
+*Relative internal accuracy* is how well the vertices agree among themselves.
+The ensemble problem damages the first and leaves the second intact, so an
+auditor can write "internally excellent, externally uncertain to two metres"
+instead of arguing about whether the data are good.
 
-```{r s2}
+The same standard offers a way to qualify a number you cannot fully stand
+behind. *Metaquality* is information about the quality of your quality
+statement, and it has three elements, confidence, representativity and
+homogeneity. Report the accuracy figure, attach a confidence statement naming
+the unresolved ensemble, and use homogeneity where a boundary was captured
+across seasons on different base stations. That is the mechanism that lets a
+verifier be honest without either accepting or rejecting outright.
+
+Two harder facts close this out. **The standard sets no thresholds and says so
+in its own scope.** Acceptable quality lives in a *conformance quality level*,
+a number stated in a data product specification or in user requirements, so the
+registry or the verification body has to set it because the standard has
+declined to. The reproducibility contract is not a coordinate system
+declaration. It is a specification with numbers in it.
+
+And **lineage is the fallback, and lineage is the weak link.** Where positional
+accuracy cannot be measured directly, the standard routes you to indirect
+evaluation, meaning assessing quality from external knowledge, and gives lineage
+as its example. Lineage is metadata, described in the standard's own words as
+general, non-quantitative and illustrative. So when the measurement is
+unavailable you are told to rely on the record of where the data has been, and
+the record of where the data has been is exactly what the shapefile export
+destroyed.
+
+## The three surfaces
+
+Everything above reduces to three rules, and they are stated last rather than
+first because they are conclusions. Call them the three surfaces. Globe for
+geometry, ellipsoid for measurement, plane for pictures.
+
+**Do the geometry on the globe.** Predicates, overlays and indexing on longitude
+and latitude are computed with spherical geometry, which in R is the `s2` engine
+that `sf` uses by default. The reason is not that a sphere is more accurate than
+a plane. It is that the spherical library uses exact arithmetic for its
+predicates, so the answer to whether a plot lies inside a jurisdiction is
+identical on every machine and every version. Determinism is the win.
+
+**Do the measurement on the ellipsoid.** No number that reaches a verification
+statement comes from spherical or projected geometry. Areas, lengths and
+distances come from geodesic calculations on a declared ellipsoid.
+
+**Declare the surface you used.** A spherical measurement states its sphere
+radius, because there is no single right one. An ellipsoidal measurement states
+its ellipsoid. A projected measurement states its projection. A number without
+its surface is not a measurement, it is a rumour.
+
+```{r three-surfaces}
+hull <- st_convex_hull(st_union(stems))
+
+sf_use_s2(TRUE);  sphere <- as.numeric(st_area(hull)) / 1e4
+sf_use_s2(FALSE); ellips <- as.numeric(st_area(hull)) / 1e4
 sf_use_s2(TRUE)
-sph <- as.numeric(st_area(st_convex_hull(st_union(stems)))) / 1e4
-sf_use_s2(FALSE)
-ell <- as.numeric(st_area(st_convex_hull(st_union(stems)))) / 1e4
 
-data.frame(engine = c("s2, sphere", "GeographicLib, ellipsoid"),
-           area_ha = round(c(sph, ell), 4),
-           rel_diff = c(NA, round((ell - sph) / sph, 8)))
+data.frame(surface = c("sphere, radius 6371010 m", "ellipsoid, geodesic",
+                       "plane, UTM zone 17N"),
+           area_ha = round(c(sphere, ellips, hull_ha), 4))
 ```
 
-*Beat: a traditional geographic information system represents the world as a flat
-projection, the way a paper map does. S2 represents it on a sphere, the way a
-globe does, and the name is the notation for the unit sphere. No seams, so a
-polygon crossing the antimeridian is ordinary. No singularities, so the poles
-behave like everywhere else. What it buys is fast in-memory indexing, robust
-constructive operations through snap rounding, and efficient nearest-neighbour
-queries.*
+```{r surface-numbers, echo=FALSE}
+s2_rel  <- abs((ellips - sphere) / sphere)
+box_rel <- abs(bbox_ha - hull_ha) / hull_ha
+```
 
-*Beat, and this is the honest framing. The area difference is around 6.4e-05, so
-two thirds of a hectare on ten thousand. That is small against the 6.6 per cent
-the bounding box and the hull disagreed by earlier in this chapter, and saying so
-teaches the reader to rank error sources rather than fear them equally. The real
-gain is that a planar intersection of two nearly coincident boundaries
-manufactures slivers, which is what `slivers layer` in the area-verification outputs
-contains, and exact spherical predicates do not.*
+Now the ranking, which is the single most useful thing in this chapter. Sphere
+against ellipsoid differ by a relative amount of
+`r format(signif(s2_rel, 2), scientific = TRUE)`. The bounding box against the
+convex hull, on page one, differed by `r round(100 * box_rel, 1)` per cent,
+about `r format(round(box_rel / s2_rel), big.mark = ",")` times larger.
 
-*Closing rule: an area reported without its geometry engine, its library versions
-and its geometry setting is not reproducible, whatever its magnitude. And the
-question of which plane you compute on, and what support the answer has, is the
-thread this book follows to the cube. See `publishing/book-spine.md`.*
+The instinct on meeting a new source of error is to fear all of them equally.
+The skill worth having is ranking them. Choosing the wrong geometry for your
+boundary cost a hectare and a half. Choosing the wrong Earth model cost a few
+square metres. Choosing the wrong realisation, or losing the record of which one
+you used, costs an argument you cannot win.
+
+And there is a standing caveat that belongs beside the rules rather than inside
+them. Spherical geometry is not a coordinate reference system. It has no EPSG
+code, no ellipsoid and no epoch. Give it a mislabelled coordinate and it returns
+a fast, exact, perfectly repeatable answer in the wrong place. The three
+surfaces fix *how* you compute. They do not fix *what* you were given.
+
+The rest of this book obeys these rules and says so at the first measurement in
+every chapter. The question of which surface you computed on, and what support
+the answer has, is the thread that runs from here to the data cube.
 
 ## Exercises
 
-*To be written. Six to eight, each closing on a number a verifier would accept.*
+1. Reproject the stems to a geographic system other than WGS 84 and back again,
+   and report the largest distance any stem moved. State whether the result is
+   within the two-metre accuracy of the ensemble, and say whether the operation
+   you performed was a conversion or a transformation.
+2. Rotate the plot outline through every angle from 0 to 45 degrees and plot the
+   bounding box area against the angle. At what rotation is the box exactly a
+   third larger than the plot, and what is the maximum?
+3. Extend the zone sweep to the neighbouring zone, so the block runs from three
+   degrees west of one central meridian to three degrees east of the next.
+   Plot the error against longitude and mark where it crosses zero.
+4. Repeat the buffer comparison at every degree from 0 to 80 north and plot the
+   enclosed fraction against latitude. At what latitude does a planar buffer
+   enclose less than half the ground intended?
+5. Take the two vertices from the linear interpolation section and move them to
+   68 degrees north, keeping the same separation in longitude. Report the
+   divergence and say what it implies for a boreal project boundary digitised
+   from widely spaced vertices.
+6. *(Applied.)* A project reports 1,240 hectares from a bounding box drawn round
+   a boundary running 12 degrees off grid north. Using only the results in this
+   chapter, estimate the area actually enclosed, and state what fraction of the
+   project's credits are being claimed on ground that is not there.
+7. *(Applied.)* Write the seven-item submission specification from this chapter
+   as a machine-readable sidecar for the stem dataset, filling in every field you
+   can and marking the ones you cannot. State which of the gaps you would raise
+   as a finding and which you would accept with a confidence statement.
 
 ::: callout-note
-## Open Decisions
+## Open decisions
 
-**Does this chapter split?** Ten sections runs 35 to 45 printed pages, at the top
-of the series range. The clean line is after "The library underneath", leaving
-projection and area as chapter 1 and plot centres, GNSS and ground truth as
-chapter 2.
+**This chapter now has to split.** It ran eleven sections before the notes were
+integrated and it runs eleven after, but four of them are new and the argument
+is denser. The clean line falls after "Straight lines that are not", which
+leaves a first chapter on what a coordinate claims and what it costs, and a
+second on the audit trail, running from projection distortion through the
+engines to what an auditor can say. That is the recommendation. It also relieves
+the seventeen-chapter page budget problem in the wrong direction, taking the
+book to eighteen before the two candidate chapters are counted.
 
-**Which two ebooks?** The author wants the geospatial data objects section
-aligned to two ebooks that present them without overwhelming the reader. Neither
-was supplied. Names or paths needed.
+**Two claims from the working notes did not survive testing** and both
+corrections are in the text. The cutblock straddling two UTM zones does not
+produce disagreeing areas, because a block on the boundary is equidistant from
+both central meridians; the distance from a single central meridian is what
+matters and the sweep now shows it. And the ensemble member count is eight on
+this machine rather than the six or seven the notes anticipated, which the
+chapter now uses as its own demonstration.
+
+**Still pending.** The a public dataset boundary verification and overlap material
+was cut from this draft rather than left as a callout, because it cannot render
+offline and because TÜV SÜD clearance is not in hand. It belongs in the second
+chapter if the split is taken. The two ebooks the geospatial objects section was
+to be aligned to have still not been supplied.
 :::

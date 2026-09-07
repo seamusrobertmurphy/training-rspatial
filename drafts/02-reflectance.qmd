@@ -1,6 +1,6 @@
 ---
 title: "Reading Reflectance, and What an Index Can Support"
-subtitle: "Chapter 2 draft, 5 September 2026"
+subtitle: "Chapter 2 redraft, 6 September 2026"
 execute:
   eval: true
   echo: true
@@ -9,12 +9,20 @@ execute:
 ---
 
 ::: callout-note
-## Draft, not a skeleton
+## Redraft
 
-Every number in the prose is computed by a chunk on this page. Brief at
-`publishing/chapter-briefs/02-reflectance.md`. The disturbance signatures
-section plants the closing arc and is the one place where the argument is
-deliberately unfinished.
+A redraft of `02-reflectance.qmd` under the `writing-scientific-books` skill,
+kept beside the original for comparison. Every code chunk is unchanged, so every
+computed number is identical. The prose is rewritten to introduce each term in
+the sentence that first uses it and to cut what the reader does not need.
+
+One substantive correction. The disturbance signatures section previously
+reported the beetle classification of Murphy et al. (2026) as having a
+commission error of 0.750 on the red-attack class and a kappa of 0.166. Table 8
+of that paper reports the reverse, a kappa of 0.750 and a commission error on
+red attack of 0.198, and the paper calls those error rates acceptable. The
+section is rewritten against the published tables, and the argument it was
+making is moved to the fire results, where the tables do support it.
 :::
 
 ```{r setup}
@@ -36,68 +44,74 @@ lulc  <- rast("../data/rondonia_class_2022.tif")
 class <- project(lulc, clear, method = "near")
 names(class) <- "class"
 ```
-
 ## Introduction
 
-A satellite does not measure forest. It counts photons arriving in a detector
-over a fixed interval of wavelength, converts that count to a digital number,
-and writes the digital number to a file. Everything between that file and a
-reported tonne of carbon is inference, and this chapter is about the first two
-steps of it, the conversion from a count to a reflectance and the compression of
-several reflectances into one index.
+A satellite does not measure forest. It counts photons landing in a detector
+over a fixed slice of wavelength, turns that count into a number, and writes the
+number to a file. Everything between that file and a reported tonne of carbon is
+inference, and this chapter covers the first two steps of it, the conversion of
+a count into a reflectance and the compression of several reflectances into one
+index.
 
-The chain is worth stating once in full, because the rest of the book assumes
-it. Sunlight passes down through the atmosphere, some of it scatters and some is
-absorbed. What reaches the canopy interacts with leaves, bark, soil and water.
-Some of that returns upward, passes through the atmosphere a second time, and
-reaches the sensor. The sensor records radiance at the top of the atmosphere. A
-processing chain then estimates what the surface must have reflected for that
-radiance to arrive, which requires a model of the atmosphere on that day over
-that place. The output is called surface reflectance, and the word to hold onto
-is *estimate*. A surface reflectance product is a retrieval with its own
-uncertainty, not a measurement, and no part of forest carbon accounting treats
-it that way.
+The chain is worth walking once in full, because the rest of the book assumes
+it. Sunlight comes down through the atmosphere, and some of it scatters off air
+and dust on the way. What arrives at the canopy meets leaves, bark, soil and
+water. Some of it goes back up, passes through the atmosphere a second time, and
+reaches the sensor. The sensor records the brightness arriving at the top of the
+atmosphere. A processing chain then works backwards and asks what the ground
+must have reflected for that brightness to arrive, which needs a model of the
+atmosphere on that day over that place.
+
+The output of that calculation is called surface reflectance, and the word to
+hold onto is *estimate*. It is a *retrieval*, meaning a quantity worked out
+backwards from something else that was measured, and it carries an uncertainty
+of its own. It is not a measurement of the ground. No part of forest carbon
+accounting treats it as anything else.
 
 The reason to persevere is that optical data is the only record long enough to
 matter. Landsat 1 launched in July 1972 and the record has not stopped since,
 which makes it the longest continuous measurement of the land surface that
 exists. Almost every forest carbon project on Earth sets its historical baseline
-from that archive, because nothing else can reach back far enough. The archive
-is imperfect in the specific ways this chapter measures. It is also
-irreplaceable.
+from that archive, because nothing else reaches back far enough. The archive is
+imperfect in the specific ways this chapter measures. It is also irreplaceable.
 
 The scene used throughout is a 24 kilometre window on the Madeira river in
-Rondonia, in the Brazilian Amazon, on two dates in 2022. It carries intact
-forest, riparian forest, open water, wetland, and the rectangular clearings of
-the Amazon frontier, so every argument below can be made on real ground rather
-than on a constructed surface.
+Rondonia, in the Brazilian Amazon, on two dates in 2022. It holds intact forest,
+riparian forest, open water, wetland, and the rectangular clearings of the
+Amazon frontier, so every argument below is made on real ground rather than on a
+surface built to prove a point.
 
 ```{r scene}
 plotRGB(clear[[c("B04", "B03", "B02")]], stretch = "lin",
         main = "Rondonia, 16 July 2022, true colour")
 ```
+## Spectral response
 
-## Spectral Response
+All of optical vegetation monitoring rests on one physical contrast, and the
+contrast is not a convention that could have been chosen differently.
 
-The contrast that all of optical vegetation monitoring rests on is physical, not
-conventional. Chlorophyll absorbs strongly in the red, near 665 nanometres,
-because that is where the pigment does its work. The internal structure of a
-leaf, the cell walls and the air spaces between them, scatters near infrared
-light near 842 nanometres almost without absorbing it, because no pigment in the
-leaf has an absorption feature there. A living leaf is therefore dark in the red
-and bright in the near infrared, and a dead or absent one is not. The difference
-between those two bands is a measurement of living tissue.
+Chlorophyll absorbs strongly in the red, near 665 nanometres, because that is
+where the pigment does its work. Near infrared light at 842 nanometres meets no
+pigment that absorbs it at all, so it passes into the leaf and bounces around
+inside. The interior of a leaf is a stack of cell walls with air pockets between
+them, and light crossing from wet wall to dry air and back again scatters at
+every boundary, the way a glass of water full of bubbles looks white while the
+water and the glass are both clear. Most of that light comes back out.
 
-Sentinel-2 records ten bands relevant here. The table below is read from the
-product specification rather than typed from memory.
+So a living leaf is dark in the red and bright in the near infrared, and a dead
+or absent one is neither. The gap between those two bands is a measurement of
+living tissue.
+
+Sentinel-2 records ten bands relevant here. The table is read from the product
+specification rather than typed from memory.
 
 ```{r bands}
 knitr::kable(bands, col.names = c("Band", "Name", "Centre (nm)",
                                   "Width (nm)", "Native cell (m)"))
 ```
-
-The signature of each land cover is the mean reflectance of its cells in every
-band. Three of them carry the whole argument.
+The *signature* of a land cover, meaning its average reflectance in every band,
+is what separates one cover from another. Three of them carry the whole
+argument.
 
 ```{r signatures}
 d <- as.data.frame(c(clear, class), na.rm = FALSE)
@@ -107,23 +121,21 @@ d$cover <- legend$cover[match(d$class, legend$id)]
 sig <- aggregate(d[names(clear)], list(cover = d$cover), mean)
 knitr::kable(sig, digits = 3)
 ```
-
 ```{r signature-numbers, echo=FALSE}
 g <- function(cov, b) sig[[b]][sig$cover == cov]
 f_red <- g("Forest", "B04");  f_nir <- g("Forest", "B08")
 s_red <- g("Clear cut, bare soil", "B04"); s_nir <- g("Clear cut, bare soil", "B08")
 w_red <- g("Water", "B04");   w_nir <- g("Water", "B08")
 ```
-
 Intact forest reflects `r round(f_red, 3)` in the red and `r round(f_nir, 3)` in
 the near infrared, a ratio of `r round(f_nir / f_red, 1)`. Cleared ground with
 bare soil reflects `r round(s_red, 3)` and `r round(s_nir, 3)`, a ratio of
-`r round(s_nir / s_red, 1)`, because soil is brighter in the red and no longer
-has a canopy scattering the near infrared. Open water reflects `r round(w_red, 3)`
-in the red and `r round(w_nir, 3)` in the near infrared, so its near infrared is
-*below* its red, because water absorbs near infrared almost completely. That
-inversion is why water takes negative values in every vegetation index, and it
-is the only reason water is easy.
+`r round(s_nir / s_red, 1)`, because soil is brighter in the red and there is no
+longer a canopy scattering the near infrared. Open water reflects
+`r round(w_red, 3)` in the red and `r round(w_nir, 3)` in the near infrared, so
+its near infrared sits *below* its red, because water swallows near infrared
+almost completely. That inversion is why water takes negative values in every
+vegetation index, and it is the only reason water is easy.
 
 Read across the rest of the table and the two shortwave infrared bands do
 something the visible bands do not. Forest reflects `r round(g("Forest","B11"), 3)`
@@ -131,31 +143,37 @@ at 1,610 nanometres and clear-cut regrowth reflects
 `r round(g("Clear cut, regrowth","B11"), 3)`, a gap of
 `r round(g("Clear cut, regrowth","B11") - g("Forest","B11"), 3)`, while their red
 reflectances differ by only
-`r round(g("Clear cut, regrowth","B04") - f_red, 3)`. The shortwave infrared
-responds to liquid water in the canopy, and a young regenerating stand holds
-less of it than a closed mature one. Hold that observation. The section on class
-separability turns it into the chapter's first result.
+`r round(g("Clear cut, regrowth","B04") - f_red, 3)`. The shortwave infrared is
+absorbed by liquid water, so it reports on how wet the canopy is, and a young
+regenerating stand holds less water than a closed mature one. Hold that
+observation. The section on class separability turns it into the chapter's first
+result.
 
-## Reflectance Retrieval
+## Reflectance retrieval
 
-The files above are Level-2A products, meaning an atmospheric correction has
-already been applied. It is worth knowing what was corrected and what was not.
+The files above are Level-2A products, which means an atmospheric correction has
+already run on them. It is worth knowing what it corrected and what it did not.
 
-A Level-1C product carries top of atmosphere reflectance, which includes
-everything the atmosphere did on the way down and on the way up. The correction
-to Level-2A estimates and removes the atmospheric contribution, using aerosol
-optical thickness and water vapour either retrieved from the scene itself or
-taken from a forecast. Where the retrieval works, the result approximates what a
-spectrometer held above the canopy would have read. Where it does not, and
-the smoky scene later in this chapter is one such case, the residual atmosphere stays in the number and
-is indistinguishable from the ground.
+A Level-1C product holds top of atmosphere reflectance, which is everything the
+atmosphere did on the way down and on the way up, mixed in with the ground. The
+correction to Level-2A estimates the atmosphere's contribution and subtracts it.
+Doing that needs two quantities for the day and place in question, the amount of
+haze in the air and the amount of water vapour, either retrieved from the scene
+itself or taken from a weather forecast. It is like reading a page through
+frosted glass and trying to subtract the glass. Where the estimate of the glass
+is good, the result approximates what an instrument held just above the canopy
+would have read. Where it is not, and the smoky scene later in this chapter is
+one such case, the leftover atmosphere stays in the number and cannot be told
+apart from the ground.
 
-There is a second, duller way the same number goes wrong, and it has cost
-projects more than the physics has. Sentinel-2 processing baseline 04.00 entered
-operations on 25 January 2022. Among other changes it shifted the stored dynamic
-range by a band-dependent constant, so that a negative surface reflectance,
-which is physically meaningless but statistically ordinary over dark water,
-could be stored rather than clamped away. From that date the correct recovery is
+There is a second and duller way the same number goes wrong, and it has cost
+projects more than the physics has.
+
+Sentinel-2 processing baseline 04.00 came into operation on 25 January 2022.
+Among other changes it shifted the stored range of values by a constant that
+differs from band to band, so that a negative surface reflectance, which is
+physically impossible but statistically ordinary over dark water, could be
+stored rather than clipped to zero. From that date the correct recovery is
 
 $$\rho = \frac{\mathrm{DN} + \mathrm{BOA\_ADD\_OFFSET}}{\mathrm{QUANTIFICATION\_VALUE}}$$
 
@@ -181,36 +199,38 @@ off <- sapply(list(NDVI = c("B08", "B04"), NDMI = c("B08", "B11"),
 off <- rbind(off, difference = off["missed", ] - off["applied", ])
 round(off, 3)
 ```
-
 Mean forest vegetation index falls from `r round(off["applied","NDVI"], 3)` to
 `r round(off["missed","NDVI"], 3)`, a shift of
 `r round(abs(off["difference","NDVI"]), 3)`, on ground where nothing happened.
 That is larger than most of the real differences a disturbance study is looking
-for. The lesson is not the number, which depends on an offset value read from
-metadata. The lesson is that a processing convention changed on a stated date,
-and any time series that crosses that date without accounting for it carries a
-step change that looks exactly like an event.
+for.
 
-## Band Support
+The lesson is not the number, which depends on an offset read from metadata. The
+lesson is that a processing convention changed on a stated date, so any time
+series crossing that date without accounting for it carries a step that looks
+exactly like an event.
 
-The previous chapter asked which plane the arithmetic happens on. The same question at the level
-of a sensor is what area of ground one number describes.
+## Band support
 
-Sentinel-2 does not answer that once. It acquires the blue, green, red and broad
-near infrared bands at a native ground sample distance of 10 metres, and the
-three red edge bands, the narrow near infrared band and the two shortwave
-infrared bands at 20 metres. The files here sit on a single 20 metre grid, which
-means six bands were coarsened to reach it and none was sharpened. An index that
-mixes a 10 metre band with a 20 metre band is not comparing like with like
-before somebody resamples, and after somebody resamples the mismatch is hidden
-rather than resolved.
+The previous chapter asked which plane the arithmetic happens on. Asked of a
+sensor, the same question becomes what area of ground one number describes. That
+area is the *support* of the value, and it is the second half of this book's
+spine.
+
+Sentinel-2 does not answer it once. It collects the blue, green, red and broad
+near infrared bands at a *ground sample distance* of 10 metres, meaning each
+number covers a 10 metre square of ground, and it collects the three red edge
+bands, the narrow near infrared band and the two shortwave infrared bands at 20
+metres. The files here sit on a single 20 metre grid, so six bands were
+coarsened to get there and none was sharpened. An index mixing a 10 metre band
+with a 20 metre band is not comparing like with like until somebody resamples,
+and once somebody resamples the mismatch is hidden rather than fixed.
 
 ```{r support-table}
 knitr::kable(aggregate(band ~ gsd_m, bands, paste, collapse = ", "),
              col.names = c("Native cell (m)", "Bands acquired at it"))
 ```
-
-The consequence at a boundary is measurable. Aggregate the scene to 60 metre
+The consequence at a boundary can be measured. Aggregate the scene to 60 metre
 cells, three by three, and ask how many of those cells are entirely forest,
 entirely something else, or partly both.
 
@@ -223,17 +243,19 @@ round(100 * c(pure_forest = mean(v == 1),
               pure_other  = mean(v == 0),
               mixed       = mean(v > 0 & v < 1)), 1)
 ```
-
 ```{r mixed-numbers, echo=FALSE}
 pct_mixed <- round(100 * mean(v > 0 & v < 1), 1)
 ```
-
 `r pct_mixed` per cent of 60 metre cells straddle the forest boundary. Their
-reflectance describes neither forest nor clearing, and whatever value an index
-returns for them is a weighted average of two things that were never averaged in
-nature. This is the whole of the mixed pixel problem, and it is why a 30 metre
-Landsat cell and a 10 metre Sentinel-2 cell are not two measurements of the same
-ground at different quality. They are measurements of different things.
+reflectance describes neither forest nor clearing. Stir a tin of green paint
+into a tin of brown and the result is a real colour that matches neither tin,
+and no amount of looking at it tells you the proportions you started with.
+Whatever value an index returns for those cells is an average of two things that
+were never averaged in nature.
+
+This is the whole of the mixed pixel problem, and it is why a 30 metre Landsat
+cell and a 10 metre Sentinel-2 cell are not two measurements of the same ground
+at different quality. They are measurements of different things.
 
 The order of operations matters for the same reason. An index is a ratio, and
 the ratio of averages is not the average of ratios.
@@ -248,16 +270,14 @@ difference <- first_average - first_index
 names(difference) <- "NDVI difference"
 global(abs(difference), quantile, probs = c(0.5, 0.95, 0.99, 1), na.rm = TRUE)
 ```
-
 ```{r order-numbers, echo=FALSE}
 q <- global(abs(difference), quantile, probs = c(0.5, 1), na.rm = TRUE)
 ```
-
 The median disagreement is `r format(round(q[1, 1], 4), scientific = FALSE)`,
 which is nothing, and the maximum is `r round(q[1, 2], 3)`, which is a great
 deal. The obvious guess is that the large disagreements sit at boundaries, where
-the two source bands vary in opposite directions across the cell, so test it
-rather than assert it.
+the two source bands move in opposite directions across the cell. Test it rather
+than assert it.
 
 ```{r order-where}
 a <- values(abs(difference)); m <- values(frac60 > 0 & frac60 < 1)
@@ -269,37 +289,36 @@ round(c(mixed_share_of_scene = 100 * mean(m),
         median_mixed         = median(a[m]),
         median_pure          = median(a[!m])), 4)
 ```
-
 ```{r order-where-numbers, echo=FALSE}
 share  <- 100 * mean(m)
 worsts <- 100 * mean(m[worst])
 ```
-
 On the cells where both quantities are defined, which is why the share differs
 slightly from the figure above, mixed cells are `r round(share, 1)` per cent of
 the scene and `r round(worsts, 1)` per cent of the worst one per cent of
 disagreements, so they are over-represented by a factor of
-`r round(worsts / share, 1)`. They do
-not account for all of it, and the obvious guess was therefore too strong. The
-typical disagreement in a mixed cell is about twice the typical disagreement in
-a pure one. So the answer to which order is correct is that it depends on what
-the number is for, and the answer to whether it matters is that it matters most
-where you are most likely to be looking.
+`r round(worsts / share, 1)`. They do not account for all of it, so the obvious
+guess was too strong. The typical disagreement in a mixed cell is about twice
+the typical disagreement in a pure one.
 
-## Index Construction
+Which order is correct depends on what the number is for. Whether it matters is
+settled. It matters most exactly where you are most likely to be looking.
+
+## Index construction
 
 A spectral index compresses several bands into one number. The normalised
 difference is the standard form,
 
 $$\mathrm{ND}(a, b) = \frac{\rho_a - \rho_b}{\rho_a + \rho_b}$$
 
-which is bounded between -1 and 1 and, because it is a ratio, cancels part of
-any multiplicative effect that raises or lowers both bands together. That
+which is bounded between -1 and 1 and, being a ratio, cancels part of any effect
+that raises or lowers both bands together. Weigh two stones on a scale reading
+ten per cent heavy and each weight is wrong, but their ratio is right. That
 cancellation is the reason indices are used at all, and the section on
-atmospheric sensitivity shows the limits of it.
+atmospheric sensitivity shows where it stops working.
 
 The family is one function applied to different band pairs, and writing it that
-way makes the point that the members differ only in which physics they ask
+way makes the point that its members differ only in which physics they ask
 about.
 
 ```{r indices}
@@ -325,17 +344,19 @@ indices <- function(r) {
 i_clear <- indices(clear)
 plot(i_clear[[c("NDVI", "NDMI", "NBR", "NDRE1")]], range = c(-0.6, 1))
 ```
+Look at the four panels together rather than at any one of them.
 
-Look at the four panels together rather than at any one of them. The vegetation
-index is nearly flat across everything that is green, because it saturates, in
-that once a canopy is closed, adding leaf area barely changes the red
-reflectance, which is already near zero. The moisture index and the burn ratio keep separating the
-clearings from the forest well after the vegetation index has stopped. That is
-not an artefact of the display. It is the next section's result.
+The vegetation index is nearly flat across everything green, because it
+saturates. Once a canopy has closed, the red reflectance is already close to
+zero, so adding more leaves changes almost nothing, the way pouring water onto a
+sponge that is already full does not make it wetter. The moisture index and the
+burn ratio keep pulling the clearings away from the forest long after the
+vegetation index has stopped. That is not a trick of the display. It is the next
+section's result.
 
-## Class Separability
+## Class separability
 
-Take the two classes a deforestation project has to tell apart, and ask whether
+Take the two classes a deforestation project has to tell apart and ask whether
 an index can do it. Intact forest and clear cut with regrowth are, respectively,
 `r round(100 * mean(d$class == 4), 1)` and
 `r round(100 * mean(d$class == 6), 1)` per cent of the scene.
@@ -352,22 +373,23 @@ quantiles <- do.call(rbind, lapply(split(iv$NDVI, iv$cover), quantile,
                                    probs = c(0.05, 0.25, 0.5, 0.75, 0.95)))
 knitr::kable(round(quantiles, 3))
 ```
-
 ```{r separability-numbers, echo=FALSE}
 fnd <- iv$NDVI[iv$cover == "Forest"]
 gnd <- iv$NDVI[iv$cover == "Clear cut, regrowth"]
 pctile <- round(100 * mean(fnd < median(gnd)), 1)
 ```
-
 Regrowth has a median vegetation index of `r round(median(gnd), 3)`. Forest has
 a median of `r round(median(fnd), 3)` and a fifth percentile of
-`r round(quantile(fnd, 0.05), 3)`. The regrowth median therefore sits at the
-`r pctile`th percentile of the forest distribution. There is no threshold that
-separates them, because there is no gap to put one in, and a two-year-old
-clearing that has grown back to scrub is spectrally inside the forest
-distribution while being, in every sense a project cares about, not forest.
+`r round(quantile(fnd, 0.05), 3)`, meaning one forest cell in twenty falls below
+that value. The regrowth median therefore sits at the `r pctile`th percentile of
+the forest distribution.
 
-That statement can be made precise. Sweep every threshold and take the best.
+There is no threshold that separates them, because there is no gap to put one
+in. A two-year-old clearing grown back to scrub sits spectrally inside the
+forest distribution while being, in every sense a project cares about, not
+forest.
+
+That can be made precise. Sweep every threshold and take the best.
 
 ```{r threshold-sweep}
 best_threshold <- function(a, b, n = 400) {
@@ -384,38 +406,37 @@ sweep <- t(sapply(c("NBR", "NDMI", "NDRE1", "NDVI"), function(nm)
   best_threshold(sub[[nm]][sub$class == 4], sub[[nm]][sub$class == 6])))
 round(sweep, 3)
 ```
-
 ```{r sweep-numbers, echo=FALSE}
 ba <- round(sweep[, "balanced_accuracy"], 3)
 tv <- round(sweep["NDVI", "threshold"], 3)
 ```
-
 Two things in that table are worth more than the rest of the chapter.
 
-The first is that the best the vegetation index can do is a balanced accuracy of
-`r ba["NDVI"]`, at a threshold of `r tv`, and at that threshold it still calls
-`r round(100 * sweep["NDVI", "regrowth_called_forest"], 1)` per cent of regrowth
-forest. Better than nothing is not the same as fit for purpose, and a project
-that maps forest by thresholding a vegetation index has a systematic error it
-cannot see, because the errors are concentrated in exactly the class the project
-is paid to find.
+The first is that the best the vegetation index can manage is a *balanced
+accuracy* of `r ba["NDVI"]`, meaning the average of how often it gets forest
+right and how often it gets regrowth right, counted separately so the larger
+class cannot flatter it. That best comes at a threshold of `r tv`, and even
+there it calls `r round(100 * sweep["NDVI", "regrowth_called_forest"], 1)` per
+cent of regrowth forest. Better than nothing is not the same as fit for purpose.
+A project mapping forest by thresholding a vegetation index has a systematic
+error it cannot see, because the errors sit in exactly the class the project is
+paid to find.
 
 The second is the ranking. The burn ratio reaches `r ba["NBR"]`, the moisture
 index `r ba["NDMI"]`, the red edge index `r ba["NDRE1"]` and the vegetation
 index `r ba["NDVI"]`. The two shortwave infrared indices beat the two visible
 ones, and they beat them because regrowth differs from forest more in canopy
-water than in greenness, exactly as the band signatures earlier in this chapter showed.
-The index the whole field reaches for first is the worst of the four at the job
-it is reached for.
+water than in greenness, which is what the band signatures showed earlier. The
+index the whole field reaches for first is the worst of the four at the job it
+is reached for.
 
-None of this is an argument against the vegetation index. It is an argument for
-choosing a band pair by the physics of the difference you are trying to see,
-which is a decision, and for reporting which one you chose, which almost nobody
-does.
+None of this argues against the vegetation index. It argues for choosing a band
+pair by the physics of the difference you are trying to see, which is a
+decision, and for reporting which one you chose, which almost nobody does.
 
-## Atmospheric Sensitivity
+## Atmospheric sensitivity
 
-Now the second date. On 2 September 2022 the same ground was under smoke from
+Now the second date. On 2 September 2022 the same ground lay under smoke from
 biomass burning, which is an ordinary condition in Rondonia in September and not
 an exotic failure case.
 
@@ -424,9 +445,8 @@ par(mfrow = c(1, 2))
 plotRGB(clear[[c("B04", "B03", "B02")]], stretch = "lin", main = "16 July 2022")
 plotRGB(smoke[[c("B04", "B03", "B02")]], stretch = "lin", main = "2 September 2022")
 ```
-
 Both scenes are Level-2A, so an atmospheric correction ran on both and neither
-was withheld. What the correction left behind is measurable band by band.
+was withheld. What the correction left behind can be measured band by band.
 
 ```{r smoke-bands}
 # global() returns a data frame whose row names carry the band, so the means are
@@ -438,19 +458,18 @@ knitr::kable(data.frame(band = names(clear), centre_nm = bands$centre_nm,
                         july = round(m1, 4), september = round(m2, 4),
                         ratio = round(m2 / m1, 2)), row.names = FALSE)
 ```
-
 ```{r smoke-numbers, echo=FALSE}
 r_ratio <- round(m2 / m1, 2)
 ```
-
 Scene-mean blue reflectance is `r r_ratio["B02"]` times its clear-date value.
 Green is `r r_ratio["B03"]`, red `r r_ratio["B04"]`, near infrared
 `r r_ratio["B08"]` and the longer shortwave infrared band `r r_ratio["B12"]`.
-The pattern is monotonic in wavelength and it has a physical cause, because
-scattering by fine aerosol particles falls off steeply as wavelength rises, so smoke
-brightens the blue end of the spectrum and barely touches the infrared. This is
-the same physics that makes the sky blue, operating on an instrument that was
-trying to look through it.
+
+The pattern runs steadily with wavelength and it has a physical cause. Fine
+particles scatter short wavelengths far more than long ones, so smoke brightens
+the blue end of the spectrum and barely touches the infrared. This is the same
+physics that makes the sky blue, working on an instrument that was trying to see
+through it.
 
 What that does to an index depends entirely on which bands the index uses.
 
@@ -463,7 +482,6 @@ shift <- sapply(names(i_clear), function(nm) c(
 shift <- rbind(shift, change = shift["september", ] - shift["july", ])
 round(shift, 3)
 ```
-
 ```{r smoke-index-numbers, echo=FALSE}
 ch <- round(shift["change", ], 3)
 fs <- values(forest_only(i_smoke[["NDVI"]])); fs <- fs[!is.na(fs)]
@@ -471,10 +489,9 @@ fc <- values(forest_only(i_clear[["NDVI"]])); fc <- fc[!is.na(fc)]
 below_clear <- round(100 * mean(fc < sweep["NDVI", "threshold"]), 1)
 below_smoke <- round(100 * mean(fs < sweep["NDVI", "threshold"]), 1)
 ```
-
 Mean forest vegetation index falls by `r abs(ch["NDVI"])`. The burn ratio, both
 of whose bands sit beyond 800 nanometres, moves `r abs(ch["NBR"])`. On identical
-ground, on which nothing happened between the two dates, one index moved
+ground, where nothing happened between the two dates, one index moved
 `r round(abs(ch["NDVI"]) / abs(ch["NBR"]), 0)` times as far as the other.
 
 Put that next to the threshold from the separability sweep. On the clear date,
@@ -484,143 +501,158 @@ Put that next to the threshold from the separability sweep. On the clear date,
 ```{r threshold-collapse}
 c(clear_date = below_clear, smoky_date = below_smoke)
 ```
-
-A forest map made by thresholding the vegetation index would have classified
-essentially the entire forest as non-forest, and it would have done so with no
-error, no warning and a plausible-looking output. The index that separated
-worst also breaks worst, and the pairing of those two results is what this
-chapter has to say.
+A forest map made by thresholding the vegetation index would have called almost
+the entire forest non-forest, and it would have done so with no error, no
+warning and a plausible-looking output. The index that separated worst also
+breaks worst, and the pairing of those two results is what this chapter has to
+say.
 
 The enhanced vegetation index deserves its own sentence, because it is the one
-in the set explicitly designed to resist this. Its blue term, with a coefficient
-of -7.5, exists to subtract the aerosol contribution.
+in the set built specifically to resist this. Its blue term, with a coefficient
+of -7.5, is there to subtract the haze.
 
 ```{r evi-failure}
 round(shift[, "EVI"], 3)
 ```
-
 It moved the wrong way, rising `r round(shift["change","EVI"], 3)` on forest.
-The correction was calibrated for a modest aerosol perturbation, and under heavy
-smoke a large blue value drives the denominator down and inflates the whole
-ratio. A correction applied outside the range it was designed for is not a
-weaker correction. It is a different error, and it is a worse one, because the
-first kind announces itself and the second does not.
+The correction was calibrated for a modest amount of haze, and under heavy smoke
+a large blue value drives the denominator down and inflates the whole ratio. A
+correction used outside the range it was built for is not a weaker correction.
+It is a different error, and a worse one, because the first kind announces
+itself and the second does not.
 
-The operational answer to all of this is cloud and aerosol masking followed by
-compositing over a window, which is the subject of the time series chapter. The
-answer this chapter can give is narrower and comes first. Know which bands your
-index uses, and know that an atmospheric state is a condition on the value in
-the same way a cell size is. The number describes the ground and the column of
-air above it, and the retrieval is the attempt to tell them apart.
+The operational answer to all of this is masking cloud and haze and then
+compositing over a window of dates, which is the subject of the time series
+chapter. The answer this chapter can give is narrower and comes first. Know
+which bands your index uses, and know that the state of the atmosphere is a
+condition on the value in the same way the cell size is. The number describes the
+ground and the column of air above it, and the retrieval is the attempt to tell
+those two apart.
 
-## Disturbance Signatures
+## Disturbance signatures
 
 Two disturbances dominate the forest carbon landscapes this book is about, and
 both were mapped with the indices computed above long before anyone modelled
-them. This section is a survey of what those signatures are and where they fail.
-The methods that turn a signature into a dated, attributed, area-adjusted
-estimate belong to later chapters and are not attempted here.
+them. This section says what those signatures are and where they fail. Turning a
+signature into a dated, attributed, area-adjusted estimate belongs to later
+chapters.
 
-### Insect Attack
+The evidence throughout is Murphy et al. (2026), who worked in the Darkwoods
+Conservation Area in the southern Selkirk Mountains of British Columbia and
+tested both disturbances against field plots on the same ground. Their tables
+are quoted rather than paraphrased, because the useful part is in the per-class
+numbers rather than in the headline.
+
+### Insect attack
 
 Mountain pine beetle, *Dendroctonus ponderosae* Hopkins, kills lodgepole pine by
-attacking the phloem, and the crown then fades over the following seasons. What
-matters for a sensor is that the fading runs through three named phases, and each
-one is a different physical state.
+tunnelling into the layer of living tissue just under the bark, and the crown
+then fades over the seasons that follow. What matters for a sensor is that the
+fading runs through three named stages, and each is a different physical state.
 
-In the green phase the tree has been attacked and its needles are still green,
-which is the phase every operational detector would most like to catch and the
-phase none of them catches reliably. In the red stage, the first twelve to
-twenty-four months after attack, the tree retains red needles while sapwood and
-foliar moisture decline together, so both a visible-band index and a shortwave
-infrared one have something to register. In the grey stage the remaining needles
-and the snags have fallen, and what the sensor sees is the understorey and the
-ground.
+In the green stage the tree has been attacked and its needles are still green.
+That is the stage an operational detector would most like to catch and the stage
+none of them catches reliably. In the red stage, the first twelve to twenty-four
+months after attack, the tree holds red needles while the water in its sapwood
+and foliage drains away, so a visible-band index and a shortwave infrared one
+both have something to register. In the grey stage the needles and then the
+standing dead stems have fallen, and what the sensor sees is the understorey and
+the ground.
 
-Which index to use in the red stage is therefore an empirical question rather
-than a deduction, and it was answered by measurement. Murphy et al. (2026)
-mapped red-stage attack across the Darkwoods Conservation Area in the southern
-Selkirk Mountains of British Columbia from an annual Landsat series running 2003
-to 2013, tested the moisture index against the wetness, greenness and brightness
-components of the tasselled cap transform, and selected the moisture index on
-its regression diagnostics against field reference plots.
+Which index to use in the red stage is an empirical question rather than a
+deduction, and it was answered by measurement. Murphy et al. mapped red-stage
+attack from an annual Landsat 5 series with a pre-outbreak scene of 20 August
+2003 and a post-outbreak scene of 31 August 2013. They tested the moisture index
+against the wetness, greenness and brightness components of the tasselled cap
+transform, which is a standard recombination of Landsat bands into three axes
+meant to track soil, vegetation and moisture. The moisture index won on
+regression against field plots, explaining 0.905 of the variance in the basal
+area fraction of beetle-killed trees at a root mean square error of 4.83, with a
+cross-validation error ratio of 1.09 that sits below the threshold above which a
+model is treated as overfitted.
 
-Their accuracy assessment is the most useful thing in this chapter for a reader
-who has to decide whether to believe a map. The moisture index classification
-reached an overall accuracy of 0.824 and a kappa of 0.750, kappa being the
-agreement left once the agreement expected by chance is removed. On the
-red-attack class itself the commission error was 0.198 and the omission error
-0.199, so about one cell in five called red attack was not, and about one in
-five of the real red attack was missed. The study describes those rates as
-acceptable and selects the moisture index on them.
+The classification that followed reached an overall accuracy of 0.824 and a
+kappa of 0.750, kappa being the agreement left once the agreement expected by
+chance is taken out. Errors on the red-attack class itself were a commission
+error of 0.198, meaning about one cell in five called red attack was not, and an
+omission error of 0.199, meaning about one in five of the real red attack was
+missed. The paper describes those rates as acceptable and selects the moisture
+index on them.
 
-That is a good result, and it is worth being exact about what a good result
-buys. One cell in five is fine for showing where an outbreak is. It is not fine
+That is a good result, and it is worth being clear about what a good result buys
+you. One cell in five is fine for mapping where an outbreak is. It is not fine
 for a project claiming payment on the difference between two years, because a
 twenty per cent false alarm rate on the disturbed class is comparable in size to
-the change many projects are trying to detect. The figure that decides whether a
-map is usable is never the overall accuracy. It is the error on the class the
-project is paid to find, and that is why the classification chapter exists.
+the change many projects are trying to detect. The number that decides whether a
+map is usable is never the overall accuracy. It is the error on the class you
+are being paid to find.
 
 ### Fire
 
-Fire is the mirror case and the easier one. Combustion removes canopy water and
-leaves char, and both effects push the shortwave infrared up hard while the near
-infrared falls, so the normalised burn ratio moves further and more reliably than
-any visible-band index. The same study tested five candidate indices against 94 burn
-plots, 9 of them field plots established immediately after the fire in 2015 and
-resampled in 2020, and 85 scored from aerial photographs. Every plot carried a
-composite burn index, a field protocol that rates fire effects across substrate,
-ground shrubs, understorey and overstorey on a scale from 0.00 to 10.00, with
-below 2.50 counted as no change and above 7.50 as high severity. The burn ratio
-had the highest correlation with the field scores, at an R-squared of 0.879
-against 0.584 for the next best index.
+Fire is the mirror case and the easier one. Combustion drives the water out of
+the canopy and leaves char behind, and both of those push the shortwave infrared
+up hard while the near infrared falls, so the normalised burn ratio moves
+further and more reliably than any visible-band index.
+
+Murphy et al. tested five candidate indices against 94 burn plots, 9 of them
+field plots established immediately after the fire in 2015 and resampled in
+2020, and 85 scored from aerial photographs. Every plot was rated with a
+composite burn index, a field protocol that scores fire effects across four
+layers, the substrate, the ground shrubs, the understorey and the overstorey, on
+a scale from 0.00 to 10.00, with below 2.50 counted as no change and above 7.50
+as high severity. The burn ratio had the strongest relationship with those field
+scores, explaining 0.879 of the variance where the next best index explained
+0.584.
 
 Its classification reached an overall accuracy of 0.872 and a kappa of 0.792,
-the best figures anywhere in the study, and the per-class errors are where the
-lesson is. On the high severity class the burn ratio missed 4 per cent. On the
-low severity class it missed 55 per cent, and 22 per cent of the cells it called
-low severity were something else. The headline figure is carried by the classes
-that were easy, the unburned ground and the severe burns, and it conceals a
-class the index can barely see, because a fire that scorches the understorey and
-leaves the canopy standing changes very little of what the sensor measures. An
-overall accuracy is an average over classes weighted by how common they are, so
-it rewards a classifier for getting the easy majority right. Read the per-class
-errors first and the overall accuracy last.
+which are the best numbers anywhere in the study. Now look inside them. On the
+high severity class the burn ratio missed 4 per cent. On the low severity class
+it missed 55 per cent, and of the cells it did call low severity, 22 per cent
+were something else.
 
-One detail of that field design belongs to this book's spine rather than to fire
-ecology. Plots were located at the centre of areas of uniform disturbance within
-a four-cell Landsat quadrant of 60 by 60 metres, with a minimum plot diameter of
-20 metres and a minimum spacing of 45 metres between plots of different classes.
-The plot was sized to the sensor's support and not to the ecology. That is the
-correct decision, it is almost never written down, and a reader who understands
-why it was taken has understood most of what this book is about.
+So the headline figure of 0.872 is carried almost entirely by the classes that
+were easy, the unburned ground and the severe burns, and it conceals a class the
+index can barely see. Low severity fire is where more than half the events are,
+and it is where an index built on canopy water has the least to work with,
+because a fire that scorches the understorey and leaves the canopy standing
+changes very little of what the sensor is measuring. An overall accuracy is an
+average over classes weighted by how common they are, so it rewards a
+classifier for getting the easy majority right. Read the per-class errors first
+and the overall accuracy last.
 
-### Where This Leads
+One detail of the field design belongs to this book's spine rather than to fire
+ecology. Plots were placed at the centre of areas of relatively uniform
+disturbance within a four-cell Landsat quadrant of 60 by 60 metres, and where
+severity classes were mixed a minimum plot diameter of 20 metres and a minimum
+spacing of 45 metres between classes were enforced. The plot was sized to the
+sensor's support, not to the ecology. That is the correct decision, it is almost
+never written down, and a reader who understands why it was taken has understood
+most of what this book is about.
+
+### Where this leads
 
 A disturbance is not only a patch on a map. It is an event in a system that has
 states, and the interesting question about a beetle outbreak or a fire regime is
-not where it was but whether the system it happened in is still in the same
-regime afterwards.
+not where it was but whether the system it happened in is still the same system
+afterwards.
 
-That question is the closing argument of this book and it is named here so that
+That question is the closing argument of this book, and it is named here so that
 the index just computed is understood as the measurement the argument will rest
-on. Insect outbreaks are the classic case of a population with a threshold, in that
-the same forest, the same beetle and a slightly warmer winter give a
-qualitatively different trajectory, and the mathematics of that shift, bifurcation and tipping
-behaviour, is a live and unsettled debate in the disturbance ecology literature
-rather than a settled tool. Whether a forest carbon landscape can pass such a
-threshold, and whether a monitoring system built from the indices in this
-chapter could detect it if it did, is a question about the length and the
-regularity of the record as much as about the ecology. The final part of the
-book takes it up with a spatio-temporal data cube as the data structure and
-Markov chain Monte Carlo as the inference machinery, and it returns to these
-same two disturbances.
+on. Insect outbreaks are the classic case of a population with a threshold, in
+that the same forest and the same beetle and a slightly warmer winter give a
+different trajectory altogether. The mathematics of that kind of shift is a live
+and unsettled debate in the disturbance ecology literature rather than a settled
+tool. Whether a forest carbon landscape can cross such a threshold, and whether a
+monitoring system built from the indices in this chapter could tell if it did, is
+a question about the length and the regularity of the record as much as about the
+ecology. The final part of the book takes it up with a data cube as the data
+structure and Markov chain Monte Carlo as the inference machinery, and it returns
+to these same two disturbances.
 
-Nothing of that is attempted here. What this chapter delivers is the
-measurement, its physical basis, and an honest account of the three ways it goes
-wrong, the wrong band pair, an uncorrected atmosphere, and a support the analyst
-never stated.
+None of that is attempted here. What this chapter delivers is the measurement,
+its physical basis, and an honest account of the three ways it goes wrong, the
+wrong band pair, an uncorrected atmosphere, and a support the analyst never
+stated.
 
 ## Conclusions
 
@@ -630,37 +662,47 @@ makes it cancel some effects and not others. It is built from estimates, which
 means the retrieval that produced them is part of the measurement.
 
 Three results from this scene stand behind that. Choosing the band pair by the
-physics of the difference matters more than choosing the index by convention,
-and on separating forest from regrowth the shortwave infrared indices beat the
+physics of the difference matters more than choosing the index by convention, and
+on separating forest from regrowth the shortwave infrared indices beat the
 visible ones by `r round(ba["NBR"] - ba["NDVI"], 3)` in balanced accuracy. An
-uncorrected atmosphere moves a visible-band index `r round(abs(ch["NDVI"]) / abs(ch["NBR"]), 0)`
-times as far as an infrared one, far enough to reclassify an entire forest
-without an error being raised. And a processing convention that changed on a
-stated date moves the same index by `r round(abs(off["difference","NDVI"]), 3)`
-if the metadata is not read.
+uncorrected atmosphere moves a visible-band index
+`r round(abs(ch["NDVI"]) / abs(ch["NBR"]), 0)` times as far as an infrared one,
+far enough to reclassify an entire forest without an error being raised. And a
+processing convention that changed on a stated date moves the same index by
+`r round(abs(off["difference","NDVI"]), 3)` if the metadata is not read.
 
-None of those are exotic. All three are in the first hour of an ordinary
+A fourth stands behind the section on disturbance. The burn ratio reached an
+overall accuracy of 0.872 in the Selkirk Mountains and still missed 55 per cent
+of the low severity class. An accuracy figure quoted without its per-class errors
+is not a result, it is a summary of which classes were common.
+
+None of those are exotic. All of them sit in the first hour of an ordinary
 workflow, which is where the errors that reach an audit are made.
 
 ## Exercises
 
-1. Compute the normalised difference between the narrow near infrared band
-   (B8A) and the red band, and compare it with the standard vegetation index
-   built on the broad band (B08). The two bands differ by 23 nanometres in
-   centre wavelength and by 124 nanometres in width. How much does the index
-   change, and which class changes most?
-2. The band support section aggregated to 60 metre cells. Repeat it at 100 and 200
-   metres and plot the mixed fraction against cell size. At what cell size does
-   more than a quarter of the scene straddle a boundary?
-3. Repeat the threshold sweep for riparian forest against wetland, two classes that are adjacent on the ground and in the legend. Which
-   index does best, and is any of them usable?
-4. *(Applied.)* The scene on 2 September is smoky everywhere. Build a crude
-   aerosol screen by flagging cells whose blue reflectance exceeds twice the
-   scene median for the clear date, apply it to the smoky scene, and report what
-   fraction of the scene survives. State whether the surviving fraction is
-   spatially random, and what that implies for a composite built from it.
-5. *(Applied.)* A project reports a forest area from a vegetation index
-   threshold and does not state the acquisition date, the processing baseline or
-   the cell size. Using only the results in this chapter, put a range on how far
-   that reported area could be from the truth, and say which of the three
-   omissions you would ask about first.
+1. Compute the normalised difference between the narrow near infrared band (B8A)
+   and the red band, and compare it with the standard vegetation index built on
+   the broad band (B08). The two bands differ by 23 nanometres in centre
+   wavelength and by 124 nanometres in width. How much does the index change, and
+   which class changes most?
+2. The band support section aggregated to 60 metre cells. Repeat it at 100 and
+   200 metres and plot the mixed fraction against cell size. At what cell size
+   does more than a quarter of the scene straddle a boundary?
+3. Repeat the threshold sweep for riparian forest against wetland, two classes
+   adjacent on the ground and in the legend. Which index does best, and is any of
+   them usable?
+4. Take the confusion between low and moderate severity described in the fire
+   section. Given a class that is missed 55 per cent of the time and covers half
+   the burned area, compute the range within which the true burned area could lie
+   if only the classified map were available.
+5. *(Applied.)* The scene on 2 September is smoky everywhere. Build a crude haze
+   screen by flagging cells whose blue reflectance exceeds twice the scene median
+   for the clear date, apply it to the smoky scene, and report what fraction of
+   the scene survives. State whether the surviving fraction is spread evenly
+   across the scene, and what that implies for a composite built from it.
+6. *(Applied.)* A project reports a forest area from a vegetation index threshold
+   and does not state the acquisition date, the processing baseline or the cell
+   size. Using only the results in this chapter, put a range on how far that
+   reported area could be from the truth, and say which of the three omissions
+   you would ask about first.

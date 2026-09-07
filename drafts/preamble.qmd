@@ -1,6 +1,6 @@
 ---
 title: "Remote Sensing for Forest Carbon Accounting"
-subtitle: "Preamble and the perspective of the book, 6 September 2026"
+subtitle: "Preamble and perspective, redrafted 6 September 2026"
 number-sections: false
 format:
   docx:
@@ -9,76 +9,100 @@ format:
     toc: false
 ---
 
-# Where this material lives
+::: callout-note
+## Redraft
 
-Nothing was lost. The preamble drafted on 4 September 2026 is at
-`publishing/preamble-draft.md` and is committed. It was never rendered because
-it is a planning file rather than a chapter, so the book project does not build
-it, which is why it is absent from `_out`. This document gathers it together
-with the other places the book's wider perspective is written down, so the whole
-of the argument can be read in one sitting.
+This is a redraft of `preamble.qmd` under the `writing-scientific-books` skill,
+kept beside the original for comparison. Content is unchanged in substance. What
+changed is who the prose addresses, how many claims arrive with an instance
+attached, and how much of it there is.
+:::
 
-Four files carry it, and each has a different job.
+# The reader
 
-`publishing/preamble-draft.md` holds the preamble itself and the author
-biography. `publishing/book-spine.md` holds the single thread that runs through
-every chapter, with its 5 September amendment. `index.qmd` is the preface as it
-currently stands in the book. `publishing/book-proposal.md` holds the same
-argument in the register a publisher reads.
+This book is written for one person, and it is worth saying who before saying
+anything else.
 
-\newpage
+She is intelligent, she reads widely, and she is not a spatial analyst. She may
+be a forester who has spent fifteen years in stands and has never opened a
+geographic information system. She may be a carbon project developer who
+commissions the maps and signs the report. She may be a verifier who has to
+decide whether a number is defensible, having been trained in forestry rather
+than in geodesy. She may be a graduate student who can fit a mixed model and has
+never been told what a projection does to a hectare.
 
-# The preamble
+What she has in common across all four is the thing this book is built on. She is
+perfectly capable of the material and nobody has taught it to her in order,
+because the people who write about it already know it and have forgotten that
+they had to learn it. Every chapter is written on the assumption that she will
+follow any argument put in front of her and will not follow a term that arrives
+undefined.
+
+So no term appears here before the sentence that introduces it. When you meet
+*support*, meaning the patch of ground one number describes, it will be
+explained in the sentence you meet it in, and it will be explained with a picture
+rather than with three more words you also do not know.
+
+# The book
 
 This book teaches the measurement of forest carbon from satellite and airborne
-observation, and it teaches it from the beginning. That second half of the
-sentence is a deliberate choice and it is worth explaining before you read
-further, because it is what separates this book from most of what sits beside it
-on the shelf.
+observation, and it teaches it from the beginning. That second half is a
+deliberate choice and it is what separates this book from what sits beside it on
+the shelf.
 
 The remote sensing literature is superb and it starts in the middle. Open almost
 any recent volume on forest observation and the first chapter maps canopy height
-from radar, or fuses Sentinel-1 with Sentinel-2 to model aboveground biomass, or
-corrects the geolocation of spaceborne laser footprints. Every one of those
-chapters is excellent and every one assumes you already know what a coordinate
-reference system does to an area calculation, why a time series is a
-three-dimensional object rather than a stack of pictures, and where the
-uncertainty in a reported tonne actually comes from. The methods literature will
-teach you to project a raster and never mention what a verifier does with the
-result. The standards documents start on the far side of the same gap and will
-tell you that an uncertainty deduction is required without ever showing you how
-to compute one. In practice the two are reconciled in undocumented spreadsheets,
-and that is where forest monitoring systems fail. They fail from inaccessible
-workflows and thin documentation far more often than they fail from flawed
-science.
+from radar, or fuses two satellite records to model the mass of wood standing in
+a stand, or corrects the position of laser footprints fired from orbit. Every one
+of those chapters is excellent. Every one of them assumes you already know what a
+coordinate system does to an area calculation, why a stack of satellite images is
+a solid rather than a pile of pictures, and where the uncertainty in a reported
+tonne actually comes from.
 
-So this book walks a trajectory rather than presenting a collection. The early
+The two literatures fail to meet, and they fail in opposite directions. The
+methods literature will teach you to reproject a raster and never mention what a
+verifier does with the result. The standards documents start on the far side of
+the same gap and will tell you that an uncertainty deduction is required without
+ever showing you how to compute one. In practice the two get reconciled in an
+undocumented spreadsheet on one analyst's laptop, and that is where forest
+monitoring systems fail. They fail from workflows nobody else can run and
+documentation nobody wrote, far more often than they fail from flawed science.
+
+So the book walks a trajectory rather than presenting a collection. The early
 chapters put a shapefile and a raster in your hands, establish what a projection
-does to a hectare, and settle what support means before any number is reported.
-Those chapters are not remedial. The errors that end up costing a project its
-credits are almost always made in the first hour of the work, in a
-transformation nobody wrote down or a mask applied in the wrong order, and by the
-time they surface in an audit they are buried under six months of analysis that
-looks impeccable. Building the foundation slowly is the cheapest uncertainty
-reduction available. Each chapter then adds one layer and closes on a defensible
-number, so that by the final part a reader who began by reading a shapefile is
-propagating allometric error through a Monte Carlo simulation and converting the
-result into the credits a project forgoes for being imprecise.
+does to a hectare, and settle what a number refers to before any number is
+reported. Those chapters are not remedial. The errors that cost a project its
+credits are almost always made in the first hour of the work, in a transformation
+nobody wrote down or a mask applied in the wrong order, and by the time they
+surface in an audit they are buried under six months of analysis that looks
+impeccable. Chapter 1 makes the point with a single forest plot whose claimed
+area and mapped area differ by 6.6 per cent, with no survey error anywhere in it.
+Building the foundation slowly is the cheapest uncertainty reduction available.
+
+Each chapter then adds one layer and closes on a number a verifier would accept,
+so that a reader who began by reading a shapefile finishes by pushing allometric
+error through a simulation and converting the result into the credits a project
+gives up for being imprecise.
+
+# The code
 
 Everything here runs. The book is written in Quarto, every figure and every
-number in the text is generated by code that ships with it, and the whole thing
-builds offline on a laptop with no account, no cloud credit and no network. That
-is not a convenience. A verifier has to be able to re-run your work three years
-later on a different machine, and an analysis that cannot be re-run has not been
-documented, only described. Where a registry document is cited the citation is to
-the section and the equation, so a reader can check it against the original
+number in the text is produced by code that ships with it, and the whole thing
+builds offline on a laptop with no account, no cloud credit and no network.
+
+That is not a convenience. A verifier has to be able to re-run your work three
+years later on a different machine, and an analysis that cannot be re-run has not
+been documented, only described. Where a registry document is cited the citation
+gives the section and the equation, so you can check it against the original
 rather than take my word for it.
 
-What I hope carries through all of it is the reason any of us do this work.
-There is a particular pleasure in looking at a planet you have only ever stood on
-and slowly acquiring the tools to map it, to measure it, and to say something
-about it that holds up, and I have tried to write a book that keeps hold of that
-rather than assuming the reader arrived already fluent.
+# The pleasure
+
+What I hope carries through all of it is the reason any of us do this work. There
+is a particular pleasure in looking at a planet you have only ever stood on and
+slowly acquiring the tools to map it, to measure it, and to say something about
+it that holds up. I have tried to write a book that keeps hold of that rather
+than assuming the reader arrived already fluent.
 
 \newpage
 
@@ -94,47 +118,54 @@ It exists so that no chapter can be written without knowing what it owes the arc
 
 Both halves are needed and they are not the same question. Geometry is where the
 arithmetic happens, on a plane, on a sphere, on an ellipsoid, in a projected grid
-that distorts area with latitude. Support is what the answer refers to, the area
-or the interval or the volume over which a value was measured and to which it
-applies. Every number in forest carbon accounting has both, almost no report
-states either, and the errors that survive to an audit are nearly always one of
-them.
+that stretches area as you move away from the equator. Support is what the answer
+refers to, the area or the interval or the volume over which a value was measured
+and to which it applies.
 
-It is the only question that is genuinely present in every chapter, from reading
-a shapefile to reporting a deduction, and it is the question the field's own
-literature treats as settled and does not.
+An example of each, because neither survives on its own. A polygon drawn round a
+forest plot has an area of 27.30 hectares if you wrap it in an upright box and
+25.56 if you follow the trees, and that is geometry. A reflectance value from a
+satellite describes a 20 metre square of ground, so a value sitting on a forest
+edge describes half a canopy and half a clearing and belongs to neither, and that
+is support. Every number in forest carbon accounting has both. Almost no report
+states either. The errors that survive to an audit are nearly always one of them.
 
-## Where it now closes
+It is the only question genuinely present in every chapter, from reading a
+shapefile to reporting a deduction, and it is the question the field's own
+literature treats as settled and has not.
 
-Amended 5 September 2026. The closing message of the book is disturbance
-ecology, and the spatio-temporal data cube is the instrument that makes it
-arguable rather than the destination. By the final part the reader has a cube fit
-for spatial modelling, and the question the book then asks of it is whether a
-forest carbon landscape has states, whether it can pass between them, and whether
-a monitoring system built from these observations could tell. That takes the
-argument into bifurcation and tipping behaviour, regime shift in ecosystem change
-and forest carbon flux, and Markov chain Monte Carlo as the machinery for
-inference about a dynamical system observed with error.
+## The close
 
-That does not displace the design-based against model-based distinction after
-Pebesma. It subsumes it, because asking whether a system has changed regime is a
+Amended 5 September 2026. The closing message of the book is disturbance ecology,
+and the data cube is the instrument that makes it arguable rather than the
+destination. By the final part the reader has a cube fit for spatial modelling,
+and the question the book asks of it is whether a forest carbon landscape has
+states, whether it can pass between them, and whether a monitoring system built
+from these observations could tell.
+
+That takes the argument into tipping behaviour, into regime shift in ecosystem
+change and forest carbon flux, and into Markov chain Monte Carlo as the machinery
+for inference about a system that changes over time and is observed with error.
+
+It does not displace the design-based against model-based distinction after
+Pebesma. It contains it, because asking whether a system has changed regime is a
 question about what the data can support, and the honest answer needs the
-inferential frame the earlier chapters built. The sentence a reader should be
-able to say at the end is that they know the geometry, the support, the
-inferential frame, and what all three together permit them to claim about whether
-the forest is the same forest.
+inferential frame the earlier chapters built. The sentence a reader should be able
+to say at the end is that they know the geometry, the support, the inferential
+frame, and what all three together permit them to claim about whether the forest
+is the same forest.
 
-## The closing move
+## The return
 
-The last chapter returns explicitly to the first. The reader is shown the same
-polygon from chapter 1 and asked what its area is now, and the honest answer is
-that it depends on the geometry, the engine, the support and the inferential
-frame, all four of which they can now state. That is the arc, and it is the
-difference between a book that teaches operations and one that teaches judgement.
+The last chapter goes back to the first. The reader is shown the same polygon from
+chapter 1 and asked what its area is now. The honest answer is that it depends on
+the geometry, the engine, the support and the inferential frame, all four of which
+they can now state. That is the arc, and it is the difference between a book that
+teaches operations and one that teaches judgement.
 
 \newpage
 
-# The house rule for chapters
+# House rule
 
 Every chapter enters through something concrete and physical, reaches a
 methodological question by the middle, closes on a number a verifier would
@@ -146,7 +177,7 @@ and an edge that does not flinch. The board at
 <https://claude.ai/code/artifact/4499bb90-ae13-4fdd-8051-ee6e63d01c74> holds all
 seventeen with their questions, their entries, their edges and their sources.
 
-# The book in one paragraph
+# One paragraph
 
 From `publishing/book-proposal.md`, kept here because it is the same argument in
 the register a publisher reads.
@@ -173,3 +204,12 @@ Four, all recorded on the chapter board and none of them settled.
 4. Does the baseline chapter lose the word *counterfactual*? It appears nine times
    in that chapter's prose and the standing style rule excludes terms imported
    from programme evaluation where the field's own wording exists.
+
+# Where it lives
+
+Four files carry the argument. `publishing/preamble-draft.md` holds the preamble
+and the author biography. `publishing/book-spine.md` holds the thread, with its
+5 September amendment. `index.qmd` is the preface as it stands in the book.
+`publishing/book-proposal.md` holds the same argument in the register a publisher
+reads. None is rendered by the book project, because all four are planning files
+rather than chapters.
