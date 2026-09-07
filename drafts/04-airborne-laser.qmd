@@ -16,6 +16,13 @@ example is `MixedConifer.laz`, which ships inside the `lidR` package, so this
 chapter needs no committed data and no network. Brief at
 `publishing/chapter-briefs/04-airborne-laser.md`. The chapter ends at the height
 metric; all plot-to-metric modelling moved to chapter 9 on 6 September 2026.
+
+The reader is the one the accepted proposal names. The main text is for graduate
+students in forestry, environmental science and remote sensing and for analysts
+arriving from a neighbouring field, and it assumes introductory statistics and no
+prior geographic information systems. Registry material sits in tinted
+verification tracks, and a reader who skips every one of them still gets a
+complete chapter.
 :::
 
 ```{r setup}
@@ -86,9 +93,40 @@ epoch and its accuracy. A national lidar collection does. Almost nothing else a
 forest carbon project touches does, and that contrast is worth noticing before
 the complaining starts about how difficult lidar is.
 
-```{r crs}
-st_crs(las)$Name
+Now turn the same question on the file this chapter actually runs on, because a
+chapter that tells you to interrogate a product and then does not interrogate its
+own is worth nothing.
+
+```{r header}
+h <- las@header
+
+data.frame(
+  declares = c("coordinate reference system", "LAS version",
+               "generating software", "file creation year", "day of year",
+               "acquisition date", "sensor", "stated vertical accuracy"),
+  value = c(st_crs(las)$Name,
+            paste0(h@PHB[["Version Major"]], ".", h@PHB[["Version Minor"]]),
+            h@PHB[["Generating Software"]],
+            as.character(h@PHB[["File Creation Year"]]),
+            as.character(h@PHB[["File Creation Day of Year"]]),
+            "not recorded", "not recorded", "not recorded"))
 ```
+
+It declares a coordinate system and nothing else that matters. There is no
+acquisition date, no sensor, no flying height, no quality level and no vertical
+accuracy. The single date it carries is a file creation year of 2017 with a day
+of year of 0, which is not a date at all, and the generating software is
+`las2las`, a format conversion tool. So 2017 records when somebody last rewrote
+the file, not when an aircraft flew.
+
+That is the ordinary condition of a lidar tile arriving at a project, and it is
+why the vertical accuracy in the specification above cannot simply be assumed to
+apply to whatever you were sent. A quality level is a claim a programme makes
+about a collection, and the tile is one file out of that collection. The header
+has a field for the software that last wrote the file and none for the aircraft
+that flew it, so the accuracy statement travels in a separate document that is
+easily parted from the data. Ask for that document by name, and ask which
+collection the tile came from, because the tile itself will not tell you.
 
 ## Two ways in
 
@@ -303,8 +341,8 @@ stems per hectare, which is the `r borrowed_rank`th of the sixteen combinations
 tested from the bottom. It is not a neutral default. It is a choice, and it
 behaves like one.
 
-::: {.verification}
-#### Under a Verification Body {.unnumbered .unlisted}
+::: callout-tip
+## Verification track: what to ask of a stem density
 
 A stem density derived from lidar is evidence, and evidence has to be traceable
 to a method. Ask for four things and none of them is onerous.
