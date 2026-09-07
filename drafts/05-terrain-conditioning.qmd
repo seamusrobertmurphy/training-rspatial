@@ -16,7 +16,15 @@ promoted. What is new is the opening, which leads with the failure and its
 price, a section on the elevation model as an observed product with a precision
 you can measure, and a comparison of every conditioning algorithm the engine
 offers. That comparison overturned the previous chapter's conclusion, which held
-that a terminal sink must be lost to make a surface routable. It need not be. Every number in the prose is computed by a chunk on this page.
+that a terminal sink must be lost to make a surface routable. It need not be.
+Every number in the prose is computed by a chunk on this page.
+
+The reader is the one the accepted proposal names. The main text is for graduate
+students in forestry, environmental science and remote sensing and for analysts
+arriving from a neighbouring field, and it assumes introductory statistics and no
+prior geographic information systems. Registry material sits in tinted
+verification tracks, and a reader who skips every one of them still gets a
+complete chapter.
 :::
 
 ```{r setup}
@@ -487,8 +495,8 @@ does say that a stage one metre above the lake bed reproduces the published
 maximum to within a couple of per cent, which is a useful anchor for a rating
 curve and a poor substitute for a gauge.
 
-::: {.verification}
-#### Under Wetland Methodologies {.unnumbered .unlisted}
+::: callout-tip
+## Verification track: accepting an inundated area
 
 A wetland methodology asks for an inundated area, usually as an annual figure or
 a class transition. Four questions decide whether the figure can be accepted.
@@ -515,6 +523,20 @@ An inundated area is worth knowing because of what lies under it. This section
 is about the layer that decides how the carbon beneath a wetland is accounted
 for, where that layer comes from, and why one binary in it changes the method
 rather than the number.
+
+::: callout-tip
+## Verification track: this whole section
+
+Everything from here to the conclusions rests on the IPCC Guidelines and their
+2013 Wetlands Supplement, so it is registry material rather than method. A
+reader who wants the spatial analysis alone can go straight to the conclusions
+without losing the thread.
+
+It is set as a section rather than a box because it runs to four parts and
+carries a table, and because the binary it turns on decides which method applies
+rather than only which number is reported. Whether it stays in the main text or
+moves to the appendix is an open decision, recorded at the foot of this chapter.
+:::
 
 ### The binary that decides everything
 
@@ -706,6 +728,14 @@ between an inundated area a verifier can accept and one they cannot.
 
 ::: callout-note
 ## Open decisions
+
+**Does the soil section stay in the main text?** It runs from "Which soil, and
+therefore which method" to the conclusions, rests entirely on the IPCC
+Guidelines and the 2013 Wetlands Supplement, and the accepted proposal commits
+that the main narrative can be read straight through without reference to any
+crediting standard. It is marked as a track at its head rather than moved,
+because moving 150 lines and a table into the appendix is a decision about the
+book rather than about this chapter.
 
 **The data script contradicts itself** and must be corrected.
 `data-raw/prepare-chilwa-data.R` asserts the one-cell-one-hectare identity in
