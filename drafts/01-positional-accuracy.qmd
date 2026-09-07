@@ -9,20 +9,26 @@ execute:
 ---
 
 ::: callout-note
-## Restructure
+## Redraft
 
-The prose of the 6 September redraft is kept wherever its section survives. What
-changed is the order and the content, integrating
-`drafts/CH01/ch01-reproducibility-notes-v3.md`. Four sections are new:
-conversion against transformation, straight lines that are not, projection
-distortion measured, and what an auditor can say. The area failure now arrives
-second, before any theory, and the three surfaces close the chapter as its
-contract with the reader.
+Redrafted 6 September 2026 against the proposal Elsevier accepted, kept at
+`publishing/Murphy 2026 Spatial Analysis in R for Forest Carbon Verification.pdf`.
+Three changes follow from it.
 
-Two claims in the notes were tested on this machine and did not survive. Both
-corrections are in the text and marked.
+The reader is the one the proposal names. The main text is for graduate students
+in forestry, environmental science and remote sensing, and for analysts moving
+into carbon work from a neighbouring field. It assumes an introductory course in
+statistics and no prior geographic information systems at all. Registry material
+belongs in the tinted verification tracks, and the proposal commits that a reader
+who skips every one of them still gets a complete book, so nothing in the main
+narrative now depends on what is inside them.
+
+The georeferencing of the course dataset is disclosed where it is used, which the
+proposal also commits to and which the previous draft did not do.
+
+Two claims in the working notes were tested on this machine and did not survive.
+Both corrections are in the text and marked.
 :::
-
 ```{r setup}
 library(sf)
 library(dplyr)
@@ -53,6 +59,22 @@ w_m     <- diff(range(raw$gx, na.rm = TRUE))
 h_m     <- diff(range(raw$gy, na.rm = TRUE))
 claimed_ha <- 25.6
 ```
+
+::: callout-important
+## Where these positions come from
+
+The stems are real and so are their positions within the plot. The census
+recorded each one on the plot's own grid, in metres from a corner, and those are
+the `gx` and `gy` columns.
+
+The longitude and latitude are not surveyed. They are reconstructed by
+`data-raw/prepare-scbi-data.R`, which lays the plot grid onto Universal
+Transverse Mercator zone 17 north with a fixed affine map, a rotation of about
+1.8 degrees together with scale factors of 1.001149 and 0.997105. Everything in
+this chapter that depends on where the plot sits on the Earth therefore depends
+on that reconstruction, and any figure derived from it is representative rather
+than a survey of record. This is said again wherever it bites.
+:::
 
 The file holds `r format(n_stems, big.mark = ",")` stems of `r n_spp` species.
 The local grid runs `r w_m` metres in one direction and `r h_m` in the other, so
@@ -92,8 +114,6 @@ data.frame(
 ```{r area-numbers, echo=FALSE}
 box_pct  <- 100 * (bbox_ha - claimed_ha) / claimed_ha
 hull_pct <- 100 * (hull_ha - claimed_ha) / claimed_ha
-rot_fit  <- lm(st_coordinates(stems_utm)[, 1] ~ raw$gx + raw$gy)
-rot_deg  <- abs(atan2(coef(rot_fit)[3], coef(rot_fit)[2]) * 180 / pi)
 ```
 
 The bounding box gives `r round(bbox_ha, 2)` hectares, which is
@@ -101,14 +121,50 @@ The bounding box gives `r round(bbox_ha, 2)` hectares, which is
 `r round(hull_ha, 2)`, which is `r round(abs(hull_pct), 1)` per cent under and
 is effectively the right answer.
 
-The cause is a rotation of `r round(rot_deg, 1)` degrees. The plot was laid out
-along the slope, not along the grid, so its long axis runs
-`r round(rot_deg, 1)` degrees off UTM north. A bounding box is axis-aligned by
-definition, so wrapping one round a tilted rectangle is like putting a tilted
-book into an upright box. The box has to be bigger than the book, and the more
-the book is tilted the more air you buy.
+The cause is that the plot sits at an angle to the grid. A *bounding box* is the
+smallest upright rectangle that contains every point, upright meaning its sides
+run along the grid axes, and a *convex hull* is the shape you would get by
+stretching an elastic band round the outermost stems. Wrapping an upright box
+round a tilted rectangle is like putting a tilted book into an upright carton.
+The carton has to be bigger than the book, and the more the book is tilted the
+more air you pay for.
 
-Now put a price on it, because that is what the rest of this book is for.
+Be exact about what has just been demonstrated and what has not. The angle can
+be recovered from the data.
+
+```{r rotation}
+rot_fit <- lm(st_coordinates(stems_utm)[, 1] ~ raw$gx + raw$gy)
+rot_deg <- abs(atan2(coef(rot_fit)[3], coef(rot_fit)[2]) * 180 / pi)
+round(rot_deg, 2)
+```
+
+That returns `r round(rot_deg, 2)` degrees, and it is not a finding. It is the
+constant `data-raw/prepare-scbi-data.R` used to build the coordinates in the
+first place, recovered by fitting a line through its own output. The hull's
+shortfall of `r round(abs(hull_pct), 2)` per cent is the same story, because the
+scale factors in that script, 1.001149 and 0.997105, predict
+`r round(25.6 * 1.001149 * 0.997105, 3)` hectares against the
+`r round(hull_ha, 3)` measured.
+
+An analysis that recovers the number it was given has demonstrated nothing about
+the world, and this book will show you several of them, because they are the
+commonest way a carbon inventory reassures itself. What the comparison does show
+is real and is worth the page. The size of the gap between a box and a hull is
+set by how far the thing is turned relative to the grid, and that is a fact about
+geometry rather than about this plot. Any boundary that does not run north and
+south loses area the same way, and a real surveyed boundary would too.
+
+Neither figure is a survey error. Both are correct measurements of different
+things. So when a claimed area and a mapped area disagree, the first question is
+not whether the survey is wrong. It is whether the thing being measured is the
+boundary or a box drawn round it.
+
+::: callout-tip
+## Verification track: what the gap is worth
+
+Skip this box and the chapter still works. It converts the area gap into the
+currency a crediting project is paid in, which is the only reason anybody outside
+a classroom cares.
 
 ```{r area-cost}
 c_density <- 150          # tonnes of carbon per hectare, a plausible temperate figure
@@ -120,22 +176,19 @@ phantom_co2 <- phantom_ha * c_density * co2_ratio
 round(c(phantom_hectares = phantom_ha, phantom_tonnes_co2e = phantom_co2), 1)
 ```
 
-```{r cost-numbers, echo=FALSE}
-ph_ha <- phantom_ha; ph_co2 <- phantom_co2
-```
+`r round(phantom_ha, 2)` hectares that are not there, and about
+`r format(round(phantom_co2), big.mark = ",")` tonnes of carbon dioxide
+equivalent that could be claimed on them, on a plot you can walk across in ten
+minutes and before a single tree has been mismeasured.
 
-`r round(ph_ha, 2)` hectares of ground that does not exist, and about
-`r format(round(ph_co2), big.mark = ",")` tonnes of carbon dioxide equivalent
-that could be claimed on it. On a plot you can walk across in ten minutes, and
-before a single tree has been mismeasured.
+Read that as an order of magnitude and nothing finer. The carbon density is a
+plausible temperate figure rather than a measured one, and the hectares come from
+the reconstructed georeferencing described at the top of this chapter. The point
+is the size of the number, not the number.
+:::
 
-Neither number is a survey error. Both are correct measurements of different
-things. When a claimed area and a mapped area disagree, the first question is
-not whether the survey is wrong. It is whether the thing being measured is the
-boundary or a box drawn round it.
-
-The rest of this chapter is about the other ways that question can be answered
-wrongly, and it works upward from the coordinate itself.
+The rest of this chapter works upward from the coordinate itself, through the
+other ways that question gets answered wrongly.
 
 ## What a coordinate claims
 
@@ -663,6 +716,12 @@ requests.
 
 ## What an auditor can say
 
+::: callout-tip
+## Verification track: reading a boundary that arrived incomplete
+
+This box is registry practice rather than method, and the chapter is complete without it. It is here for readers who receive other people's
+boundaries and have to write something defensible about them.
+
 Suppose a boundary arrives without most of that. The question is not whether to
 accept or reject it, which is a false choice. The question is what can be
 written down.
@@ -708,6 +767,7 @@ general, non-quantitative and illustrative. So when the measurement is
 unavailable you are told to rely on the record of where the data has been, and
 the record of where the data has been is exactly what the shapefile export
 destroyed.
+:::
 
 ## The three surfaces
 
