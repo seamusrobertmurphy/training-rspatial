@@ -327,6 +327,105 @@ metres, which is floating point noise. Whether the transformation moved anything
 depends on which operation the software chose, and that is the question to ask.
 Not whether one was used, but which one.
 
+## Projection distortion
+
+Every book says a projection distorts. Almost none says by how much, in
+hectares, on ground a reader works on. Here it is measured twice.
+
+Start with what a projection is doing. Peel an orange and press the skin flat and
+it tears, because a curved surface will not lie on a plane without being cut or
+stretched. A projection makes the same compromise deliberately, choosing which
+property to preserve and which to sacrifice. Universal Transverse Mercator, the
+system most forest work arrives in, preserves shape and sacrifices area, and it
+limits the damage by cutting the world into sixty north to south strips six
+degrees wide and treating each one separately.
+
+Inside a strip the stretch is not uniform. Each strip has a *central meridian*, a
+line of longitude down its middle, and along that line the system deliberately
+shrinks everything by a factor of 0.9996. That sounds like a mistake and it is
+not. Shrinking the middle means the strip can grow towards its edges without the
+error at the edge being any larger than the error in the middle, in the way a
+tailor takes in a seam so the garment sits evenly rather than pulling on one
+side.
+
+So the error depends on where in the strip you are standing. Take one block of
+500 hectares and slide it from the central meridian out to the edge of the zone,
+measuring it each time both on the ellipsoid and on the projected grid.
+
+```{r utm-sweep}
+square_500ha <- function(lon, lat, ha = 500) {
+  d <- sqrt(ha * 1e4)
+  dlat <- d / 111320
+  dlon <- d / (111320 * cos(lat * pi / 180))
+  st_sfc(st_polygon(list(rbind(c(lon, lat), c(lon + dlon, lat),
+                               c(lon + dlon, lat + dlat), c(lon, lat + dlat),
+                               c(lon, lat)))), crs = 4326)
+}
+
+sweep <- lapply(c(-123, -124, -125, -126), function(lon) {
+  p <- square_500ha(lon, 49.5)
+  g <- as.numeric(st_geod_area(p)) / 1e4
+  u <- as.numeric(st_area(st_transform(p, 32610))) / 1e4
+  data.frame(deg_from_central_meridian = abs(lon + 123),
+             geodesic_ha = round(g, 3), utm_ha = round(u, 3),
+             error_ha = round(u - g, 3), error_pct = round(100 * (u - g) / g, 3))
+}) |> bind_rows()
+
+sweep
+```
+
+```{r utm-numbers, echo=FALSE}
+e_cm   <- sweep$error_ha[sweep$deg_from_central_meridian == 0]
+e_edge <- sweep$error_ha[sweep$deg_from_central_meridian == 3]
+swing  <- e_edge - e_cm
+```
+
+On the central meridian the block shrinks by `r sprintf('%.2f', abs(e_cm))`
+hectares. Three degrees away, at the edge of the zone, the same block grows by
+`r sprintf('%.2f', e_edge)`. The swing from one end to the other is
+`r round(swing, 2)` hectares on 500, and the sign flips on the way across.
+Nothing about the block changed. Only where it was standing changed.
+
+That is the answer to why the coordinate system matters, and it is worth holding
+next to the hectare and a half the bounding box cost earlier. Both errors are
+invisible in the output. Neither raises a warning.
+
+::: callout-important
+## A correction to the working notes
+
+The notes for this chapter proposed teaching this with a cutblock straddling the
+boundary between two zones at 126 degrees west, measured once in each, expecting
+the two answers to disagree. They do not, and the reason is better than the
+original example.
+
+```{r zone-straddle}
+p <- square_500ha(-126.02, 49.5)
+z9  <- as.numeric(st_area(st_transform(p, 32609))) / 1e4
+z10 <- as.numeric(st_area(st_transform(p, 32610))) / 1e4
+alb <- as.numeric(st_area(st_transform(p, 3005)))  / 1e4
+geo <- as.numeric(st_geod_area(p)) / 1e4
+
+data.frame(basis = c("geodesic on the ellipsoid", "UTM zone 9N",
+                     "UTM zone 10N", "BC Albers, equal area"),
+           ha = round(c(geo, z9, z10, alb), 3),
+           error_ha = round(c(0, z9, z10, alb) - c(0, geo, geo, geo), 3))
+```
+
+```{r straddle-numbers, echo=FALSE}
+z_gap <- abs(z9 - z10)
+```
+
+The two zones differ by `r signif(z_gap, 2)` hectares, which is nothing. A block
+sitting on the boundary is three degrees from both central meridians at once, so
+both projections stretch it by the same amount. Choosing the zone is a red
+herring. What matters is how far you are from whichever central meridian you
+picked, which is what the sweep above measures.
+
+Note the last row as well. The equal-area projection reproduces the geodesic area
+to three decimal places, because preserving area is the property it was built to
+preserve and the property Universal Transverse Mercator gave away.
+:::
+
 ## Horizontal accuracy
 
 Now the quantity this chapter is named for, and the reason the previous two
@@ -399,6 +498,84 @@ illustrative, and it gives lineage as the example of indirect evaluation. So the
 standard sends you to lineage exactly when you need it most, and lineage is the
 first thing a shapefile export destroys, because that format records the system
 the data is in now and nothing about where it has been.
+:::
+
+## Engines and versions
+
+Two analysts measure the same polygon and get different areas. Neither has made a
+mistake, and this is not a rare event.
+
+```{r versions}
+sf_extSoftVersion()[c("GEOS", "GDAL", "proj.4")]
+```
+
+Almost every geographic information system in use, commercial or free, sits on
+the same three open source libraries. GEOS does the geometry, meaning
+intersections, unions and validity checks. GDAL reads and writes the file
+formats. PROJ does the coordinate operations. Commercial desktop packages run
+their own engine over GDAL, and R, Python and QGIS call the libraries directly.
+Each ships whichever versions it happened to be built against, which is why the
+three numbers printed above are a property of your machine rather than of your
+analysis.
+
+Those versions matter because PROJ changed its architecture, and the change moved
+numbers rather than only interfaces.
+
+The old design used *early binding*, meaning the datum shift was decided in
+advance and written into the definition of each coordinate system, with every
+operation routed through WGS 84 as a hub. A definition could therefore carry a
+correction nobody had chosen and nobody could see. PROJ 6, released in 2019,
+replaced that with *late binding*. The register of possible operations, each with
+its own published accuracy and its own area of validity, is now consulted at the
+moment you ask, and one is chosen then. The same release moved the EPSG register
+into PROJ itself as a database, so definitions stopped being scattered across
+files that disagreed, and adopted well-known text version 2, so a system could be
+written down and read back without loss.
+
+Late binding is the better design. It is also the reason for the paragraph worth
+remembering.
+
+Two analysts running the identical command on the identical file can get
+different numbers, because the operation is selected at run time from a database
+whose version differs between their machines, and from a collection of correction
+grids whose contents differ too. That is not a bug, it is the design, and it is
+why "I reprojected to WGS 84" is not a reproducible statement.
+
+Which is why the chain of operations a boundary has been through is worth
+recording, and why almost nobody records it. By the time a boundary reaches a
+verifier it has usually passed through four or five systems. Collected on a
+handheld receiver, brought into a desktop package in a state plane system,
+reprojected to a national grid for a client, exported for a subcontractor, and
+reprojected back. Each step reverses on its own. The chain does not.
+
+The tempting explanation is that the file formats cannot record it, and that
+explanation is wrong. The shapefile genuinely cannot, having no lineage mechanism
+at all and a `.prj` sidecar holding the present system and nothing else. But the
+shapefile stopped being the only option years ago. GeoPackage fixes the real
+shapefile defects, which are a two gigabyte ceiling on file size, field names
+truncated to ten characters, a limit of 255 columns, and an ambiguity between
+polygon and multipolygon that makes counting features unreliable. It also carries
+a metadata table able to hold ISO 19115 records, and that standard defines a
+lineage element meant for exactly this. The container can hold the chain. The
+chain is missing because nobody writes it, which is a working practice rather
+than a technical limit.
+
+::: callout-tip
+## Verification track: what a submission should carry
+
+Seven items, and they belong in a data product specification as conformance
+criteria rather than in an email as requests.
+
+1. The **realisation**, not the family. WGS 84 (G1762) or NAD83(CSRS), never
+   plain WGS 84.
+2. The **coordinate epoch**, as a decimal year.
+3. The **transformation used**, by EPSG code, with its published accuracy.
+4. **Software versions**, meaning PROJ, the EPSG database, and any correction
+   grids.
+5. The **edge rule**, planar or geodesic.
+6. The **measurement basis**, meaning the method and the ellipsoid the area was
+   computed on.
+7. A **checksum** over the geometry.
 :::
 
 ## Three surfaces
