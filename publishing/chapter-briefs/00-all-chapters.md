@@ -231,9 +231,26 @@ it has already seen; blockCV 4.0-0, CRAN 20 August 2026, is the fix.
 separate, and the final chapter returns to it.
 
 **Sources.** `acr-remote-sensing-demo`, `enhanced-forest-inventory-full-pipeline`,
-`enhanced-forest-inventory-model-assessment`, `blockCV`.
+`enhanced-forest-inventory-model-assessment`, `blockCV`, and from 6 September
+2026 the plot-to-metric modelling moved out of chapter 4.
 
-**Missing.** New chapter. Source material is unusually complete.
+**Amended 6 September 2026.** All plot-to-metric modelling now lives here.
+Chapter 4 ends at the height metric and hands over. The reason is that part four
+of `lidar-forestry` builds its model on simulated plot data and a synthetic
+species raster, says so, and then reports cross-validated errors from it, which
+breaks the preface rule that a constructed surface carries no reported number.
+Moving the boundary fixes the defect without needing new data, shortens a long
+chapter 4, and fills the hole here, because this chapter owned calibration and
+validation and had no worked example of its own.
+
+**What this chapter now needs.** Real plots over real lidar. Three candidates in
+order. The stand-level attributes in `gisborne-forest-stocking-density`, which
+were already compared against a lidar-derived stocking density layer and are the
+closest thing in the library to a validation set. The United States Forest
+Service Forest Inventory and Analysis plots, whose coordinates are fuzzed and
+swapped, which is itself a positional accuracy lesson this book is well placed to
+teach and an empirical question worth answering either way. Or the enhanced
+forest inventory pipeline repositories, which carry a caret workflow already.
 
 ---
 

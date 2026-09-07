@@ -1,150 +1,191 @@
 # Chapter 4 brief
 
-Compiled 6 September 2026. Working title **Deriving canopy height from airborne
-laser scanning, how much is the sensor and how much the analyst**. Subject is
-the three-dimensional measurement, from the raw returns to a metric a biomass
-model can use.
+Compiled 6 September 2026, rewritten the same day after the author supplied two
+further repositories. Working title **Deriving canopy height from airborne laser
+scanning, how much is the sensor and how much the analyst**.
 
 ## The question
 
 How much of a laser-derived canopy height is the sensor, and how much is a
 parameter the analyst chose?
 
-## Why it sits here
+That question now has an answer the chapter can demonstrate rather than assert,
+and the demonstration comes from the author's own working repositories.
 
-Chapters 1 and 2 settled where a measurement is and what it is. This chapter is
-the first one where the measurement has a third dimension, and it is the first
-where the analyst's own choices become a larger error source than the
-instrument. That reversal is the chapter.
+## The finding that organises the chapter
 
-## What the library holds
+Two of the three source repositories detect tree tops with a variable window
+function. A variable window function is a rule that says how wide to search for
+a treetop as a function of how tall the canopy is, on the assumption that taller
+trees have wider crowns. It is two coefficients.
 
-`training/lidar-forestry` is a complete five-part ebook and it is richer than the
-chapter currently in the manuscript. Its working example is airborne lidar tile
-`10SGH1587` from the United States Geological Survey 3D Elevation Program, flown
-over the Carr Hirz Delta Fires burn scar in Shasta County, northern California.
-Quality Level 1 linear-mode lidar, accepted at 9.8 centimetres or better absolute
-vertical accuracy at 95 per cent confidence in open terrain. One square
-kilometre at about 78 points per square metre, 78.3 million points. Figures are
-built from a one hectare clip centred on the densest-canopy cell, which keeps
-every chunk under a million points.
+`la-ronge-variable-tree-heights` defines it as
 
-That provenance is worth more than the data. It is a public, copyright-clear,
-quality-graded product with a stated vertical accuracy, which is exactly what
-chapter 1 spent forty pages arguing every dataset should have and almost none
-does. The chapter should say so.
+```r
+wf_Popescu <- function(x) { a = 0.05; b = 0.6; y <- a * x + b; return(y) }
+```
 
-The five parts map onto the chapter as follows. Part one is catalogue
-management, ground classification, noise removal, terrain model and height
-normalisation. Part two is stem detection by fixed and variable windows and by
-the rasterised method. Part three prepares the canopy height model and extracts
-dominant height by two routes, points and raster. Part four builds spatial
-covariates and trains a model. Part five is validation.
+and introduces it as "Popescu and Wynne's function (2004) which was developed in
+pine forests".
 
-`la-ronge-variable-tree-heights`, 367 megabytes, carries a second canopy height
-model and treetop set. `lidar-dtm-extractor-QGIS-plugin` carries the terrain
-extraction as a plugin. Both are supporting rather than central.
+`gisborne-forest-stocking-density` defines it as
 
-## The defect to fix before this chapter is drafted
+```r
+wf_plowright <- function(x) { a = 0.05; b = 0.6; y <- a * x + b; return(y) }
+```
 
-**Part four of the source ebook runs on simulated plot data and a synthetic
-species raster, and it says so plainly.** Its own words are that the plot data
-are simulated because the 3DEP release is copyright-clear but no public field
-inventory plots accompany it, and that the response surface is drawn from the
-canopy height model, terrain and a synthetic species raster with additive
-Gaussian noise, to preserve the structure of the workflow without depending on
-proprietary provincial layers.
+and labels its plot "Plowright, 2018; y=0.05*x+0.6", with the code comment "Used
+Plowright's window function as temporary fix here", followed by a link to the
+ForestTools package vignette.
 
-That is an honest note and it is the same defect already flagged in the activity
-data and time series chapters, where the preface rule is that a constructed
-surface carries no reported number. The ebook then reports numbers from it,
-including cross-validated root mean square errors of 33 to 47 cubic metres per
-hectare and root mean square error ratios of 0.32 to 0.44.
+**The two functions are identical to the digit.** Same slope, same intercept,
+two different attributions, applied to boreal spruce and jack pine in northern
+Saskatchewan and to plantation forest near Gisborne in New Zealand. Neither was
+calibrated to its own stand. One is explicitly labelled a temporary fix. Both
+produced operational outputs, and in the Gisborne case those outputs were
+compared against an official stand-level inventory and used to propose a
+remapping.
 
-Three ways out, in order of preference.
+That is the chapter. Not as an accusation, because the code says plainly what it
+did in both cases, but as the clearest available demonstration that the largest
+single lever on a stem count is a two-coefficient line the analyst borrowed.
 
-1. **Find public plots over public lidar.** The United States Forest Service
-   Forest Inventory and Analysis programme publishes plot data with fuzzed and
-   swapped coordinates, which is itself a positional accuracy lesson this book
-   is well placed to teach. Whether the fuzzing defeats a plot-to-metric model at
-   one hectare is an empirical question and the answer is worth a section either
-   way.
-2. **Move the modelling out of this chapter entirely** and into chapter 9, which
-   already owns calibration, prediction and spatially blocked cross-validation.
-   Chapter 4 then ends at the metric rather than at the model, which is a
-   cleaner boundary and shortens a chapter that is already long.
-3. **Keep the simulation and report no number from it**, using it only to show
-   the shape of the workflow. Weakest, because the interesting failures in the
-   source ebook are all numerical.
+**To verify before print.** Popescu and Wynne (2004) published species-specific
+window functions for pine and deciduous stands, and the linear form
+`0.05x + 0.6` appears to be the ForestTools vignette's own illustrative example
+rather than anything in that paper. Open the paper and check the attribution.
+If it is wrong it must be corrected in both repositories, and the correction is
+itself worth a sentence in the chapter, because a misattributed parameter is
+harder to audit than an uncalibrated one.
 
-**Recommendation is the second.** It fixes the defect by moving the boundary
-rather than by finding new data, it shortens this chapter, and it gives chapter
-9 the worked example it currently lacks.
+## What each repository brings
+
+**`lidar-forestry`**, a five-part ebook, brings the raw measurement chain.
+Working example is airborne lidar tile `10SGH1587` from the United States
+Geological Survey 3D Elevation Program over the Carr Hirz Delta Fires burn scar
+in Shasta County, California. Quality Level 1, accepted at 9.8 centimetres or
+better absolute vertical accuracy at 95 per cent confidence in open terrain, one
+square kilometre at about 78 points per square metre, 78.3 million points, with
+figures built from a one hectare clip. That provenance is the point. It is a
+public, copyright-clear, quality-graded product with a stated vertical accuracy,
+which is exactly the specification chapter 1 spends its length arguing for and
+which almost no dataset in this field meets. Parts one to three carry ground
+classification, noise removal, terrain model, height normalisation, fixed and
+variable window detection, and dominant height extraction by two routes.
+
+**`la-ronge-variable-tree-heights`** brings the support argument. It works from
+a one metre digital surface model and digital elevation model from the Canadian
+High Resolution Digital Elevation Model repository, differences them into a
+canopy height model, detects treetops, and classifies the landscape into Height
+Heterogeneity Areas by the standard deviation of tree height. Its stated purpose
+is to tell inventory crews where to add plots or shrink sampling units. That is
+the spine's support argument arriving from the field side, and it hands directly
+to chapter 6 on plot design.
+
+**`gisborne-forest-stocking-density`** brings the validation. Working from
+LINZ digital surface and elevation models, it derives a stem map and a stocking
+density layer at ten metre resolution, and compares the result against official
+stand-level attributes. That comparison is what the chapter needs and it is what
+the simulated modelling in `lidar-forestry` part four was standing in for.
+
+## A second finding, to verify before use
+
+The Gisborne workflow computes stems per hectare as
+
+```r
+ttops_height <- ForestTools::sp_summarise(ttops, grid = 10, variables = "height", ...)
+stem_count_ha <- 10 * stem_count_rast
+```
+
+If `grid = 10` produces ten metre cells, each cell covers 100 square metres and
+the conversion to stems per hectare is a factor of 100, not 10. As written the
+layer would report stems per thousand square metres under a hectare label, low
+by an order of magnitude. `sp_summarise` is no longer exported by the installed
+ForestTools, so this could not be checked by running it and **must not be stated
+in the chapter until it has been**. If it holds it is the most valuable single
+paragraph in the chapter, because it is a units error inside a layer that was
+compared against official records and passed.
+
+## The modelling boundary, now settled
+
+Part four of `lidar-forestry` runs on simulated plot data and a synthetic
+species raster, says so, and reports cross-validated errors from it. That breaks
+the preface rule that a constructed surface carries no reported number.
+
+**Decision taken 6 September 2026: chapter 4 ends at the metric, and all
+plot-to-metric modelling moves to chapter 9.** Chapter 9 already owns
+calibration, prediction and spatially blocked cross-validation and had no worked
+example. This fixes the defect by moving a boundary rather than by finding new
+data, shortens a long chapter, and fills a hole elsewhere. Chapter 9 then needs
+real plots, and the Gisborne stand attributes are the strongest candidate in the
+library.
 
 ## Structure
 
-Nine sections, ending at the metric rather than the model.
+Nine sections. The chapter ends at the metric.
 
-**4.1 Introduction.** What a return is, why one pulse comes back several times,
-and the single sentence that governs the chapter: everything downstream inherits
-the classification of the first return that was called ground.
+**4.1 Introduction.** One pulse, several returns. The sentence that governs
+everything downstream is that every later number inherits the classification of
+the returns called ground.
 
-**4.2 The tile and its accuracy.** The 3DEP provenance, the quality level, the
-stated vertical accuracy and the point density. Read from the file rather than
-from the documentation. This is where chapter 1's specification is met by a real
-product for the first time, and the chapter should make that explicit.
+**4.2 The tile and its accuracy.** Read the 3DEP provenance, quality level,
+stated vertical accuracy and point density from the file. First dataset in the
+book that meets chapter 1's specification.
 
-**4.3 Ground classification.** Cloth simulation filter against progressive
-morphological filter, run on the same returns. The source ebook already runs
-both. Report the agreement and, more usefully, where they disagree, which is
+**4.3 Two ways in.** Raw returns against a differenced surface model. Most
+operational foresters never see a point cloud; they are handed a digital surface
+model and a digital elevation model and they subtract. La Ronge and Gisborne
+both do this and it has different failure modes from the point cloud route,
+because the vendor's own ground classification is baked in and cannot be
+inspected.
+
+**4.4 Ground classification.** Cloth simulation filter against progressive
+morphological filter on identical returns. Report where they disagree, which is
 under dense low vegetation and on breaks of slope.
 
-**4.4 Terrain and normalisation.** Building the terrain model, subtracting it,
-and the order that cannot be reversed. Interpolating a terrain model from an
-already normalised cloud returns a flat, valid, projected and useless surface,
-and nothing errors. That is the chapter's cheapest and best trap.
+**4.5 Normalisation, and the order that cannot be reversed.** Interpolating a
+terrain model from an already normalised cloud returns a surface that is flat,
+valid, projected and useless, and nothing errors.
 
-**4.5 The canopy height model.** Rasterising, pit filling, and the choice of
-cell size, which is the support question from chapter 2 arriving in three
-dimensions.
+**4.6 The window function.** The chapter's core. Plot `0.05x + 0.6` against
+height, then vary the two coefficients across published ranges and report how
+stem count moves. Then the La Ronge and Gisborne case, the identical function
+under two names on two continents.
 
-**4.6 Individual tree detection.** Fixed against variable windows. The window
-function is the clearest case in the book of a parameter masquerading as a
-measurement, because a function calibrated in one stand and applied to another
-changes stem density by an order of magnitude without warning.
+**4.7 Height metrics and their support.** Upper percentiles, cover, density. A
+95th percentile over a cell holding several crowns returns something near the
+tallest of them, not the mean, which is why upper percentiles predict biomass
+and are not stand height.
 
-**4.7 Crown segmentation.** Where the trees become objects, and where the
-segmentation algorithm's assumptions start to matter more than the point
-density.
-
-**4.8 Area-based metrics.** Height percentiles, cover, density. The 95th
-percentile over a cell holding several crowns returns something near the tallest
-of them, not the mean, which is why upper percentiles predict biomass well and
-why they are not stand height. This is the section that hands to chapter 9.
+**4.8 Where the metric decides the fieldwork.** Height Heterogeneity Areas from
+La Ronge. Using the variance of a derived metric to allocate sampling effort,
+which is the support argument running backwards from the sensor to the plot, and
+the hand-off to chapter 6.
 
 **4.9 Conclusions.**
 
 ## Owes the spine
 
 A height metric's support is the cell it was aggregated to, and it is not the
-tree. Section 4.5 pays that at the raster and section 4.8 pays it again at the
-metric. The chapter also carries the vertical half of chapter 1's argument,
-because height above ground is not height above sea level and the conversion
-between them needs a geoid model.
+tree. Section 4.7 pays it at the metric and 4.8 pays it again by using it to
+size a sample. The chapter also carries the vertical half of chapter 1, because
+height above ground is not height above sea level.
 
 ## Data
 
-The one hectare clip and its derived products need committing, and the sizes are
-manageable if the clip rather than the tile is committed. The source ebook's
-assets directory is 69 megabytes in total. A normalised one hectare cloud, a
-terrain model, a canopy height model and a treetop set should come in well under
-that.
+Commit the one hectare Carr clip and its derived products, not the tile. A
+normalised cloud, terrain model, canopy height model and treetop set should come
+in well under the 69 megabytes the source ebook's assets occupy. The 78.3 million
+point tile is fetched by `data-raw` on the same pattern as the Rondonia and
+Chilwa scripts.
 
-The tile itself is 78.3 million points and must not be committed. The
-`data-raw` script fetches it from the Staged Elevation directory, clips, and
-writes the products, on the same pattern as the Rondonia and Chilwa scripts.
+La Ronge and Gisborne need a decision. Both work on public national elevation
+products, HRDEM in Canada and LINZ in New Zealand, so both are copyright-clear
+in principle. Gisborne's official stand attributes may not be, and the
+comparison is the valuable part. Confirm before committing anything from it.
 
-## Missing
+## Open
 
-Nothing blocking. The modelling boundary decision above is the only open
-question, and the recommendation is to move it to chapter 9.
+1. Verify the Popescu and Wynne attribution against the paper.
+2. Verify the stems per hectare conversion factor by running it.
+3. Confirm the Gisborne stand attributes are clear for publication.
