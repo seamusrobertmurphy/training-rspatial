@@ -1,0 +1,515 @@
+---
+title: "Conditioning a Digital Elevation Model for Hydrological Routing"
+subtitle: "Chapter 5 draft, 6 September 2026"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+::: callout-note
+## Draft
+
+A restructure of `04-terrain-hydrology.qmd`, which retires when this is
+promoted. The conditioning argument is unchanged because it was already right.
+What is new is the opening, which now leads with the failure and its price, and
+a section on the elevation model as an observed product with a precision you can
+measure. Every number in the prose is computed by a chunk on this page.
+:::
+
+```{r setup}
+library(terra)
+library(sf)
+library(whitebox)
+
+sf_use_s2(FALSE)
+
+dem    <- rast("../data/chilwa_dem.tif")
+lake   <- st_read("../data/chilwa_hydro.gpkg", layer = "lake",   quiet = TRUE)
+basin  <- st_read("../data/chilwa_hydro.gpkg", layer = "basin",  quiet = TRUE)
+rivers <- st_read("../data/chilwa_hydro.gpkg", layer = "rivers", quiet = TRUE)
+```
+
+## One metre
+
+Lake Chilwa sits in southern Malawi. Water enters from the surrounding hills and
+leaves only by evaporation, so it is *endorheic*, meaning it has no outlet. Its
+area swings by a factor of several between wet and dry years and it has dried out
+completely three times in living memory, in 1968, 1995 and 2012.
+
+A wetland carbon project on ground like this reports an inundated area. Here is
+what that number is worth.
+
+```{r stage-area}
+# equal-area frame, and only the lake's own catchment
+demu  <- project(dem, "EPSG:32736", method = "bilinear")
+basu  <- vect(st_transform(basin, "EPSG:32736"))
+laku  <- vect(st_transform(lake,  "EPSG:32736"))
+
+d   <- mask(crop(demu, basu), basu)
+csz <- cellSize(d, unit = "ha")
+
+# the lake bed, taken as the fifth percentile of elevation under the polygon
+bed <- as.numeric(global(mask(crop(demu, laku), laku),
+                         quantile, probs = 0.05, na.rm = TRUE))
+
+# the connected depression, not every low cell in the basin
+patch_at_3m <- patches(ifel(d <= bed + 3, 1, NA), directions = 8)
+main <- patch_at_3m %in% unique(na.omit(extract(patch_at_3m, laku)[, 2]))
+
+stage <- data.frame(stage_m = 0:3)
+stage$flooded_ha <- vapply(stage$stage_m, function(s)
+  as.numeric(global(ifel(d <= bed + s & main, csz, 0), "sum", na.rm = TRUE)),
+  numeric(1))
+stage$ratio <- round(stage$flooded_ha / stage$flooded_ha[1], 1)
+stage$flooded_ha <- round(stage$flooded_ha)
+stage
+```
+
+```{r stage-numbers, echo=FALSE}
+a0 <- stage$flooded_ha[1]; a1 <- stage$flooded_ha[2]; a2 <- stage$flooded_ha[3]
+jump <- round(a1 / a0, 1)
+next_step <- round(100 * (a2 - a1) / a1, 1)
+hydro_ha <- round(sum(expanse(laku, unit = "ha")))
+```
+
+Raise the water level by one metre and the flooded area goes from
+`r format(a0, big.mark = ",")` hectares to `r format(a1, big.mark = ",")`, a
+factor of `r jump`. Raise it by a second metre and the area grows by
+`r next_step` per cent. The curve is not gentle and it is not symmetric. Nearly
+everything happens in the first metre.
+
+Now the part that matters. **One metre is the finest distinction this elevation
+model can make.**
+
+```{r precision}
+v <- values(dem); v <- v[!is.na(v)]
+
+c(storage = datatype(dem),
+  unique_values = length(unique(v)),
+  all_integers = all(v == round(v)),
+  smallest_step_m = min(diff(sort(unique(v)))))
+```
+
+The file holds signed integers. Every elevation in this basin is a whole number
+of metres, and the smallest difference it can express is exactly the increment
+that moves the lake by a factor of `r jump`.
+
+So the chapter's question is not how to model inundation. It is what an
+inundated area can mean when the surface it is measured on cannot resolve the
+step that determines it. Everything below works toward an answer, and the answer
+is not that the data are unusable.
+
+## What the elevation model is
+
+The previous chapter read a vertical accuracy off a lidar product: 9.8
+centimetres or better at 95 per cent confidence, stated by the programme that
+flew it. Ask this file the same question.
+
+```{r provenance}
+dem
+```
+
+It is a 100 metre grid in EPSG:3857 covering the basin plus margin. It came from
+the Amazon Web Services Terrain Tiles mosaic through the `elevatr` package at
+zoom level 10, which returns roughly five arc-second cells at this latitude.
+That mosaic is composited from several global and national sources whose
+identity varies by location and is not recorded per cell.
+
+Nowhere in the file, and nowhere in the service that supplied it, is there a
+vertical accuracy figure for this basin. There is no quality level, no
+confidence statement, no separation of open ground from vegetated. What can be
+established is what the file itself demonstrates, which is a one metre
+quantisation, and that is a precision rather than an accuracy. A value can be
+recorded to the metre and be wrong by ten.
+
+That is the ordinary condition of terrain data in this field, and it is worth
+stating plainly rather than working around quietly. A lidar collection tells you
+how wrong it might be. A global elevation mosaic tells you the number.
+
+## The grid it sits on
+
+One property has to be settled before any area is quoted, because it silently
+corrupts every hydrological figure that follows.
+
+EPSG:3857 is a Mercator projection. It is conformal rather than equal-area, and
+its scale factor grows with latitude, so a cell that is nominally 100 metres
+square does not cover a hectare of ground anywhere except the equator.
+
+```{r cell-area}
+cs <- cellSize(dem, unit = "ha")
+round(unlist(global(cs, c("min", "mean", "max"), na.rm = TRUE)), 4)
+```
+
+```{r cell-numbers, echo=FALSE}
+cs_mean <- as.numeric(global(cs, "mean", na.rm = TRUE))
+cs_err  <- round(100 * (1 / cs_mean - 1), 1)
+```
+
+A cell covers `r round(cs_mean, 3)` hectares, not one. Treating each cell as a
+hectare, which is the standard shortcut for converting a flow accumulation count
+into contributing area, **overstates area by `r cs_err` per cent**.
+
+::: callout-warning
+## A contradiction in this book's own data script
+
+`data-raw/prepare-chilwa-data.R` states in its header that "at 100 m each cell
+is exactly one hectare, so flow accumulation counts convert to contributing area
+by multiplying by 0.01 to get square kilometres" and adds that "that identity is
+used in the chapter's prose". Two paragraphs later the same header states that
+the projection inflates area by about seven per cent and that the chapter
+therefore reports in UTM.
+
+Both cannot be true. The measurement above settles it: the identity is wrong by
+`r cs_err` per cent and the second paragraph is right. The header must be
+corrected, and it is recorded here rather than fixed silently because a
+contradiction between a data script and the chapter that reads it is exactly the
+kind of thing that survives review.
+:::
+
+This chapter uses `cellSize()` throughout and reports areas after reprojection
+to UTM zone 36S, which is close enough to equal-area at this extent to serve as
+truth.
+
+## Terrain derivatives
+
+Elevation is rarely the variable of interest. What it implies is.
+
+```{r derivatives}
+slope <- terrain(dem, "slope", unit = "degrees")
+tri   <- terrain(dem, "TRI")
+
+round(unlist(global(c(slope, tri), "mean", na.rm = TRUE)), 2)
+```
+
+```{r hillshade}
+#| fig-cap: "Relief of the Lake Chilwa basin. The lake occupies the flat floor at centre; the Zomba and Mulanje massifs rise on the western and southern margins."
+hs <- shade(terrain(dem, "slope",  unit = "radians"),
+            terrain(dem, "aspect", unit = "radians"),
+            angle = 40, direction = 315)
+
+plot(hs, col = grey(0:100 / 100), legend = FALSE, mar = c(2, 2, 2, 2))
+plot(st_geometry(lake),  add = TRUE, border = "steelblue", lwd = 2)
+plot(st_geometry(basin), add = TRUE, border = "orangered", lwd = 1.5)
+```
+
+Slope governs operability and erosion risk, and ruggedness is a useful
+productivity covariate, because sheltered gentler terrain often carries taller
+and denser stands. Both are computed from differences between neighbouring
+cells, so both inherit the one metre quantisation, and on ground this flat that
+matters. A slope computed from integer elevations across 100 metre cells cannot
+express anything shallower than about half a degree.
+
+## Depressions, real and artefact
+
+Water moves downhill, so an elevation model already encodes drainage. It does not
+encode it cleanly. Every model contains cells with no lower neighbour, produced
+by interpolation error, vegetation returns and finite vertical precision. A
+routing algorithm entering one has nowhere to send the water, and the drainage
+network fragments.
+
+```{r sinks}
+dir.create("../data/chilwa-hydro", showWarnings = FALSE)
+wd <- "../data/chilwa-hydro/"
+file.copy("../data/chilwa_dem.tif", paste0(wd, "dem.tif"), overwrite = TRUE)
+
+wbt_depth_in_sink(dem = "dem.tif", output = "sink_depth.tif",
+                  wd = wd, zero_background = TRUE, verbose_mode = FALSE)
+
+sink_depth <- rast(paste0(wd, "sink_depth.tif"))
+sd_v <- values(sink_depth); sd_v <- sd_v[!is.na(sd_v) & sd_v > 0]
+
+data.frame(
+  cells_in_a_depression = length(sd_v),
+  within_1m  = round(100 * mean(sd_v <= 1), 1),
+  within_2m  = round(100 * mean(sd_v <= 2), 1),
+  max_depth_m = round(max(sd_v), 1))
+```
+
+```{r sink-numbers, echo=FALSE}
+n_sink <- length(sd_v)
+w1 <- round(100 * mean(sd_v <= 1), 1)
+w2 <- round(100 * mean(sd_v <= 2), 1)
+maxd <- round(max(sd_v))
+```
+
+`r format(n_sink, big.mark = ",")` cells sit in some depression, and the deepest
+is `r maxd` metres below its spillover point.
+
+Read the middle two columns against the previous section. **`r w1` per cent of
+those depressions are one metre deep or less**, which is a single quantisation
+step, and `r w2` per cent are within two. Those cannot be distinguished from
+rounding. They are not necessarily artefacts, but nothing in the data can say
+that they are not, and a rule that removes depressions below a depth threshold
+is really a rule about the storage format.
+
+No threshold on depth alone separates real basins from interpolation pits,
+because the two overlap in size. The deepest single pit in this grid is an
+artefact, not the lake.
+
+## Conditioning, and the asymmetry inside it
+
+Two families of algorithm exist. **Filling** raises the floor of a depression
+until it overflows, which is simple and destroys the depression. **Breaching**
+carves a channel out through the lowest point of the rim, which changes far
+fewer cells and preserves the basin's shape.
+
+WhiteboxTools implements Lindsay's hybrid method, which breaches what it can
+within a depth limit and fills whatever remains. Two parameters do the work.
+`max_depth` caps how deep a channel may be carved. `flat_increment` adds a small
+monotonic gradient along the carved channel so flow directions stay unambiguous
+across ground the model records as perfectly level.
+
+```{r breach}
+wbt_breach_depressions(dem = "dem.tif", output = "breached.tif", wd = wd,
+                       max_depth = 3, flat_increment = 0.001,
+                       verbose_mode = FALSE)
+
+breached <- rast(paste0(wd, "breached.tif"))
+change   <- breached - dem
+
+data.frame(
+  cells_changed = global(change != 0, "sum", na.rm = TRUE)[1, 1],
+  max_carved_m  = round(-global(change, "min", na.rm = TRUE)[1, 1], 2),
+  max_raised_m  = round(global(change, "max", na.rm = TRUE)[1, 1], 2))
+```
+
+```{r breach-numbers, echo=FALSE}
+max_carve <- round(-global(change, "min", na.rm = TRUE)[1, 1], 1)
+max_raise <- round(global(change, "max", na.rm = TRUE)[1, 1], 1)
+```
+
+Read both columns together, because the asymmetry between them is the single
+most consequential behaviour in this chapter.
+
+The carving obeys its limit exactly. No cell is lowered by more than the
+`r max_carve` metres imposed. The raising does not obey it, because **the limit
+does not apply to filling at all**. The deepest fill is `r max_raise` metres,
+`r round(max_raise / max_carve)` times the carving limit that was set.
+
+A published description of this method as one that preserves deeper basin
+structures while breaching shallow artefacts is therefore only half right. The
+constraint bounds the carving. It does not bound what the algorithm does to
+everything it declines to carve.
+
+```{r fill}
+wbt_fill_depressions_wang_and_liu(dem = "breached.tif", output = "filled.tif",
+                                  wd = wd, verbose_mode = FALSE)
+
+filled <- rast(paste0(wd, "filled.tif"))
+global((filled - breached) != 0, "sum", na.rm = TRUE)[1, 1]
+```
+
+Zero cells change in the second pass. That is the correct result and it is worth
+pausing on, because it is easy to run a fill step, see a new file appear, and
+assume it did something. The breaching step already filled every depression it
+declined to breach, so its output was depression-free before the filling
+algorithm ever saw it.
+
+## What conditioning destroys
+
+If the conditioned surface has no depressions left, then it has no Lake Chilwa.
+
+```{r endorheic}
+lake_mask <- rasterize(vect(lake), dem)
+raised    <- ifel(!is.na(lake_mask), breached - dem, NA)
+
+data.frame(
+  mean_raise_m = round(global(raised, "mean", na.rm = TRUE)[1, 1], 1),
+  max_raise_m  = round(global(raised, "max",  na.rm = TRUE)[1, 1], 1),
+  raw_bed_m    = round(as.numeric(global(ifel(!is.na(lake_mask), dem, NA),
+                                         quantile, probs = 0.5, na.rm = TRUE)), 1),
+  conditioned_bed_m = round(as.numeric(global(ifel(!is.na(lake_mask), breached, NA),
+                                              quantile, probs = 0.5, na.rm = TRUE)), 1))
+```
+
+```{r endo-numbers, echo=FALSE}
+mr <- round(global(raised, "mean", na.rm = TRUE)[1, 1], 1)
+xr <- round(global(raised, "max",  na.rm = TRUE)[1, 1], 1)
+```
+
+The lake bed has been raised by `r mr` metres on average and by `r xr` at its
+deepest. In the conditioned model, Chilwa is a gentle ramp that water crosses on
+its way somewhere else.
+
+This is not a bug and it cannot be tuned away. Flow routing requires that every
+cell have a downhill neighbour, and a terminal sink by definition does not. Any
+algorithm that produces a routable surface must remove the sink. The question is
+not how to avoid that but which surface each downstream calculation is entitled
+to use, and there are only two rules.
+
+**Flow routing uses the conditioned model**, and the endorheic basin is expected
+to be gone from it. That is acceptable, because what routing is for is the
+convergence pattern, and filling a flat sink with a monotonic gradient preserves
+where water arrives even while inventing where it leaves.
+
+**Anything depending on the shape of the depression uses the raw model.** That
+means depression depth, inundated extent and any stage-area relationship,
+including the calculation this chapter opened with. Running an inundation model
+on a conditioned surface is a silent and total error, because the basin whose
+flooding is being modelled has already been filled.
+
+## Flow routing, and a maximum in the wrong place
+
+```{r routing}
+wbt_d8_pointer(dem = "breached.tif", output = "d8.tif", wd = wd,
+               verbose_mode = FALSE)
+wbt_d8_flow_accumulation(input = "d8.tif", output = "acc.tif", wd = wd,
+                         pntr = TRUE, verbose_mode = FALSE)
+
+acc <- rast(paste0(wd, "acc.tif"))
+global(acc, "max", na.rm = TRUE)[1, 1]
+```
+
+```{r routing-check}
+# where is that maximum, and is it in the lake?
+peak_cell <- which.max(values(acc))
+peak_xy   <- xyFromCell(acc, peak_cell)
+in_lake   <- !is.na(extract(lake_mask, peak_xy)[, 1])
+
+lake_acc <- global(ifel(!is.na(lake_mask), acc, NA), "max", na.rm = TRUE)[1, 1]
+
+data.frame(global_max_cells = global(acc, "max", na.rm = TRUE)[1, 1],
+           global_max_in_lake = in_lake,
+           lake_max_cells = lake_acc)
+```
+
+```{r acc-numbers, echo=FALSE}
+gmax <- global(acc, "max", na.rm = TRUE)[1, 1]
+lmax <- lake_acc
+```
+
+The largest flow accumulation in the grid is
+`r format(gmax, big.mark = ",")` cells, and it is **not in the lake**. It belongs
+to a neighbouring catchment draining off the edge of the raster. Chilwa's own
+convergence peaks at `r format(lmax, big.mark = ",")` cells.
+
+That distinction is easy to lose. A script that reports the maximum accumulation
+in a grid as the catchment's outlet is right whenever the grid contains one
+catchment and wrong the rest of the time, and nothing about the output announces
+which case you are in. The check is two lines and almost nobody writes them.
+
+Multiplying either figure by a nominal hectare per cell would then compound the
+error by the `r cs_err` per cent established earlier.
+
+## Stage and area
+
+Return to the opening calculation with everything the chapter has established.
+
+```{r rating}
+stage_full <- data.frame(stage_m = seq(0, 4, 0.5))
+stage_full$flooded_ha <- vapply(stage_full$stage_m, function(s)
+  round(as.numeric(global(ifel(d <= bed + s & main, csz, 0), "sum", na.rm = TRUE))),
+  numeric(1))
+
+plot(stage_full$stage_m, stage_full$flooded_ha / 1000, type = "b", pch = 19,
+     xlab = "stage above lake bed (m)", ylab = "flooded area (thousand ha)",
+     main = "Stage-area curve, Lake Chilwa basin")
+abline(h = hydro_ha / 1000, lty = 2, col = "steelblue")
+text(3, hydro_ha / 1000, "HydroLAKES maximum extent", pos = 3, cex = 0.8,
+     col = "steelblue")
+```
+
+```{r rating-numbers, echo=FALSE}
+at1 <- stage_full$flooded_ha[stage_full$stage_m == 1]
+agree_pct <- round(100 * abs(at1 - hydro_ha) / hydro_ha, 1)
+```
+
+Two things are visible. The curve is nearly vertical in its first metre and
+nearly flat afterwards, which is what a shallow basin with a wide flat floor
+looks like. And the one metre stage encloses
+`r format(at1, big.mark = ",")` hectares against the HydroLAKES published
+maximum extent of `r format(hydro_ha, big.mark = ",")`, a difference of
+`r agree_pct` per cent.
+
+That agreement is a genuine result and it is easy to over-read. The published
+polygon is a long-run maximum extent and the model surface is an instantaneous
+threshold, so the two are not the same quantity and this is not a validation. It
+does say that a stage one metre above the lake bed reproduces the published
+maximum to within a couple of per cent, which is a useful anchor for a rating
+curve and a poor substitute for a gauge.
+
+::: {.verification}
+#### Under Wetland Methodologies {.unnumbered .unlisted}
+
+A wetland methodology asks for an inundated area, usually as an annual figure or
+a class transition. Four questions decide whether the figure can be accepted.
+
+Which surface was the extent computed on, the raw model or the conditioned one.
+A conditioned surface has had the basin removed and cannot produce an inundated
+extent at all.
+
+What is the vertical precision of that surface, and how does it compare with the
+stage difference the project is claiming. Here the precision is one metre and
+one metre is a factor of `r jump` in area.
+
+What was the stage, and where did it come from. A gauge, a satellite altimeter,
+or a threshold chosen to reproduce a published polygon are three different
+levels of evidence.
+
+And in what projection was the area computed. A `r cs_err` per cent error is
+available for free to anyone who counts cells on a Mercator grid.
+:::
+
+## Conclusions
+
+An elevation model is an observation with a precision, and on low-relief ground
+that precision governs the answer.
+
+This basin's model resolves one metre, and one metre moves the lake by a factor
+of `r jump`. `r w1` per cent of its depressions are a single quantisation step
+deep and cannot be told from rounding. Conditioning it for flow routing raised
+the lake bed by `r mr` metres on average and `r xr` at its deepest, because a
+depth limit bounds carving and does not bound filling. The largest flow
+accumulation in the grid belongs to a different catchment. And a Mercator cell
+here is `r round(cs_mean, 3)` hectares, so the convenient identity overstates
+area by `r cs_err` per cent.
+
+None of that makes the data unusable. It makes the reporting conditional, and
+the condition is always the same. State which surface, state its precision, and
+state whether the quantity you are reporting depends on the depression shape or
+only on the convergence pattern. Those three sentences are the difference
+between an inundated area a verifier can accept and one they cannot.
+
+## Exercises
+
+1. Rerun the breaching step with `max_depth` at 1, 3 and 10 metres. Report the
+   maximum carve and the maximum fill in each case, and confirm that only the
+   first responds to the parameter.
+2. Compute the stage-area curve at 0.1 metre steps between 0 and 2 metres. The
+   elevation model stores integers. Explain what the intermediate points
+   represent and whether they carry information.
+3. Reproject the elevation model to UTM zone 36S before conditioning rather than
+   after, and report whether the flow accumulation maximum lands in the same
+   place. State which order you would defend.
+4. Take the sink depth surface and classify depressions into those deeper and
+   shallower than two metres. Map both. Say what fraction of the deep class lies
+   inside the HydroLAKES polygon and what that implies about using depth alone
+   as a filter.
+5. *(Applied.)* A project reports 96,000 hectares of inundated wetland from this
+   basin and does not state its stage or its surface. Using only the results in
+   this chapter, give the range of stages consistent with that figure and say
+   what you would ask for first.
+6. *(Applied.)* Compute contributing area at the lake's convergence point twice,
+   once by multiplying the cell count by 0.01 square kilometres and once with
+   `cellSize()`. Report both and the difference in square kilometres.
+
+::: callout-note
+## Open decisions
+
+**The data script contradicts itself** and must be corrected.
+`data-raw/prepare-chilwa-data.R` asserts the one-cell-one-hectare identity in
+one paragraph and refutes it two paragraphs later. The measurement in this
+chapter settles it at `r cs_err` per cent.
+
+**No vertical accuracy is available for this surface.** The chapter states the
+precision, which is measurable, and says plainly that no accuracy figure exists.
+If a published assessment of the AWS Terrain Tiles mosaic over southern Africa
+can be found, section two should cite it and the conclusions should be
+rewritten around it.
+
+**The stage-area anchor is not a validation** and the draft says so. Whether a
+gauge record for Chilwa can be obtained is worth an hour. If it can, the rating
+curve becomes a real one and this chapter gains its strongest number.
+:::
