@@ -509,6 +509,157 @@ And in what projection was the area computed. A `r cs_err` per cent error is
 available for free to anyone who counts cells on a Mercator grid.
 :::
 
+## Which soil, and therefore which method
+
+An inundated area is worth knowing because of what lies under it. This section
+is about the layer that decides how the carbon beneath a wetland is accounted
+for, where that layer comes from, and why one binary in it changes the method
+rather than the number.
+
+### The binary that decides everything
+
+The IPCC divides every soil in the world into two classes and gives them
+different accounting.
+
+An **organic soil**, meaning a peat or Histosol, is defined by the 2006
+Guidelines after FAO. The organic horizon must be at least ten centimetres
+thick; a horizon under twenty centimetres must hold twelve per cent or more
+organic carbon when mixed to twenty centimetres; a soil never saturated for more
+than a few days must exceed twenty per cent organic carbon by weight. Everything
+that is not an organic soil is a **mineral soil**.
+
+That single classification changes the method.
+
+| | Organic soil | Mineral soil |
+|---|---|---|
+| Method | Area-based annual **emission factor** | **Stock change** against a reference |
+| Quantity | Tonnes per hectare **per year** | Tonnes per hectare, differenced over a period |
+| Reference needed | None | Reference stock, plus land use, management and input factors |
+| Default period | None. At Tier 1 there is **no transition period** | Twenty years by default |
+| Recently against long drained | Tier 1 does not distinguish them | Tier 1 does not distinguish them |
+
+The consequence is that the two are not comparable and cannot be summed
+casually. A flux is a rate and a stock change is a difference, and a project
+that reports both has to be explicit about which pools each covers.
+
+A second rule follows from the definition and is easy to miss. **All organic
+soils are assumed to have originally been wet**, so in the IPCC's language a dry
+organic soil is always a *drained* organic soil, whatever anyone did or did not
+do to it. Drainage is not established by evidence of ditching. It is inferred
+from the soil being dry.
+
+### The gases are not the same either
+
+Drained organic soils emit carbon dioxide, and the Wetlands Supplement gives
+Tier 1 factors for it in Table 2.1. They also emit methane, which the 2006
+Guidelines had assumed negligible, and the Supplement gives that in Table 2.3
+for the land and separately in Table 2.4 **for the drainage ditches**, which are
+a small fraction of the area and a large fraction of the methane. Nitrous oxide
+comes from the nitrogen in the organic matter and from any fertiliser. And
+carbon leaves in the water as dissolved organic carbon, which the Supplement
+gives a Tier 1 method for, and as particulate and dissolved inorganic carbon,
+for which it gives none.
+
+Rewetting inverts the pattern rather than reversing it. Carbon dioxide falls,
+nitrous oxide drops to almost nothing, and methane rises, because the oxygen
+level falls and methanogenesis restarts.
+
+Coastal wetlands, meaning mangrove, tidal marsh and seagrass, are a separate
+chapter again, and there methane and nitrous oxide are **not significant except
+where the wetland receives agricultural run-off or sewage**. Saline inland
+wetlands, the playas and pans and sabkhas, get no factors at all, because the
+Supplement records that the literature cannot support them.
+
+### The one number that matters most, and its interval
+
+```{r ipcc-defaults}
+# IPCC 2013 Wetlands Supplement, Table 2.1, transcribed from
+# references/standards/IPCC-md/IPCC-2013-Wetlands-Supplement.md
+tier1 <- data.frame(
+  land_use = c("Forest, nutrient-poor", "Forest, nutrient-rich",
+               "Forest", "Forest and cleared forest"),
+  zone     = c("Boreal", "Boreal", "Temperate", "Tropical"),
+  ef_tCO2C_ha_yr = c(0.37, 0.93, 2.6, 5.3),
+  ci_low   = c(-0.11, 0.54, 2.0, -0.7),
+  ci_high  = c(0.84, 1.30, 3.3, 9.5),
+  sites    = c(63L, 62L, 8L, 21L))
+
+tier1$spans_zero <- tier1$ci_low < 0 & tier1$ci_high > 0
+knitr::kable(tier1)
+```
+
+```{r ipcc-numbers, echo=FALSE}
+trop <- tier1[tier1$zone == "Tropical", ]
+temp <- tier1[tier1$zone == "Temperate", ]
+```
+
+The tropical factor is `r trop$ef_tCO2C_ha_yr` tonnes of carbon dioxide carbon
+per hectare per year, and its ninety-five per cent interval runs from
+`r trop$ci_low` to `r trop$ci_high`. **It spans zero.** On `r trop$sites` sites,
+the published Tier 1 default cannot establish whether a tropical drained organic
+forest soil is emitting or removing.
+
+Set that beside the temperate row, whose interval is tight and rests on
+`r temp$sites` sites, and the boreal rows, whose intervals are wider on more
+than sixty sites each. The width of a confidence interval here is telling you
+about the spread of the underlying sites, not about how much evidence there is,
+and the two are easy to confuse.
+
+### Where the layer comes from
+
+Two scales of answer exist, and a project needs both.
+
+**Globally**, the reference soil group probabilities from SoilGrids give a
+Histosol layer at 250 metres, and the Harmonized World Soil Database gives a
+coarser classed alternative. Both answer the organic-or-mineral question
+directly. The layer below was fetched from the ISRIC coverage service over this
+basin and is committed with the book.
+
+```{r histosol}
+histosol <- rast("../data/chilwa_histosol_pct.tif")
+names(histosol) <- "histosol_pct"
+
+hb <- mask(crop(histosol, vect(st_transform(basin, crs(histosol)))),
+           vect(st_transform(basin, crs(histosol))))
+hv <- values(hb); hv <- hv[!is.na(hv)]
+
+c(cells = length(hv),
+  max_probability_pct  = max(hv),
+  mean_probability_pct = round(mean(hv), 2),
+  cells_above_10pct    = sum(hv > 10))
+```
+
+```{r hist-numbers, echo=FALSE}
+h_max <- max(hv); h_n10 <- sum(hv > 10)
+```
+
+Across the whole Chilwa basin the highest Histosol probability anywhere is
+`r h_max` per cent, and `r h_n10` cells exceed ten per cent.
+
+**Chilwa is not a peatland.** That is a result rather than a disappointment, and
+it settles the method. The organic soil apparatus above, Table 2.1 and its
+methane companions, does not apply here. What applies is Chapter 5 of the
+Supplement, on inland wetland mineral soils, which covers riparian wetlands,
+forested swamps and marshes, works by stock change against a reference stock,
+and defaults to a twenty year period.
+
+Anyone who had reached for the tropical drained organic soil factor of
+`r trop$ef_tCO2C_ha_yr` because the map said wetland would have applied a rate
+to a soil that has no such rate, and would have done it on a factor whose sign
+is unresolved.
+
+**At country level** the global layers are a screening tool and not the answer.
+National soil surveys, and in many countries a national wetland or peatland
+inventory, carry the mapping the inventory compiler is expected to use, and
+their class boundaries will not match SoilGrids. The global layer tells you
+which question to ask. The national layer answers it.
+
+One caution belongs with any organic soil figure outside Southeast Asia. The
+Supplement records that organic soil fire emissions are validated for that
+region only, and that FAOSTAT sets them to zero beyond Indonesia, Malaysia and
+Brunei. An organic soil fire estimate for an African or American basin is an
+extrapolation past the evidence its own default rests on, and should say so.
+
 ## Conclusions
 
 An elevation model is an observation with a precision, and on low-relief ground

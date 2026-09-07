@@ -102,3 +102,35 @@ cat("file     ", round(file.size("data/chilwa_dem.tif") / 1e6, 1), "MB\n")
 cat("lake     ", round(as.numeric(st_area(st_transform(lake, 32736))) / 1e6, 1), "km2\n")
 cat("basin    ", round(as.numeric(st_area(st_transform(basin, 32736))) / 1e6, 1), "km2\n")
 cat("rivers   ", nrow(rivers), "reaches\n")
+
+# ---------------------------------------------------------------------------
+# Histosol probability over the Chilwa basin, added 6 September 2026 for the
+# wetland organic soils section.
+#
+# Source: SoilGrids 2.0, ISRIC, WRB reference soil group probability for
+# Histosols, fetched through the OGC Web Coverage Service at maps.isric.org.
+# The value is a percentage probability that a cell's dominant soil is a
+# Histosol, so it needs no scaling and carries no unit ambiguity.
+#
+# It is fetched rather than derived because the question it answers is binary
+# and decides which IPCC method applies. An organic soil is reported by an
+# area-based annual emission factor; a mineral soil is reported by stock change
+# against a reference. Getting that wrong changes the method, not the number.
+#
+# Deliberately NOT fetched: the SoilGrids organic carbon stock layer, ocs
+# 0-30cm. Its WCS DescribeCoverage returns a placeholder unit of W.m-2.Sr-1 and
+# no scale factor, and the raw values over this basin have a median of 34,
+# which is plausible read as t/ha and implausible read as the documented
+# tenth-of-t/ha. Until the conversion is confirmed against ISRIC's own
+# documentation the layer must not be used for a reported number.
+
+if (FALSE) {   # run manually; the book reads the committed file
+  bb <- "SUBSET=long(35.0141,36.3941)&SUBSET=lat(-16.0299,-14.5284)"
+  crs_args <- paste0("&SUBSETTINGCRS=http://www.opengis.net/def/crs/EPSG/0/4326",
+                     "&OUTPUTCRS=http://www.opengis.net/def/crs/EPSG/0/4326",
+                     "&FORMAT=GEOTIFF_INT16")
+  url <- paste0("https://maps.isric.org/mapserv?map=/map/wrb.map",
+                "&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage",
+                "&COVERAGEID=Histosols&", bb, crs_args)
+  download.file(url, "data/chilwa_histosol_pct.tif", mode = "wb")
+}
