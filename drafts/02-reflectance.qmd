@@ -9,22 +9,27 @@ execute:
 ---
 
 ::: callout-note
-## Redraft
+## Revision
 
-A redraft of `02-reflectance.qmd` under the `writing-scientific-books` skill,
-kept beside the original for comparison. Every code chunk is unchanged, so every
-computed number is identical. The prose is rewritten to introduce each term in
-the sentence that first uses it and to cut what the reader does not need.
+Revised 6 September 2026 against the proposal Elsevier accepted, in step with
+chapter 1.
 
-One substantive correction. The disturbance signatures section previously
-reported the beetle classification of Murphy et al. (2026) as having a
-commission error of 0.750 on the red-attack class and a kappa of 0.166. Table 8
-of that paper reports the reverse, a kappa of 0.750 and a commission error on
-red attack of 0.198, and the paper calls those error rates acceptable. The
-section is rewritten against the published tables, and the argument it was
-making is moved to the fire results, where the tables do support it.
+The reader is the one the proposal names. The main text is for graduate students
+in forestry, environmental science and remote sensing and for analysts arriving
+from a neighbouring field, and it assumes introductory statistics and no prior
+geographic information systems. Registry material sits in tinted verification
+tracks, and a reader who skips every one of them still gets a complete chapter.
+
+The provenance of the land cover classes is now declared, which it was not, and
+the results that rest on them are qualified accordingly.
+
+One substantive correction stands from earlier the same day. The disturbance
+section had reported the beetle classification of Murphy et al. (2026) as having
+a commission error of 0.750 on the red-attack class and a kappa of 0.166. Table 8
+of that paper reports the reverse, a kappa of 0.750 and a commission error of
+0.198, and the paper calls those rates acceptable. The argument the section was
+making is supported instead by the fire results, where it now sits.
 :::
-
 ```{r setup}
 library(terra)
 
@@ -44,6 +49,34 @@ lulc  <- rast("../data/rondonia_class_2022.tif")
 class <- project(lulc, clear, method = "near")
 names(class) <- "class"
 ```
+::: callout-important
+## What these classes are
+
+The satellite imagery in this chapter is real. Two Sentinel-2 surface reflectance
+scenes over the same 24 kilometre window in Rondonia, ten bands each, on 16 July
+and 2 September 2022.
+
+The land cover map is not ground truth. It is the output of somebody else's
+classifier, a nine-class Sentinel-2 classification of Rondonia for 2022 shipped
+in the `sitsdata` package, and `data-raw/prepare-rondonia-data.R` extracts it
+unchanged. So wherever this chapter says forest or regrowth, read it as what a
+classifier called forest or regrowth. Its agreement with the 2,032 validation
+points that ship alongside it is 83 per cent.
+
+That matters most in the section on class separability, which asks how well a
+spectral index tells two classes apart when those classes were themselves
+assigned from spectral data. Part of what the result measures is the earlier
+classifier's own decision boundary, and the section says so again where it bites.
+
+Two smaller things, recorded because a reader rebuilding the data will meet them.
+The validation table ships a numeric class column that disagrees with the map's
+own legend file, coding mountainside forest as 4 rather than 3 and swapping
+wetland with seasonally flooded, so the preparation script joins on the label
+text and discards the numeric column. And the 20 metre grid these files sit on is
+a harmonisation applied upstream, not the native resolution of every band, which
+is the subject of the band support section below.
+:::
+
 ## Introduction
 
 A satellite does not measure forest. It counts photons landing in a detector
@@ -212,10 +245,14 @@ exactly like an event.
 
 ## Band support
 
-The previous chapter asked which plane the arithmetic happens on. Asked of a
-sensor, the same question becomes what area of ground one number describes. That
-area is the *support* of the value, and it is the second half of this book's
-spine.
+Chapter 1 asked what a point, a line and a polygon are, and which surface the
+arithmetic happens on. Asked of a sensor, the same question becomes what area of
+ground a single number describes. That area is the *support* of the value, and it
+is the second half of this book's spine.
+
+A polygon in chapter 1 had a boundary you could draw. A satellite value has no
+boundary you can draw. It has a footprint, and the footprint of one number does
+not stop where the forest stops.
 
 Sentinel-2 does not answer it once. It collects the blue, green, red and broad
 near infrared bands at a *ground sample distance* of 10 metres, meaning each
@@ -417,10 +454,15 @@ accuracy* of `r ba["NDVI"]`, meaning the average of how often it gets forest
 right and how often it gets regrowth right, counted separately so the larger
 class cannot flatter it. That best comes at a threshold of `r tv`, and even
 there it calls `r round(100 * sweep["NDVI", "regrowth_called_forest"], 1)` per
-cent of regrowth forest. Better than nothing is not the same as fit for purpose.
-A project mapping forest by thresholding a vegetation index has a systematic
-error it cannot see, because the errors sit in exactly the class the project is
-paid to find.
+cent of regrowth forest. Better than nothing is not the same as fit for purpose,
+and the failures are not spread evenly. They concentrate in the smaller of the
+two classes, which is the one a disturbance study exists to find.
+
+Remember what the classes are before reading that as a verdict on the index. Both
+labels came from a classifier that used the same kind of spectral data, so some
+of the overlap measured here is the earlier model's decision boundary rather than
+the ground. The overlap is real and the exact balanced accuracy is not a
+measurement against truth.
 
 The second is the ranking. The burn ratio reaches `r ba["NBR"]`, the moisture
 index `r ba["NDMI"]`, the red edge index `r ba["NDRE1"]` and the vegetation
@@ -579,13 +621,22 @@ omission error of 0.199, meaning about one in five of the real red attack was
 missed. The paper describes those rates as acceptable and selects the moisture
 index on them.
 
-That is a good result, and it is worth being clear about what a good result buys
-you. One cell in five is fine for mapping where an outbreak is. It is not fine
-for a project claiming payment on the difference between two years, because a
-twenty per cent false alarm rate on the disturbed class is comparable in size to
-the change many projects are trying to detect. The number that decides whether a
-map is usable is never the overall accuracy. It is the error on the class you
-are being paid to find.
+That is a good result, and the fire section below shows what a good headline
+figure can still hide.
+
+::: callout-tip
+## Verification track: what one in five costs
+
+One cell in five is fine for mapping where an outbreak is. It is not fine for a
+project claiming payment on the difference between two years. A twenty per cent
+false alarm rate on the disturbed class is comparable in size to the change many
+projects are trying to detect, so the error and the signal arrive at the same
+magnitude and no amount of careful accounting downstream separates them again.
+
+This is why registries ask for an accuracy assessment with per-class figures
+rather than a single number, and why a submission reporting only overall accuracy
+is incomplete rather than merely thin.
+:::
 
 ### Fire
 
@@ -677,7 +728,16 @@ of the low severity class. An accuracy figure quoted without its per-class error
 is not a result, it is a summary of which classes were common.
 
 None of those are exotic. All of them sit in the first hour of an ordinary
-workflow, which is where the errors that reach an audit are made.
+workflow, which is where the errors that survive to the end of one are made.
+
+One limit applies to the first of the four and is worth carrying forward. The
+forest and regrowth labels in this scene came from a classifier rather than from
+the ground, so the separability figures describe how two spectral indices compare
+against a common reference, not how either performs against truth. That is enough
+to rank them, which is what the section claimed, and it is not enough to certify
+either. The chapter on classification builds the reference data that would be,
+and the chapter on uncertainty says what a claim needs before a number can be
+reported with an interval attached.
 
 ## Exercises
 
