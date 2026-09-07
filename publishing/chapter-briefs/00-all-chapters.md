@@ -285,8 +285,7 @@ classifier, and it does not survive averaging.
 
 **Owes the spine.** A change detected at one support is not a change at another.
 
-**Sources.** `training-rspatial/06-disturbance-risk`, `public-disturbance-data`,
-`public-boundary-data`, `disturbance-checker`, `darkwoods_beetles`,
+**Sources.** `training-rspatial/06-disturbance-risk`, `disturbance-checker`, `darkwoods_beetles`,
 `woolly-adelgid-signatures`, `deep-learn-alaska-spruce-beetle`,
 `wildfire-fuel-mapping-CFFDRS-2.0`.
 
@@ -431,7 +430,7 @@ against more deforestation than the jurisdiction has.
 to project support, and the allocation is where the argument happens.
 
 **Sources.** `training-rspatial/10-baseline-modelling`, `VM0048` baseline and
-leakage, `public-jurisdictional-data`, `VT0007-deforestation-map`.
+leakage, `VT0007-deforestation-map`.
 
 **Missing.** Non-permanence risk and buffer determination. Deforestation risk
 modelling as a worked example rather than an aside.
@@ -460,8 +459,7 @@ design-based against model-based inference, citing Pebesma's chapter on
 statistical modelling.
 
 **Sources.** `training-rspatial/11-uncertainty`, `uncertainty/04-monte-carlo`,
-`TREES-monte-carlo-app`, `TREES-demo-repository`, `area-verification`,
-`verra-tasks1-2`, `sop-library`.
+`TREES-monte-carlo-app`, `TREES-demo-repository`, `verra-tasks1-2`, `sop-library`.
 
 **Missing.** ART equation numbers are out of date. The uncertainty adjustment
 factor moved from Equation 11 in TREES 2.0 to Equations 7 and 8 in TREES 3.0,

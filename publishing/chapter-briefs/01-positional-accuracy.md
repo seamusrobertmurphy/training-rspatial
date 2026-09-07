@@ -30,23 +30,17 @@ onto a flat one with a distortion you chose. Eratosthenes, the longitude problem
 and the marine chronometer belong here as the fastest route into what a datum is,
 kept to a page.
 
-**1.3 The area check.** The applied core, grounded in `training/area-verification`.
-The workflow already exists there and runs the sequence a verifier runs: set the
-geometric plane, unpack the submitted Esri file geodatabase, summarise the
-layers, validate geometry, extract the invalid artefacts, calculate hectares,
-break the total down by boundary, stratum and harvest unit, and test the
-difference against materiality. The repository already carries the outputs that
-make the teaching concrete, namely `slivers layer`, `artefact lines layer`,
-`artefact polygons layer` and an `Invalid Geometries` folder holding the points
-and polygons that failed. Real submitted data from an ACR project in Jackson
-County.
+**1.3 The area check.** The applied core. The sequence a verifier runs, taught on
+a public dataset: set the geometric plane, read the submitted layers, validate
+geometry, extract the invalid artefacts, calculate hectares, break the total down
+by boundary and stratum, and test the difference against materiality. No client
+material is used and none may be.
 
-**1.4 Overlap and ownership.** The check that nine submissions in ten fail on the
-first pass. Test the project boundary against federal land, adjacent private
-parcels, national parks and neighbouring ownership. Any positive intersection is
-land claimed twice. The section teaches `st_intersection`, `st_difference` and
-`st_area`, and it teaches why a union across four exclusion residuals readmits
-every excluded parcel.
+**1.4 Overlap and ownership.** Testing a project boundary against adjacent
+ownership, where any positive intersection is land claimed twice. The section
+teaches `st_intersection`, `st_difference` and `st_area`, and why a union across
+several exclusion residuals readmits every excluded parcel. To be built on public
+cadastral and protected-area layers.
 
 **1.5 The inheritance path.** Why the chain of reprojections is lost, and what to
 do about it. See the corrections below before drafting this section.
@@ -56,8 +50,8 @@ different areas. ArcGIS runs its own engine over GDAL, GDAL ships in many
 versions, and PROJ changed its model at version 6. Spherical against planar
 geometry, and `sf_use_s2()` as the switch that changes an answer without
 comment. The point is not that one library is right but that a reported area
-without a stated software environment is not reproducible, which is why the
-area-verification workflow ends on a runtime log.
+without a stated software environment is not reproducible, which is why a
+serious area check ends on a runtime log.
 
 **1.7 Plot centres and why they are indestructible.** Permanent sample plots in
 North America are marked with rebar, and public forest inventory programmes use
@@ -112,8 +106,7 @@ chapter's ethic is that a reader should be able to rank error sources by size,
 not fear all of them equally.
 
 The real gain is elsewhere. A planar intersection of two nearly coincident
-boundaries produces slivers, which is exactly what `Outputs/slivers layer` in the
-area-verification repository contains. Exact spherical predicates do not manufacture
+boundaries produces slivers, which is why exact spherical predicates matter, because they do not manufacture
 them. So the caveat closes the chapter by tying the geometry engine back to the
 finding the chapter opened on, and it ends on the rule that a reported area
 without its engine, its library versions and its geometry setting stated is not
@@ -127,14 +120,9 @@ in the cube. See `publishing/book-spine.md`.
 
 | Section | Repository |
 |---|---|
-| 1.3 area check | `training/area-verification` |
-| 1.3, 1.4 | `training/public-boundary-data` |
-| 1.4 overlap | `training/public-jurisdictional-data/AreaCheck` |
 | 1.7 plot centres | `training/sop-library/sop-plot-grid` |
 | 1.8 GNSS | `training/GPS-training-material`, `training/survey-tools` |
 | 1.8 field capture | KoBoToolbox deployment, 2019 |
-| 1.10 S2 caveat | `area-verification/Outputs/slivers layer`, the `s2` and `sf` vignettes |
-
 ## Corrections before drafting
 
 Three points in the dictation would not survive review and one term was

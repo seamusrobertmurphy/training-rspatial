@@ -818,9 +818,8 @@ matters and the sweep now shows it. And the ensemble member count is eight on
 this machine rather than the six or seven the notes anticipated, which the
 chapter now uses as its own demonstration.
 
-**Still pending.** The a public dataset boundary verification and overlap material
-was cut from this draft rather than left as a callout, because it cannot render
-offline and because TÜV SÜD clearance is not in hand. It belongs in the second
-chapter if the split is taken. The two ebooks the geospatial objects section was
-to be aligned to have still not been supplied.
+**Still pending.** The boundary verification and overlap sections were cut from
+this draft and must be rebuilt on public data. No client or engagement material
+may appear in this book in any form. The two ebooks the geospatial objects
+section was to be aligned to have still not been supplied.
 :::

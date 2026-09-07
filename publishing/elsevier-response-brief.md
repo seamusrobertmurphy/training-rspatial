@@ -39,7 +39,7 @@ Word pages you anticipate producing OR the total number of words" and a
 "manuscript completion date", so the numbers are the author's to propose and
 Elsevier's to accept.
 
-Whether TÜV SÜD has cleared the audit material cannot be determined from the
+Decided 6 September 2026: no client or engagement material appears in the book, for copyright reasons, so the clearance question is closed and the affected sections are rebuilt on public data. The original note read: whether clearance had been given could not be determined from the
 repository. Nothing in `publishing/`, in the chapter sources or in the committed
 memory records a clearance. This matters more under Elsevier than it did under
 CRC, because several verification tracks describe specific engagements. The
@@ -1238,7 +1238,7 @@ December window flagged 38 per cent of a project area against 4 per cent on a Ju
 to September window, is the strongest empirical claim in the book and it is
 uncited and unsourced. It rests on an engagement, and it needs either a citation,
 a reproducible demonstration on the Rondonia data, or removal. This is also the
-passage most exposed on the TÜV SÜD clearance question.
+passage formerly exposed on that question, now rewritten on public data.
 
 **7 Allometry and Biomass.** The five-equations-on-84-oaks demonstration, with a
 4.75-fold spread from equation choice alone, is the book's best single argument
