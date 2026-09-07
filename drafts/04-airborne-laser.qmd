@@ -1,0 +1,472 @@
+---
+title: "Deriving Canopy Height from Airborne Laser Scanning"
+subtitle: "Chapter 4 draft, 6 September 2026"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+::: callout-note
+## Draft
+
+Every number in the prose is computed by a chunk on this page. The working
+example is `MixedConifer.laz`, which ships inside the `lidR` package, so this
+chapter needs no committed data and no network. Brief at
+`publishing/chapter-briefs/04-airborne-laser.md`. The chapter ends at the height
+metric; all plot-to-metric modelling moved to chapter 9 on 6 September 2026.
+:::
+
+```{r setup}
+library(lidR)
+library(terra)
+library(sf)
+library(dplyr)
+```
+
+## Introduction
+
+A laser scanner mounted under an aircraft sends out a pulse and listens. The
+pulse spreads as it travels, so by the time it reaches a forest it is a cone
+rather than a line, and different parts of that cone hit different things. Some
+of it strikes the top of a crown and comes straight back. Some passes through a
+gap in the foliage, hits a branch lower down, and returns later. Some reaches
+the ground. One pulse, several returns, each arriving at a different time and
+therefore reporting a different height.
+
+That is the whole physical basis of airborne laser scanning in forestry, and
+everything in this chapter follows from one consequence of it. **The instrument
+measures ranges. It does not measure trees.** Turning a cloud of ranges into a
+canopy height requires deciding which returns hit the ground, and turning a
+canopy height into a stem count requires deciding how wide to look for a
+treetop. Both are decisions, both are made in software, and this chapter is
+about how much they move the answer.
+
+The question it settles is how much of a laser-derived height is the sensor and
+how much is the analyst. By the end you will have seen the same returns produce
+stem densities differing by a factor of twelve, with no change to the data at
+all.
+
+```{r load}
+las <- readLAS(system.file("extdata", "MixedConifer.laz", package = "lidR"))
+las
+```
+
+```{r load-facts, echo=FALSE}
+area_ha <- as.numeric(st_area(st_as_sfc(st_bbox(las)))) / 1e4
+n_pts   <- npoints(las)
+dens    <- round(n_pts / (area_ha * 1e4), 2)
+```
+
+`r format(n_pts, big.mark = ",")` returns over `r round(area_ha, 2)` hectares of
+mixed conifer, a density of `r dens` returns per square metre. That is modest by
+current standards and typical of what a project actually receives.
+
+## Provenance and vertical accuracy
+
+Before any processing, ask what the product claims about itself. This is the
+first dataset in this book that can answer.
+
+Airborne lidar delivered through a national programme carries a stated quality
+level. The United States 3D Elevation Program grades its collections, and its
+Quality Level 1 specification requires an absolute vertical accuracy of 9.8
+centimetres or better at 95 per cent confidence in open terrain, at a nominal
+point density of at least eight returns per square metre. Canada's High
+Resolution Digital Elevation Model programme and New Zealand's national
+elevation holdings publish comparable statements.
+
+Three words in that specification do the work. **Absolute** means against
+surveyed control, not against itself. **In open terrain** means the figure does
+not apply under canopy, which is where forestry works. And **95 per cent** means
+one return in twenty is worse than the stated figure, by an unstated amount.
+
+The previous chapters argued that a dataset should state its realisation, its
+epoch and its accuracy. A national lidar collection does. Almost nothing else a
+forest carbon project touches does, and that contrast is worth noticing before
+the complaining starts about how difficult lidar is.
+
+```{r crs}
+st_crs(las)$Name
+```
+
+## Two ways in
+
+Most people who work with lidar in forestry never see a point cloud. They are
+handed two rasters, a **digital surface model** giving the height of whatever is
+topmost at each cell, and a **digital elevation model** giving the height of the
+ground, and they subtract one from the other to get canopy height. National
+programmes distribute both, and the arithmetic is one line.
+
+That route is legitimate and it is not equivalent. Subtracting two supplied
+surfaces means the vendor's own ground classification is already baked into the
+answer and cannot be inspected, adjusted or reported. It is a measurement whose
+largest single decision was made by somebody else and is not recorded anywhere
+in the file you were given.
+
+This chapter takes the point cloud route, because that is the one where the
+decisions are visible. Everything it demonstrates applies to the differenced
+route as well, with the difference that you cannot see it happening.
+
+## Ground classification
+
+A return is ground or it is not, and no instrument reports which. Classifying
+them is an inference from geometry, and two standard algorithms make that
+inference differently.
+
+The **cloth simulation filter** imagines the terrain inverted and a stiff cloth
+dropped onto it from below, then calls ground whatever the cloth touches. Its
+parameters are the cloth's rigidness and its resolution. A **progressive
+morphological filter** instead opens the surface with a window that grows in
+steps, removing anything that rises too steeply above its surroundings for its
+size.
+
+```{r ground}
+g_csf <- classify_ground(las, algorithm = csf(sloop_smooth = FALSE))
+g_pmf <- classify_ground(las, algorithm = pmf(ws = seq(3, 12, 3),
+                                              th = seq(0.1, 1.5, length.out = 4)))
+
+n_csf <- sum(g_csf$Classification == 2L)
+n_pmf <- sum(g_pmf$Classification == 2L)
+agree <- sum(g_csf$Classification == 2L & g_pmf$Classification == 2L)
+
+data.frame(
+  algorithm = c("cloth simulation", "progressive morphological", "both agree"),
+  ground_returns = c(n_csf, n_pmf, agree),
+  pct_of_cloud = round(100 * c(n_csf, n_pmf, agree) / npoints(las), 1)
+)
+```
+
+```{r ground-numbers, echo=FALSE}
+disagree <- (n_csf - agree) + (n_pmf - agree)
+pct_dis <- round(100 * disagree / max(n_csf, n_pmf), 1)
+```
+
+The two disagree on `r format(disagree, big.mark = ",")` returns, which is
+`r pct_dis` per cent of the larger ground set. That is not a rounding
+difference. More than a quarter of what one algorithm calls ground the other
+does not, and the distribution of the disagreement matters more than its size. Disagreements are not scattered
+at random. They concentrate under dense low vegetation, where neither algorithm
+can see the soil, and on breaks of slope, where a steep face looks to a
+morphological filter exactly like a large object. Those are the same places
+where the terrain model most needs to be right, because an error in ground
+height propagates into every canopy height above it, one for one and with the
+opposite sign.
+
+## Normalisation, and an order that cannot be reversed
+
+Canopy height is height above ground, so the terrain surface has to be
+subtracted from every return. In `lidR` that is one call, and the cloud used
+here arrives already normalised, which the height distribution shows.
+
+```{r normalised}
+round(c(min_Z = min(las$Z), median_Z = median(las$Z), max_Z = max(las$Z)), 2)
+```
+
+A minimum of zero and a maximum near `r round(max(las$Z))` metres is a canopy
+height distribution, not an elevation. An unnormalised cloud in this landscape
+would start somewhere above a thousand metres above sea level.
+
+The order of operations here cannot be reversed, and getting it wrong fails
+silently. Build a terrain model from a cloud that has already been normalised
+and you interpolate a surface through points whose ground is already at zero.
+The result is a flat plane. It is a valid raster, it has a coordinate reference
+system, it plots without complaint, and it is useless. Nothing errors, nothing
+warns, and every height computed against it is simply the height that was
+already there.
+
+That is the cheapest trap in this chapter and the one most often sprung, because
+a workflow assembled from fragments of other people's scripts has no way of
+knowing which stage its input has already been through.
+
+## The canopy height model
+
+Rasterising the returns into a canopy height model turns an irregular cloud into
+a grid, which is the same support decision chapter 2 made for reflectance,
+arriving now in three dimensions.
+
+```{r chm}
+chm <- rasterize_canopy(las, res = 0.5, algorithm = p2r(subcircle = 0.15))
+chm
+plot(chm, main = "Canopy height model, 0.5 m cells")
+```
+
+The `subcircle` argument replaces each return with a small disc before
+rasterising, which fills the pits that appear where a pulse slipped between
+crowns and reached the ground. Pit filling is cosmetic in a picture and is not
+cosmetic in what follows, because a pit inside a crown can be detected as the
+edge between two trees.
+
+## The window function
+
+Now the chapter's subject. Finding treetops means finding local maxima, and
+finding a local maximum means choosing how large a neighbourhood counts as
+local. Choose a window too small and one crown yields several tops. Too large
+and several crowns yield one.
+
+Because tall trees generally have wider crowns than short ones, the standard
+approach makes the window a function of height. In the great majority of
+published and operational work that function is a straight line with two
+coefficients,
+
+$$w(h) = a\,h + b$$
+
+where $w$ is the window width in metres and $h$ is the canopy height at that
+cell. Two numbers. They are the largest single lever on a stem count anywhere in
+forest remote sensing, and they are very often borrowed.
+
+```{r window-shape}
+wf <- function(a, b) function(x) pmax(a * x + b, 1)
+
+heights <- seq(0, 35, 0.5)
+plot(heights, wf(0.05, 0.6)(heights), type = "l", ylim = c(0, 6), lwd = 2,
+     xlab = "canopy height (m)", ylab = "window width (m)",
+     main = "Variable window functions")
+lines(heights, wf(0.03, 0.3)(heights), lty = 2)
+lines(heights, wf(0.10, 1.5)(heights), lty = 3)
+legend("topleft", bty = "n", lty = c(1, 2, 3),
+       legend = c("0.05h + 0.6", "0.03h + 0.3", "0.10h + 1.5"))
+```
+
+Now vary the two coefficients across the range that appears in practice, and
+count the trees each choice produces on identical returns.
+
+```{r window-sweep}
+grid <- expand.grid(a = c(0.03, 0.05, 0.07, 0.10),
+                    b = c(0.3, 0.6, 1.0, 1.5))
+
+grid$stems_ha <- vapply(seq_len(nrow(grid)), function(i) {
+  tops <- locate_trees(chm, lmf(ws = wf(grid$a[i], grid$b[i]), hmin = 2))
+  round(nrow(tops) / area_ha)
+}, numeric(1))
+
+knitr::kable(grid)
+```
+
+```{r window-numbers, echo=FALSE}
+lo <- min(grid$stems_ha); hi <- max(grid$stems_ha)
+borrowed <- grid$stems_ha[grid$a == 0.05 & grid$b == 0.6]
+borrowed_rank <- sum(grid$stems_ha <= borrowed)
+```
+
+Stem density ranges from `r format(lo, big.mark = ",")` to
+`r format(hi, big.mark = ",")` stems per hectare, a spread of
+`r round(hi / lo, 1)`-fold, on one cloud, with one canopy height model, and no
+field measurement involved anywhere. The choice of two coefficients moved the
+answer by more than an order of magnitude.
+
+That should be read alongside the allometry chapter, where five defensible
+published equations applied to the same eighty-four oaks returned totals
+spanning 4.75-fold. The window function is a larger lever than the allometric
+equation, and it receives a small fraction of the scrutiny.
+
+A fixed window, which is the simpler alternative, is no safer.
+
+```{r fixed-window}
+fixed <- data.frame(window_m = c(2, 3, 5, 8))
+fixed$stems_ha <- vapply(fixed$window_m, function(w)
+  round(nrow(locate_trees(chm, lmf(ws = w, hmin = 2))) / area_ha), numeric(1))
+fixed
+```
+
+```{r fixed-numbers, echo=FALSE}
+fr <- round(max(fixed$stems_ha) / min(fixed$stems_ha), 1)
+```
+
+A `r fr`-fold spread from one parameter.
+
+### The function that travelled
+
+The coefficients used above are not arbitrary. The pairing $a = 0.05$,
+$b = 0.6$ is by some distance the most widely copied in operational work, and
+its history is worth following because it is instructive rather than
+embarrassing.
+
+The same two-line function appears in two of this author's own project
+repositories. In a boreal study of tree height variability around La Ronge,
+Saskatchewan, it is defined as `wf_Popescu` and introduced as "Popescu and
+Wynne's function (2004) which was developed in pine forests". In a stocking
+density remapping of a plantation forest near Gisborne, New Zealand, the
+identical function is defined as `wf_plowright`, its plot is labelled
+"Plowright, 2018", and the code comment beside it reads "Used Plowright's window
+function as temporary fix here", followed by a link to a package vignette.
+
+Same slope. Same intercept. Two attributions. Boreal spruce and jack pine on one
+continent, plantation radiata pine on another. Neither calibrated to its own
+stand. Both produced operational outputs, and the second was compared against an
+official stand-level inventory and used to propose a remapping.
+
+Nothing was concealed. Both files say plainly what they did, which is why they
+can be used this way. The point is what the sweep above already established. On
+this cloud the borrowed pairing returns `r format(borrowed, big.mark = ",")`
+stems per hectare, which is the `r borrowed_rank`th of the sixteen combinations
+tested from the bottom. It is not a neutral default. It is a choice, and it
+behaves like one.
+
+::: {.verification}
+#### Under a Verification Body {.unnumbered .unlisted}
+
+A stem density derived from lidar is evidence, and evidence has to be traceable
+to a method. Ask for four things and none of them is onerous.
+
+The window function, written out, with its coefficients. The source those
+coefficients came from, by citation, not by package vignette. Whether they were
+calibrated on this forest or transferred from another, and if transferred, from
+what species and what structure. And the minimum height threshold below which
+returns were ignored, since that alone changes what counts as a tree.
+
+A submission that cannot answer the second and third questions has not given you
+a measurement. It has given you an output.
+:::
+
+## Height metrics and their support
+
+Individual tree detection is the glamorous product and it is not what most
+carbon inventories run on. Area-based metrics are. Summarise the returns inside
+a cell, use the summaries as predictors, and never identify a tree at all.
+
+```{r metrics}
+m <- pixel_metrics(las, ~list(
+  p95  = quantile(Z, 0.95),
+  mean = mean(Z),
+  max  = max(Z),
+  cover = 100 * sum(Z > 2) / length(Z)), res = 20)
+
+round(global(m, "mean", na.rm = TRUE), 2)
+```
+
+```{r metric-numbers, echo=FALSE}
+mm <- global(m, "mean", na.rm = TRUE)[, 1]
+names(mm) <- c("p95", "mean", "max", "cover")
+```
+
+Read those three heights together. Averaged over 20 metre cells, the 95th
+percentile of return height is `r round(mm[["p95"]], 1)` metres, the mean return
+height is `r round(mm[["mean"]], 1)` metres, and the maximum is
+`r round(mm[["max"]], 1)`. The 95th percentile sits at
+`r round(100 * mm[["p95"]] / mm[["max"]])` per cent of the maximum and
+`r round(mm[["p95"]] / mm[["mean"]], 1)` times the mean.
+
+That gap is the whole reason upper percentiles are used to predict biomass. A
+cell holding several crowns and a great deal of empty air between them has a
+mean return height dragged down by every pulse that passed through a gap. The
+95th percentile ignores those and reports something close to the tallest crown
+present, which is where the mass is.
+
+And it is why an upper percentile **is not stand height**. It is a statistic of
+the returns in a cell, its support is the cell, and it belongs to no tree. A
+project that reports a 95th percentile as though it were a mensurational top
+height has changed what the number means without changing the number, which is
+the failure this book keeps returning to.
+
+## Where the metric decides the fieldwork
+
+The last section runs the argument backwards. Everything so far has used the
+sensor to describe the forest. This uses it to decide how much fieldwork the
+forest needs, and it is where the chapter hands over to plot design.
+
+The height variation hypothesis holds that structural variability, not just
+mean structure, carries ecological information. Its practical corollary in
+inventory is simpler. Where canopy height varies sharply over short distances, a
+fixed sampling intensity buys less precision than it does in a uniform stand,
+because each plot represents a more heterogeneous neighbourhood.
+
+Lidar measures that variability directly and cheaply, before anyone walks in.
+
+```{r heterogeneity}
+sd_h <- pixel_metrics(las, ~sd(Z), res = 20)
+names(sd_h) <- "height_sd"
+
+v <- values(sd_h); v <- v[!is.na(v)]
+round(c(min = min(v), median = median(v), max = max(v),
+        ratio_max_min = max(v) / min(v)), 2)
+```
+
+```{r het-numbers, echo=FALSE}
+hr <- round(max(v) / min(v), 1)
+```
+
+Across this stand the standard deviation of return height varies `r hr`-fold
+between cells, from `r round(min(v), 1)` to `r round(max(v), 1)` metres. The
+range is modest here only because the extent is `r round(area_ha, 1)` hectares
+of one forest type; across a management unit spanning burned, regenerating and
+intact stands it is far wider. Under a sampling design whose precision depends
+on within-unit variance, cells like these do not deserve equal effort. Classifying a
+landscape this way, into what the La Ronge work calls height heterogeneity
+areas, tells a crew where to add plots or shrink sampling units before the
+season starts.
+
+That is the support argument arriving from the opposite direction. Chapter 1
+asked what area a number describes. This asks how many numbers an area needs.
+The chapter on field plot design takes it from here.
+
+## Conclusions
+
+An airborne laser measures ranges, and every forestry quantity derived from it
+passes through decisions that are not in the data.
+
+Which returns are ground is inferred, and two standard algorithms disagree on
+`r pct_dis` per cent of them, concentrated exactly where terrain error matters
+most. The order of normalisation cannot be reversed and fails without erroring.
+The window function that turns a height surface into a stem count is two
+coefficients, and moving them across their ordinary published range changed
+density `r round(hi / lo, 1)`-fold on identical returns, which is a larger lever
+than the choice of allometric equation. And an upper height percentile, the
+workhorse predictor of biomass, is a property of a cell rather than of a tree.
+
+None of that argues against lidar, which remains the best measurement of forest
+structure available at landscape scale by a wide margin. It argues for reporting
+the decisions alongside the number, because a stem density without its window
+function is not reproducible, and a canopy height without its ground
+classification is not a measurement.
+
+## Exercises
+
+1. Rerun the ground classification with the cloth simulation filter's
+   `sloop_smooth` argument set to `TRUE` and report how many returns change
+   class. State whether the change is larger or smaller than the disagreement
+   between the two algorithms.
+2. Build the canopy height model at 0.25, 0.5 and 1 metre cells and rerun the
+   window sweep on each. Report whether the coefficient sensitivity gets larger
+   or smaller as cells get coarser, and explain why.
+3. The sweep used a minimum height of 2 metres. Repeat it at 1, 2 and 5 metres
+   and report how much of the spread in stem density is attributable to that
+   threshold rather than to the two coefficients.
+4. Compute the 95th percentile of return height at 10, 20 and 40 metre cells.
+   Report how the mean of that statistic changes with cell size and say which of
+   the three you would use to predict biomass, and why.
+5. *(Applied.)* A project reports 340 stems per hectare from a lidar stem map
+   and does not state its window function. Using only the results in this
+   chapter, give the range of window coefficients consistent with that figure on
+   a stand like this one, and say what you would ask for.
+6. *(Applied.)* Take the height standard deviation surface from the last section
+   and propose a two-class split into ordinary and heterogeneous ground. State
+   the threshold you chose, the fraction of the stand in each class, and how you
+   would allocate a fixed budget of twenty plots between them.
+
+::: callout-note
+## Open decisions
+
+**The attribution needs checking.** Popescu and Wynne (2004) published
+species-specific window functions for pine and deciduous stands, and the linear
+form used throughout this chapter appears to originate in a package vignette
+rather than in that paper. Open the paper before print. If the attribution is
+wrong it should be corrected in both source repositories, and the correction is
+worth a sentence here, because a misattributed parameter is harder to audit than
+an uncalibrated one.
+
+**A units check is outstanding.** The Gisborne workflow converts a treetop count
+on a ten metre summary grid to stems per hectare by multiplying by ten, where
+ten metre cells would require one hundred. `ForestTools::sp_summarise` is no
+longer exported by the installed version, so this could not be settled by
+running it and is deliberately not stated in the chapter. If it holds it belongs
+in section 4.6, because that layer was compared against official stand
+attributes and passed.
+
+**Data.** The chapter currently runs entirely on `MixedConifer.laz` from `lidR`,
+which is public, tiny and needs no commit. That is a virtue for reproducibility
+and a limitation for the argument, since the stand is 0.8 hectares of one forest
+type. Committing a one hectare clip of a national programme tile would let
+section 4.2 read a real quality level off a real file rather than describing
+one.
+:::
