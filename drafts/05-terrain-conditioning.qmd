@@ -12,10 +12,11 @@ execute:
 ## Draft
 
 A restructure of `04-terrain-hydrology.qmd`, which retires when this is
-promoted. The conditioning argument is unchanged because it was already right.
-What is new is the opening, which now leads with the failure and its price, and
-a section on the elevation model as an observed product with a precision you can
-measure. Every number in the prose is computed by a chunk on this page.
+promoted. What is new is the opening, which leads with the failure and its
+price, a section on the elevation model as an observed product with a precision
+you can measure, and a comparison of every conditioning algorithm the engine
+offers. That comparison overturned the previous chapter's conclusion, which held
+that a terminal sink must be lost to make a surface routable. It need not be. Every number in the prose is computed by a chunk on this page.
 :::
 
 ```{r setup}
@@ -248,7 +249,7 @@ No threshold on depth alone separates real basins from interpolation pits,
 because the two overlap in size. The deepest single pit in this grid is an
 artefact, not the lake.
 
-## Conditioning, and the asymmetry inside it
+## Conditioning, and the parameter that does the damage
 
 Two families of algorithm exist. **Filling** raises the floor of a depression
 until it overflows, which is simple and destroys the depression. **Breaching**
@@ -261,94 +262,150 @@ within a depth limit and fills whatever remains. Two parameters do the work.
 monotonic gradient along the carved channel so flow directions stay unambiguous
 across ground the model records as perfectly level.
 
-```{r breach}
+The obvious way to protect a genuine 400 metre basin is to cap the carving, so
+that shallow artefacts are breached and the real basin is left alone. That
+reasoning is exactly backwards, and the way to see it is to run every algorithm
+the engine offers on the same surface.
+
+```{r algorithms}
+run_one <- function(label, fn) {
+  t   <- system.time(fn())
+  out <- rast(paste0(wd, "cond.tif"))
+  ch  <- out - dem
+  lk  <- ifel(!is.na(rasterize(vect(lake), dem)), ch, NA)
+  data.frame(algorithm = label,
+             seconds       = round(t[["elapsed"]], 1),
+             cells_changed = global(ch != 0, "sum", na.rm = TRUE)[1, 1],
+             max_carve_m   = round(-global(ch, "min", na.rm = TRUE)[1, 1], 1),
+             max_fill_m    = round(global(ch, "max", na.rm = TRUE)[1, 1], 1),
+             lake_raise_m  = round(global(lk, "mean", na.rm = TRUE)[1, 1], 1))
+}
+
+algos <- rbind(
+  run_one("breach, Lindsay, max_depth 3", function()
+    wbt_breach_depressions(dem = "dem.tif", output = "cond.tif", wd = wd,
+      max_depth = 3, flat_increment = 0.001, verbose_mode = FALSE)),
+  run_one("breach, Lindsay, unconstrained", function()
+    wbt_breach_depressions(dem = "dem.tif", output = "cond.tif", wd = wd,
+      flat_increment = 0.001, verbose_mode = FALSE)),
+  run_one("breach, least cost", function()
+    wbt_breach_depressions_least_cost(dem = "dem.tif", output = "cond.tif",
+      wd = wd, dist = 100, fill = TRUE, verbose_mode = FALSE)),
+  run_one("fill, Wang and Liu", function()
+    wbt_fill_depressions_wang_and_liu(dem = "dem.tif", output = "cond.tif",
+      wd = wd, verbose_mode = FALSE)),
+  run_one("fill, Planchon and Darboux", function()
+    wbt_fill_depressions_planchon_and_darboux(dem = "dem.tif",
+      output = "cond.tif", wd = wd, verbose_mode = FALSE)))
+
+knitr::kable(algos)
+```
+
+```{r algo-numbers, echo=FALSE}
+g <- function(lab, col) algos[[col]][algos$algorithm == lab]
+r_con <- g("breach, Lindsay, max_depth 3", "lake_raise_m")
+r_unc <- g("breach, Lindsay, unconstrained", "lake_raise_m")
+c_unc <- g("breach, Lindsay, unconstrained", "max_carve_m")
+f_con <- g("breach, Lindsay, max_depth 3", "max_fill_m")
+r_lc  <- g("breach, least cost", "lake_raise_m")
+r_fil <- g("fill, Wang and Liu", "lake_raise_m")
+```
+
+Read the last two columns together, because the result is the opposite of what
+the parameter's name suggests.
+
+**Constrained to three metres, the algorithm fills the lake by
+`r r_con` metres on average and by up to `r f_con` metres.** It refuses to carve
+a channel deeper than three metres, and the only way out of a four hundred metre
+basin is a channel deeper than three metres, so it fills the basin instead.
+
+**Unconstrained, it does not raise a single cell.** The lake is untouched, and
+the largest carve is `r c_unc` metres, which is one channel out of the basin.
+
+The parameter intended to protect deep basins is the parameter that destroys
+them. Capping the carving does not preserve the depression. It removes the
+algorithm's only means of preserving it.
+
+Both filling algorithms do the same damage as the constrained breach, at
+`r r_fil` metres, which tells you the choice that matters is not breaching
+against filling. The least-cost breach is worse than either at `r r_lc` metres.
+
+The unconstrained surface is also fully routable, which is the claim that has to
+be checked rather than assumed.
+
+```{r routable}
 wbt_breach_depressions(dem = "dem.tif", output = "breached.tif", wd = wd,
-                       max_depth = 3, flat_increment = 0.001,
-                       verbose_mode = FALSE)
+                       flat_increment = 0.001, verbose_mode = FALSE)
+wbt_depth_in_sink(dem = "breached.tif", output = "check_sink.tif", wd = wd,
+                  zero_background = TRUE, verbose_mode = FALSE)
 
-breached <- rast(paste0(wd, "breached.tif"))
-change   <- breached - dem
+remaining <- values(rast(paste0(wd, "check_sink.tif")))
+breached  <- rast(paste0(wd, "breached.tif"))
+change    <- breached - dem
+carve     <- values(change); carve <- carve[!is.na(carve) & carve != 0]
 
-data.frame(
-  cells_changed = global(change != 0, "sum", na.rm = TRUE)[1, 1],
-  max_carved_m  = round(-global(change, "min", na.rm = TRUE)[1, 1], 2),
-  max_raised_m  = round(global(change, "max", na.rm = TRUE)[1, 1], 2))
+c(depressions_remaining = sum(remaining > 0, na.rm = TRUE),
+  cells_altered         = length(carve),
+  any_cell_raised       = any(carve > 0),
+  median_carve_m        = round(quantile(-carve, 0.5), 2),
+  p90_carve_m           = round(quantile(-carve, 0.9), 2))
 ```
 
-```{r breach-numbers, echo=FALSE}
-max_carve <- round(-global(change, "min", na.rm = TRUE)[1, 1], 1)
-max_raise <- round(global(change, "max", na.rm = TRUE)[1, 1], 1)
-```
+Zero depressions remain, so the surface routes. No cell was raised. The median
+altered cell was carved by nothing at all and nine in ten by less than two
+metres, because almost all of the work is removing single-cell pits. One channel
+carries the whole `r c_unc` metre carve.
 
-Read both columns together, because the asymmetry between them is the single
-most consequential behaviour in this chapter.
-
-The carving obeys its limit exactly. No cell is lowered by more than the
-`r max_carve` metres imposed. The raising does not obey it, because **the limit
-does not apply to filling at all**. The deepest fill is `r max_raise` metres,
-`r round(max_raise / max_carve)` times the carving limit that was set.
-
-A published description of this method as one that preserves deeper basin
-structures while breaching shallow artefacts is therefore only half right. The
-constraint bounds the carving. It does not bound what the algorithm does to
-everything it declines to carve.
-
-```{r fill}
-wbt_fill_depressions_wang_and_liu(dem = "breached.tif", output = "filled.tif",
-                                  wd = wd, verbose_mode = FALSE)
-
-filled <- rast(paste0(wd, "filled.tif"))
-global((filled - breached) != 0, "sum", na.rm = TRUE)[1, 1]
-```
-
-Zero cells change in the second pass. That is the correct result and it is worth
-pausing on, because it is easy to run a fill step, see a new file appear, and
-assume it did something. The breaching step already filled every depression it
-declined to breach, so its output was depression-free before the filling
-algorithm ever saw it.
-
-## What conditioning destroys
-
-If the conditioned surface has no depressions left, then it has no Lake Chilwa.
+## What conditioning destroys, and what it need not
 
 ```{r endorheic}
 lake_mask <- rasterize(vect(lake), dem)
-raised    <- ifel(!is.na(lake_mask), breached - dem, NA)
 
-data.frame(
-  mean_raise_m = round(global(raised, "mean", na.rm = TRUE)[1, 1], 1),
-  max_raise_m  = round(global(raised, "max",  na.rm = TRUE)[1, 1], 1),
-  raw_bed_m    = round(as.numeric(global(ifel(!is.na(lake_mask), dem, NA),
-                                         quantile, probs = 0.5, na.rm = TRUE)), 1),
-  conditioned_bed_m = round(as.numeric(global(ifel(!is.na(lake_mask), breached, NA),
-                                              quantile, probs = 0.5, na.rm = TRUE)), 1))
+constrained <- local({
+  wbt_breach_depressions(dem = "dem.tif", output = "con3.tif", wd = wd,
+    max_depth = 3, flat_increment = 0.001, verbose_mode = FALSE)
+  rast(paste0(wd, "con3.tif"))
+})
+
+beds <- data.frame(
+  surface = c("raw", "breached, max_depth 3", "breached, unconstrained"),
+  lake_bed_median_m = round(c(
+    as.numeric(global(ifel(!is.na(lake_mask), dem, NA),
+                      quantile, probs = 0.5, na.rm = TRUE)),
+    as.numeric(global(ifel(!is.na(lake_mask), constrained, NA),
+                      quantile, probs = 0.5, na.rm = TRUE)),
+    as.numeric(global(ifel(!is.na(lake_mask), breached, NA),
+                      quantile, probs = 0.5, na.rm = TRUE))), 1))
+beds
 ```
 
-```{r endo-numbers, echo=FALSE}
-mr <- round(global(raised, "mean", na.rm = TRUE)[1, 1], 1)
-xr <- round(global(raised, "max",  na.rm = TRUE)[1, 1], 1)
+```{r bed-numbers, echo=FALSE}
+b_raw <- beds$lake_bed_median_m[1]
+b_con <- beds$lake_bed_median_m[2]
+b_unc <- beds$lake_bed_median_m[3]
 ```
 
-The lake bed has been raised by `r mr` metres on average and by `r xr` at its
-deepest. In the conditioned model, Chilwa is a gentle ramp that water crosses on
-its way somewhere else.
+The raw lake bed sits at `r b_raw` metres. Under the constrained breach it sits
+at `r b_con`. Under the unconstrained breach it sits at `r b_unc`, which is the
+raw value. Chilwa survives one of these and not the other.
 
-This is not a bug and it cannot be tuned away. Flow routing requires that every
-cell have a downhill neighbour, and a terminal sink by definition does not. Any
-algorithm that produces a routable surface must remove the sink. The question is
-not how to avoid that but which surface each downstream calculation is entitled
-to use, and there are only two rules.
+That changes the standing advice, which has been that flow routing requires
+removing terminal sinks and the loss is unavoidable. It is avoidable here. A
+breach that is allowed to carve as deep as the terrain requires produces a
+routable surface and an intact basin at the same time, because it gives the
+water an outlet instead of raising the floor until there is no basin left.
 
-**Flow routing uses the conditioned model**, and the endorheic basin is expected
-to be gone from it. That is acceptable, because what routing is for is the
-convergence pattern, and filling a flat sink with a monotonic gradient preserves
-where water arrives even while inventing where it leaves.
+Two rules still follow and they are now weaker than they were.
 
-**Anything depending on the shape of the depression uses the raw model.** That
-means depression depth, inundated extent and any stage-area relationship,
-including the calculation this chapter opened with. Running an inundation model
-on a conditioned surface is a silent and total error, because the basin whose
-flooding is being modelled has already been filled.
+**Anything depending on the shape of the depression must be computed on a
+surface that still has the depression.** That means depression depth, inundated
+extent and any stage-area relationship, including the calculation this chapter
+opened with. On a constrained-breach or filled surface the basin is already
+gone, and running an inundation model on one is a silent and total error.
+
+**And the conditioning parameters belong in the report.** Two analysts running
+the same function on the same file, one with a depth cap and one without, get a
+lake and no lake. Neither is warned.
 
 ## Flow routing, and a maximum in the wrong place
 
@@ -459,9 +516,10 @@ that precision governs the answer.
 
 This basin's model resolves one metre, and one metre moves the lake by a factor
 of `r jump`. `r w1` per cent of its depressions are a single quantisation step
-deep and cannot be told from rounding. Conditioning it for flow routing raised
-the lake bed by `r mr` metres on average and `r xr` at its deepest, because a
-depth limit bounds carving and does not bound filling. The largest flow
+deep and cannot be told from rounding. Conditioning it for flow routing raised the
+lake bed by `r r_con` metres on average when the carve was capped at three
+metres, and by nothing at all when it was not, because the cap removes the only
+way out of a deep basin and the algorithm fills instead. The largest flow
 accumulation in the grid belongs to a different catchment. And a Mercator cell
 here is `r round(cs_mean, 3)` hectares, so the convenient identity overstates
 area by `r cs_err` per cent.
