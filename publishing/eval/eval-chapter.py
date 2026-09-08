@@ -24,7 +24,9 @@ CITED = (r'IPCC|Refinement|Guidelines|Protocol|Volume|VM\d+|VMD\d+|VT\d+|ACR|ART
 CITED_BEFORE = re.compile(r'(?:' + CITED + r')[^.]{0,60}$', re.I)
 CITED_AFTER  = re.compile(r'^[^.]{0,60}(?:' + CITED + r')', re.I)
 
-# Front matter numbers chapters by design, and a contents page must.
+# Front matter numbers chapters by design, and a contents page must. Planning
+# documents under publishing/ cite other documents' chapters by number as a
+# matter of course, so the self-reference check does not apply to them either.
 FRONT_MATTER = ("table-of-contents", "preamble", "index")
 
 # Callouts that are drafting scaffolding and are stripped when a draft is
@@ -71,7 +73,8 @@ def prose_text(prose):
 def check(path):
     prose, code, src = split_source(path)
     codetext = "\n".join(l for _, l in code)
-    is_front = any(k in os.path.basename(path) for k in FRONT_MATTER)
+    is_front = (any(k in os.path.basename(path) for k in FRONT_MATTER)
+                or "publishing/" in path.replace(os.sep, "/"))
     findings = []
 
     def add(rule, line, detail, severity="fail"):
