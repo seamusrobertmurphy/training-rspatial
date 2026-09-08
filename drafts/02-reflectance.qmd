@@ -12,7 +12,7 @@ execute:
 ## Revision
 
 Revised 6 September 2026 against the proposal Elsevier accepted, in step with
-chapter 1.
+the opening chapter.
 
 The reader is the one the proposal names. The main text is for graduate students
 in forestry, environmental science and remote sensing and for analysts arriving
@@ -245,12 +245,12 @@ exactly like an event.
 
 ## Band support
 
-Chapter 1 asked what a point, a line and a polygon are, and which surface the
-arithmetic happens on. Asked of a sensor, the same question becomes what area of
+The opening chapter asked what a point, a line and a polygon are, and which
+surface the arithmetic happens on. Asked of a sensor, the same question becomes what area of
 ground a single number describes. That area is the *support* of the value, and it
 is the second half of this book's spine.
 
-A polygon in chapter 1 had a boundary you could draw. A satellite value has no
+A polygon in that chapter had a boundary you could draw. A satellite value has no
 boundary you can draw. It has a footprint, and the footprint of one number does
 not stop where the forest stops.
 
