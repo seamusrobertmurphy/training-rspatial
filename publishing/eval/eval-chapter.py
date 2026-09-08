@@ -17,22 +17,50 @@ ALLOW_NUM = re.compile(r"""
   | (?:v|V)\d+\.\d+         # v2.1
 """, re.X)
 
-CITED_DOC = re.compile(
-    r'(IPCC|Refinement|Guidelines|Protocol|Volume|VM\d+|VMD\d+|VT\d+|ACR|ART|CARB|'
-    r'Annex|Appendix|Regulation|Guidance)[^.]{0,60}$', re.I)
+# A chapter of some OTHER document may be named by number. The marker can sit on
+# either side of the reference, as in "Chapter 5 of the 2019 Refinement".
+CITED = (r'IPCC|Refinement|Guidelines|Protocol|Volume|VM\d+|VMD\d+|VT\d+|ACR|ART'
+         r'|CARB|Annex|Appendix|Regulation|Guidance|GOFC|FCPF|Verra|Supplement|Wetlands|Chapter of')
+CITED_BEFORE = re.compile(r'(?:' + CITED + r')[^.]{0,60}$', re.I)
+CITED_AFTER  = re.compile(r'^[^.]{0,60}(?:' + CITED + r')', re.I)
+
+# Front matter numbers chapters by design, and a contents page must.
+FRONT_MATTER = ("table-of-contents", "preamble", "index")
+
+# Callouts that are drafting scaffolding and are stripped when a draft is
+# promoted, so their working notes are not held to the prose rules.
+SCAFFOLD = re.compile(r'^##\s+(Draft|Revision|Condensed|Open decisions)\s*$', re.I)
 
 
 def split_source(path):
     src = open(path, encoding="utf-8").read()
     src = re.sub(r'\A---\n.*?\n---\n', '', src, flags=re.S)          # yaml
     lines = src.split("\n")
-    in_code = False
+    in_code = in_scaffold = False
+    depth = 0
     prose, code = [], []
     for i, l in enumerate(lines, 1):
         if re.match(r'^\s*```', l):
             in_code = not in_code
             continue
-        (code if in_code else prose).append((i, l))
+        if in_code:
+            code.append((i, l))
+            continue
+        if re.match(r'^:::+\s*\{?\.?callout', l) or re.match(r'^:::+\s*callout', l):
+            depth += 1
+            prose.append((i, l))
+            continue
+        if re.match(r'^:::+\s*$', l):
+            depth = max(0, depth - 1)
+            if depth == 0:
+                in_scaffold = False
+            prose.append((i, l))
+            continue
+        if depth and SCAFFOLD.match(l.strip()):
+            in_scaffold = True
+            continue
+        if not in_scaffold:
+            prose.append((i, l))
     return prose, code, src
 
 
@@ -43,6 +71,7 @@ def prose_text(prose):
 def check(path):
     prose, code, src = split_source(path)
     codetext = "\n".join(l for _, l in code)
+    is_front = any(k in os.path.basename(path) for k in FRONT_MATTER)
     findings = []
 
     def add(rule, line, detail, severity="fail"):
@@ -84,16 +113,32 @@ def check(path):
             for m in re.finditer(r':(?!\s*$)', c):
                 add("colon-in-prose", ln, l)
 
-        # 4. a chapter of THIS book referred to by number
-        for m in re.finditer(r'[Cc]hapters?\s+\d+', bare):
-            before = bare[:m.start()]
-            if CITED_DOC.search(before):
-                continue                                  # someone else's ch.
-            add("chapter-number-in-prose", ln, l)
-
         # 5. first person
         if re.search(r'\b(I|we|our|us|my)\b', bare) and not l.startswith('#'):
             add("first-person", ln, l, "candidate")
+
+    # 4. a chapter of THIS book referred to by number. Run over the joined prose
+    #    with a window either side, because the marker naming someone else's
+    #    document often sits on the next line.
+    if not is_front:
+        joined, offsets = "", []
+        for ln, l in prose:
+            if l.startswith('#'):
+                joined += "\n"; offsets.append((len(joined), ln)); continue
+            offsets.append((len(joined), ln))
+            joined += re.sub(r'`[^`]*`', ' CODE ', l) + " "
+        def lineof(pos):
+            last = 0
+            for off, ln in offsets:
+                if off <= pos: last = ln
+                else: break
+            return last
+        for m in re.finditer(r'[Cc]hapters?\s+\d+', joined):
+            if CITED_BEFORE.search(joined[max(0, m.start()-90):m.start()]) \
+               or CITED_AFTER.search(joined[m.end():m.end()+90]):
+                continue
+            add("chapter-number-in-prose", lineof(m.start()),
+                joined[max(0, m.start()-60):m.end()+40])
 
     # 6. headings
     for ln, l in prose:

@@ -112,7 +112,7 @@ is not that the data are unusable.
 
 ## What the elevation model is
 
-The previous chapter read a vertical accuracy off a lidar product: 9.8
+The previous chapter read a vertical accuracy off a lidar product, 9.8
 centimetres or better at 95 per cent confidence, stated by the programme that
 flew it. Ask this file the same question.
 
@@ -170,7 +170,8 @@ used in the chapter's prose". Two paragraphs later the same header states that
 the projection inflates area by about seven per cent and that the chapter
 therefore reports in UTM.
 
-Both cannot be true. The measurement above settles it: the identity is wrong by
+Both cannot be true, and the measurement above settles it, the identity being
+wrong by
 `r cs_err` per cent and the second paragraph is right. The header must be
 corrected, and it is recorded here rather than fixed silently because a
 contradiction between a data script and the chapter that reads it is exactly the

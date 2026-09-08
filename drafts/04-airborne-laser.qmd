@@ -220,7 +220,7 @@ knowing which stage its input has already been through.
 ## The canopy height model
 
 Rasterising the returns into a canopy height model turns an irregular cloud into
-a grid, which is the same support decision chapter 2 made for reflectance,
+a grid, which is the same support decision the reflectance chapter made,
 arriving now in three dimensions.
 
 ```{r chm}

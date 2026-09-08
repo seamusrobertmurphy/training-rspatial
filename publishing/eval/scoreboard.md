@@ -55,3 +55,34 @@ metre fix compounds sampling error because it moves which trees are in the plot.
 Measured, a 20 metre error costs 3.4 per cent on a one-off stand mean, while a
 three metre relocation error drops the signal-to-noise on a growth estimate from
 16.5 to 0.66.
+
+## Harness calibration, 8 September 2026
+
+The first full run cried wolf three ways and each exemption is principled rather
+than convenient.
+
+A contents page and a preamble must name chapters by number, so front matter is
+exempt from that check. The drafting callouts titled Draft, Revision, Condensed
+and Open decisions are scaffolding stripped when a draft is promoted, so their
+working notes are not held to the prose rules. And a chapter of somebody else's
+document may be named by number, as in Chapter 5 of the 2019 Refinement
+Supplement, which the check now recognises by looking for the document marker on
+either side of the reference across a ninety character window, because the
+marker frequently sits on the next line.
+
+The exemptions were regression tested rather than assumed. A `chapter 9`
+reference appended to the clean chapter 6 draft is still caught.
+
+Four real failures were fixed on the way. A `chapter 2` reference in the prose of
+the laser chapter, a `Chapter 1` in the same file, three in the reflectance
+chapter, and two colons in the terrain chapter.
+
+| Corpus | Failures | Candidates |
+|---|---|---|
+| six drafts and the contents page | 0 | 192 |
+| sixteen files in the book proper | 185 | 75 |
+
+The 143 candidates on the contents page are the chapter and section numbers a
+contents page consists of. The 185 failures in the book proper are the backlog,
+almost all colons in prose, and each clears as its chapter is replaced by a
+draft.
