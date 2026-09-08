@@ -101,3 +101,8 @@ tasks/
 
 # Regenerated at render time by the terrain chapter
 data/chilwa-hydro/
+
+# Download cache for the global IPCC stratification layers. The originals run to
+# 96 MB (FAO GEZ 2010 shapefile) and are re-fetched by
+# data-raw/prepare-ipcc-strata.R; only the small derived layers are committed.
+data-raw/cache/

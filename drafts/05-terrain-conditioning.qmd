@@ -521,8 +521,8 @@ available for free to anyone who counts cells on a Mercator grid.
 ## Which soil, and therefore which method
 
 An inundated area is worth knowing because of what lies under it. This section
-is about the layer that decides how the carbon beneath a wetland is accounted
-for, where that layer comes from, and why one binary in it changes the method
+is about the three global layers a Tier 1 estimate stratifies on, where each of
+them comes from, and why one binary inside the soil layer changes the method
 rather than the number.
 
 ::: callout-tip
@@ -533,9 +533,9 @@ Everything from here to the conclusions rests on the IPCC Guidelines and their
 reader who wants the spatial analysis alone can go straight to the conclusions
 without losing the thread.
 
-It is set as a section rather than a box because it runs to four parts and
-carries a table, and because the binary it turns on decides which method applies
-rather than only which number is reported. Whether it stays in the main text or
+It is set as a section rather than a box because it runs to six parts and
+carries a table and three global maps, and because the binary it turns on
+decides which method applies rather than only which number is reported. Whether it stays in the main text or
 moves to the appendix is an open decision, recorded at the foot of this chapter.
 :::
 
@@ -628,15 +628,186 @@ than sixty sites each. The width of a confidence interval here is telling you
 about the spread of the underlying sites, not about how much evidence there is,
 and the two are easy to confuse.
 
-### Where the layer comes from
+### Three layers stand behind every default
 
-Two scales of answer exist, and a project needs both.
+A Tier 1 estimate is a lookup, and the lookup cannot start until three questions
+have been answered for the ground in front of you. Which climate region it sits
+in, which ecological zone, and which soil type. Table 3.1 of the 2019 Refinement
+names climate and soil, and Chapter 4 adds the ecological zone and the continent
+to select a biomass growth rate. The tables are printed in the Guidelines and
+are easy to find. The layers behind them are not, and that is where a first
+inventory stalls.
+
+All three are mapped below from public sources, and all three are committed with
+this book at a size it can carry. `data-raw/prepare-ipcc-strata.R` records what
+each one is, what licence it carries and what was done to it.
+
+```{r strata}
+climate <- rast("../data/ipcc_climate_zones.tif")
+ecozone <- rast("../data/fao_gez_2010.tif")
+soil    <- rast("../data/ipcc_soil_classes.tif")
+
+lyr <- list(climate, ecozone, soil)
+data.frame(
+  stratum  = c("Climate region", "Ecological zone", "Soil type"),
+  classes  = sapply(lyr, function(r) nrow(freq(r))),
+  cell_deg = sapply(lyr, function(r) round(res(r)[1], 4)),
+  source   = c("Lewis (2022), from CRU TS3.25",
+               "FAO (2012), FRA Working Paper 179",
+               "Batjes (2009), from HWSD 1.2"))
+```
+
+The climate layer is the one to handle carefully. The IPCC prints its climate
+regions as Figure 3A.5.1 and does not publish the grid behind them. What is used
+here is a reconstruction by Matthew Lewis, who ran the Figure 3A.5.2 decision
+tree over the same Climatic Research Unit monthly series the Refinement names,
+for the same 1985 to 2015 window, and posted the result under a Creative Commons
+licence. He also lists where his output disagrees with the printed figure, in
+South America, in the African montane belt, and in northern Russia and Canada.
+It is the best public version of that layer and it is not that layer, and an
+inventory that uses it says so.
+
+```{r map-climate}
+#| fig-width: 9
+#| fig-height: 4.4
+#| fig-cap: "IPCC climate regions at half a degree, the twelve classes the Figure 3A.5.2 decision tree produces. The red marker is the Lake Chilwa basin."
+here_xy <- st_coordinates(st_centroid(st_union(st_transform(basin, 4326))))
+
+plot(climate, mar = c(2, 2, 1, 9), plg = list(cex = 0.65), axes = TRUE)
+points(here_xy[1], here_xy[2], pch = 21, bg = "red", cex = 1.2)
+```
+
+The ecological zones are the second axis, and the Guidelines treat them as a
+subdivision of the first, in that Annex 3A.5 says climate regions are further
+subdivided into ecological zones to apply the Tier 1 biomass method. They come
+from the Food and Agriculture Organization's own mapping for forest reporting,
+twenty zones in five domains, and they select the biomass stocks and growth
+rates in Tables 4.7 to 4.10 rather than any soil factor.
+
+```{r map-ecozone}
+#| fig-width: 9
+#| fig-height: 4.4
+#| fig-cap: "FAO global ecological zones, 2010 update, rasterised to five arc-minutes. Hue carries the climate domain and lightness the zone within it."
+plot(ecozone, mar = c(2, 2, 1, 11), plg = list(cex = 0.6), axes = TRUE)
+points(here_xy[1], here_xy[2], pch = 21, bg = "red", cex = 1.2)
+```
+
+The soil layer is the third, and it decides which method runs rather than which
+number is looked up. Batjes keyed every mapping unit of the Harmonized World
+Soil Database to a dominant IPCC class, so its boundaries are soil survey
+boundaries generalised to between 1:1 million and 1:5 million, not climate
+contours. Salt flats, rock outcrops, water bodies and land ice are kept as
+themselves rather than forced into one of the seven.
+
+```{r map-soil}
+#| fig-width: 9
+#| fig-height: 4.4
+#| fig-cap: "IPCC default soil classes from the Harmonized World Soil Database, aggregated from 30 arc-seconds to five arc-minutes by majority. Browns are the mineral classes, blues the wetland and organic ones."
+plot(soil, mar = c(2, 2, 1, 10), plg = list(cex = 0.65), axes = TRUE)
+points(here_xy[1], here_xy[2], pch = 21, bg = "red", cex = 1.2)
+```
+
+### What the three layers say about this basin
+
+```{r strata-here}
+here <- vect(st_transform(basin, 4326))
+
+read_off <- function(r) {
+  v <- extract(r, here)[[2]]
+  v <- v[!is.na(v)]
+  t <- sort(table(v), decreasing = TRUE)
+  data.frame(cells = length(v), class = names(t)[1],
+             share_pct = round(100 * t[[1]] / length(v)))
+}
+
+basin_strata <- cbind(
+  stratum = c("Climate region", "Ecological zone", "Soil type"),
+  do.call(rbind, lapply(list(climate, ecozone, soil), read_off)))
+basin_strata
+```
+
+```{r strata-numbers, echo=FALSE}
+cz_here <- tolower(basin_strata$class[1]); cz_n <- basin_strata$cells[1]
+gz_here <- tolower(basin_strata$class[2]); gz_share <- basin_strata$share_pct[2]
+so_here <- tolower(basin_strata$class[3]); so_share <- basin_strata$share_pct[3]
+```
+
+The climate layer calls this basin `r cz_here`. The ecological zone layer calls
+it `r gz_here` on `r gz_share` per cent of its area, and the soil layer calls it
+`r so_here` on `r so_share` per cent.
+
+The first two are not independent, and the Guidelines say how they connect.
+Table 4.1 of Chapter 4, which the 2019 Refinement leaves unrefined and which the
+FAO reproduces as Table 8 of its own 2010 update, pairs every climate region
+with the ecological zones that sit inside it. Tropical dry forest belongs there
+to the tropical dry region, alongside tropical shrubland and tropical desert.
+The only zone the table puts under tropical moist is the one FAO used to call
+tropical moist deciduous forest and renamed tropical moist forest in the 2010
+update, keeping its code TAwa.
+
+So these two layers disagree about this basin, and they disagree against the
+crosswalk the Guidelines print. The disagreement is about the layers rather than
+about the ground. The ecological zone comes from FAO's own mapping and covers
+`r gz_share` per cent of the basin. The climate region comes from a
+reconstruction at half a degree, and at that size the answer depends on how the
+cells are counted.
+
+```{r climate-touch}
+touched <- extract(climate, here, touches = TRUE)[[2]]
+
+sort(table(touched), decreasing = TRUE)[1:2]
+```
+
+```{r touch-numbers, echo=FALSE}
+tt <- sort(table(touched), decreasing = TRUE)
+cz_touch <- length(touched); cz_dry <- as.integer(tt[["Tropical dry"]])
+```
+
+Counting only the cells whose centre falls inside the basin gives `r cz_n`, all
+of them `r cz_here`. Counting every cell the basin touches gives `r cz_touch`,
+of which `r cz_dry` are tropical dry, the region the ecological zone would have
+implied. The stratum is being decided by where an outline lands on a half degree
+grid rather than by anything about the ground, and the montane margins this
+chapter measured on the west and south are far below what that grid can carry. A
+compiler has to pick one layer, and the version a verifier can accept is the one
+written down with its reason.
+
+### What the soil layer cannot settle
+
+The seven IPCC soil classes include wetland and organic, and the layer puts
+neither of them anywhere in this basin. The committed Chilwa window holds the
+same data at the full 30 arc-seconds, which is the resolution the coarsening
+threw away.
+
+```{r soil-fine}
+fine <- rast("../data/chilwa_ipcc_soil.tif")
+f <- extract(fine, here)[[2]]; f <- f[!is.na(f)]
+
+round(100 * sort(table(f), decreasing = TRUE)[1:4] / length(f), 1)
+```
+
+```{r soil-fine-numbers, echo=FALSE}
+f_hydric <- sum(f %in% c("Wetland", "Organic"))
+f_cells  <- length(f)
+f_top    <- tolower(names(sort(table(f), decreasing = TRUE))[1])
+f_share  <- round(100 * max(table(f)) / f_cells, 1)
+```
+
+At 30 arc-seconds the dominant class is still `r f_top`, on `r f_share` per cent
+of the basin against the `r so_share` per cent the coarse grid gave, so the
+majority rule cost little here. Of the `r format(f_cells, big.mark = ",")`
+cells in the basin, `r f_hydric` carry a wetland or organic class. That is not evidence that no hydric soil is
+present. It is evidence that the survey behind the database did not map one at
+its own scale, which for a seasonal marsh fringing a lake that has dried out
+three times is the expected outcome rather than a surprise.
+
+So the organic-or-mineral binary, the one that decides whether the emission
+factors above apply at all, has to be answered from something finer.
 
 **Globally**, the reference soil group probabilities from SoilGrids give a
-Histosol layer at 250 metres, and the Harmonized World Soil Database gives a
-coarser classed alternative. Both answer the organic-or-mineral question
-directly. The layer below was fetched from the ISRIC coverage service over this
-basin and is committed with the book.
+Histosol layer at 250 metres, and they answer the question directly. The layer
+below was fetched from the ISRIC coverage service over this basin and is
+committed with the book.
 
 ```{r histosol}
 histosol <- rast("../data/chilwa_histosol_pct.tif")
@@ -657,7 +828,9 @@ h_max <- max(hv); h_n10 <- sum(hv > 10)
 ```
 
 Across the whole Chilwa basin the highest Histosol probability anywhere is
-`r h_max` per cent, and `r h_n10` cells exceed ten per cent.
+`r h_max` per cent, and `r h_n10` cells exceed ten per cent. Two independent
+layers, one from a soil survey and one from a machine learning model over soil
+profiles, agree.
 
 **Chilwa is not a peatland.** That is a result rather than a disappointment, and
 it settles the method. The organic soil apparatus above, Table 2.1 and its
@@ -667,15 +840,15 @@ forested swamps and marshes, works by stock change against a reference stock,
 and defaults to a twenty year period.
 
 Anyone who had reached for the tropical drained organic soil factor of
-`r trop$ef_tCO2C_ha_yr` because the map said wetland would have applied a rate
-to a soil that has no such rate, and would have done it on a factor whose sign
-is unresolved.
+`r trop$ef_tCO2C_ha_yr` because the site is a wetland in the ordinary sense of
+the word would have applied a rate to a soil that has no such rate, and would
+have done it on a factor whose sign is unresolved.
 
 **At country level** the global layers are a screening tool and not the answer.
 National soil surveys, and in many countries a national wetland or peatland
 inventory, carry the mapping the inventory compiler is expected to use, and
-their class boundaries will not match SoilGrids. The global layer tells you
-which question to ask. The national layer answers it.
+their class boundaries will not match either layer above. The global layer tells
+you which question to ask. The national layer answers it.
 
 One caution belongs with any organic soil figure outside Southeast Asia. The
 Supplement records that organic soil fire emissions are validated for that
@@ -726,6 +899,10 @@ between an inundated area a verifier can accept and one they cannot.
 6. *(Applied.)* Compute contributing area at the lake's convergence point twice,
    once by multiplying the cell count by 0.01 square kilometres and once with
    `cellSize()`. Report both and the difference in square kilometres.
+7. Read the three strata layers for a basin of your own choosing, using the same
+   three files and the same majority rule. Report the class and the share for
+   each, and say which of the three you would refuse to use at that basin's size
+   and why.
 
 ::: callout-note
 ## Open decisions
