@@ -113,11 +113,13 @@ def check(path):
             c = re.sub(r'[A-Z]{3,}:\d+', ' ', bare)       # EPSG:32720
             c = re.sub(r'\d+:\d+', ' ', c)                # time or ratio
             c = re.sub(r'https?://\S+', ' ', c)
+            c = re.sub(r'\*[^*]+\*', ' TITLE ', c)   # a cited title keeps its colon
             for m in re.finditer(r':(?!\s*$)', c):
                 add("colon-in-prose", ln, l)
 
         # 5. first person
-        if re.search(r'\b(I|we|our|us|my)\b', bare) and not l.startswith('#'):
+        fp = re.sub(r'\b[A-Z]\.(?=[,;)\s])', ' ', bare)   # author initials, not pronouns
+        if re.search(r'\b(I|we|our|us|my)\b', fp) and not l.startswith('#'):
             add("first-person", ln, l, "candidate")
 
     # 4. a chapter of THIS book referred to by number. Run over the joined prose
