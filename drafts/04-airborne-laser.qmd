@@ -434,8 +434,8 @@ landscape this way, into what the La Ronge work calls height heterogeneity
 areas, tells a crew where to add plots or shrink sampling units before the
 season starts.
 
-That is the support argument arriving from the opposite direction. Chapter 1
-asked what area a number describes. This asks how many numbers an area needs.
+That is the support argument arriving from the opposite direction. The opening
+chapter asked what area a number describes. This asks how many numbers an area needs.
 The chapter on field plot design takes it from here.
 
 ## Conclusions
