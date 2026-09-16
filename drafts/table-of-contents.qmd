@@ -1,6 +1,6 @@
 ---
 title: "Remote Sensing for Forest Carbon Accounting"
-subtitle: "Proposed table of contents, 6 September 2026"
+subtitle: "Proposed table of contents, 10 September 2026"
 number-sections: false
 format:
   docx:
@@ -9,11 +9,11 @@ format:
     toc: false
 ---
 
-Seventeen chapters in four parts, one part for each phrase of the subtitle, *Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory*.
+Nineteen chapters in four parts, one part for each phrase of the subtitle, *Applications of Lidar, Radar and Optical Data in Forest Mensuration, Landscape Monitoring and Greenhouse Gas Inventory*.
 
 Chapter titles were rewritten on 5 September 2026 against the contents pages of *Satellite Remote Sensing for Forest and Environmental Monitoring* (Elsevier Earth Observation Series, 2025), where every title opens on the operation rather than the topic, names the sensor, and lands a result. Section headings were rewritten the same day into the same register, Title Case noun phrases of at most three words. Neither set has been written into the manuscript, and both are here for review.
 
-At this revision 11 of the seventeen chapters are drafted and 159 sections are written. Sections marked *track* are verification tracks, unnumbered and unlisted in the book itself, and a reader who skips every one of them still gets a complete book. At the pace of the comparable series volume, 20 chapters over 663 pages, seventeen chapters runs to about 560 pages before front matter.
+At the 6 September revision 11 of the then seventeen chapters were drafted and 159 sections were written. Two chapters entered the outline on 10 September 2026, the risk mapping chapter at the end of Part 3 and the disturbance disaggregation chapter at the end of the book, and neither has sections drafted yet. Sections marked *track* are verification tracks, unnumbered and unlisted in the book itself, and a reader who skips every one of them still gets a complete book. At the pace of the comparable series volume, 20 chapters over 663 pages, nineteen chapters runs to about 630 pages before front matter.
 
 # Part 1. Data
 
@@ -220,71 +220,83 @@ Sections not yet drafted. Planned scope. Calibrating a plot-to-metric model, app
   *track* Model Interrogation  
 13.16 Exercises
 
+## 14. Mapping deforestation risk and reversal risk, and why the same index answers two questions with opposite signs
+
+*Source ready. Owes the spine, Support. A risk value has the support of its coarsest covariate, and the allocation inherits it.*
+
+Sections not yet drafted. Planned scope. Normalising covariates to a zero to one index, a weighted sum against a fitted spatial model, risk-weighted allocation of a jurisdictional deforestation rate, and the reversal risk rating that prices a buffer contribution from the same kind of surface.
+
 \newpage
 
 # Part 4. Greenhouse Gas Inventory
 
 *From extent and factor to the audited estimate*
 
-## 14. Estimating activity data from a probability sample where the classified map is a stratifier
+## 15. Estimating activity data from a probability sample where the classified map is a stratifier
 
 *Source ready. Owes the spine, Design-based inference in its purest form. The map stratifies, the sample estimates.*
 
 Sections not yet drafted. Planned scope. The three IPCC approaches, spatially explicit transitions, area estimation from a probability sample, and the map as stratifier.
 
-## 15. Selecting emission factors across IPCC tiers and finding which term deserves the next measurement
+## 16. Selecting emission factors across IPCC tiers and finding which term deserves the next measurement
 
 *Drafted. Owes the spine, Support governs which factor applies, by depth, climate zone or stratum.*
 
-15.1 Factor Definition  
-15.2 Methodological Tiers  
-15.3 Default Factors  
-15.4 Fire Emission Factors  
-  15.4.1 Combustion Parameters  
-  15.4.2 Unit Conversion  
-  15.4.3 Carbon Dioxide  
-15.5 Stock-Difference Method  
-15.6 Gain-Loss Asymmetry  
-15.7 Uncertainty Propagation  
-15.8 Dominant Terms  
-15.9 Cost of Imprecision  
+16.1 Factor Definition  
+16.2 Methodological Tiers  
+16.3 Default Factors  
+16.4 Fire Emission Factors  
+  16.4.1 Combustion Parameters  
+  16.4.2 Unit Conversion  
+  16.4.3 Carbon Dioxide  
+16.5 Stock-Difference Method  
+16.6 Gain-Loss Asymmetry  
+16.7 Uncertainty Propagation  
+16.8 Dominant Terms  
+16.9 Cost of Imprecision  
   *track* Double Counting  
   *track* Registry Acceptance  
-15.10 Exercises
+16.10 Exercises
 
-## 16. Constructing a deforestation baseline with fixed reference periods, the ratchet and risk-weighted allocation
+## 17. Constructing a deforestation baseline with fixed reference periods, the ratchet and risk-weighted allocation
 
 *Drafted. Owes the spine, Support across time. A reference period is a decision about temporal extent.*
 
-16.1 Baseline Accounting  
-16.2 Baseline and Forecast  
-16.3 Standard Requirements  
-16.4 Ratchet Mechanism  
-16.5 Uncertainty Discounting  
-16.6 Jurisdictional Allocation  
+17.1 Baseline Accounting  
+17.2 Baseline and Forecast  
+17.3 Standard Requirements  
+17.4 Ratchet Mechanism  
+17.5 Uncertainty Discounting  
+17.6 Jurisdictional Allocation  
   *track* Reference Periods  
   *track* Verifier Questions  
-16.7 Exercises
+17.7 Exercises
 
-## 17. Quantifying uncertainty and its cost: Monte Carlo propagation, registry deductions and the limits of a short record
+## 18. Quantifying uncertainty and its cost: Monte Carlo propagation, registry deductions and the limits of a short record
 
-*Drafted. Owes the spine, The close. Geometry, support and inferential frame, and whether the forest is the same forest.*
+*Drafted. Owes the spine, Inference. Geometry, support and inferential frame, handed to the last chapter to ask along the time axis.*
 
-17.1 Why Uncertainty Matters  
-17.2 Carbon Estimate  
-17.3 Sampling Error  
-17.4 Measurement Error  
-17.5 Cross-Validation  
+18.1 Why Uncertainty Matters  
+18.2 Carbon Estimate  
+18.3 Sampling Error  
+18.4 Measurement Error  
+18.5 Cross-Validation  
   *track* Metric to Deduction  
   *track* Model Eligibility  
-17.6 Monte Carlo Propagation  
-17.7 Conservative Estimates  
-17.8 Area-Adjusted Estimation  
-17.9 Reported and Adjusted  
-17.10 Registry Deductions  
+18.6 Monte Carlo Propagation  
+18.7 Conservative Estimates  
+18.8 Area-Adjusted Estimation  
+18.9 Reported and Adjusted  
+18.10 Registry Deductions  
   *track* Rule Sources  
   *track* Sampling and Counting  
-17.11 Exercises
+18.11 Exercises
+
+## 19. Disaggregating natural from anthropogenic disturbance over a thirty-year record, and what a shorter one cannot say
+
+*Source ready. Owes the spine, The close. How long a record must be before a year can be called an outlier.*
+
+Sections not yet drafted. Planned scope. The managed land proxy, the IPCC definition of a natural disturbance, background level and margin from an outlier-free time series, the three national rules that disagree, and the record length each one needs.
 
 \newpage
 
@@ -296,6 +308,8 @@ Sections not yet drafted. Planned scope. The three IPCC approaches, spatially ex
 
 **Chapter 3** is the only gap. Nothing in the library carries radar, the title promises it, and it is the largest single piece of new writing in the book.
 
-**Chapters 6, 8, 9 and 14** are new chapters whose source material exists elsewhere in the library and has never been written up as teaching.
+**Chapters 6, 8, 9 and 15** are new chapters whose source material exists elsewhere in the library and has never been written up as teaching.
 
-The spine was amended on 5 September 2026. The closing message of the book is disturbance ecology, and the spatio-temporal data cube is the instrument that makes it arguable rather than the destination. The final part takes up bifurcation and tipping behaviour, regime shift in forest carbon flux, and Markov chain Monte Carlo as the machinery for inference about a dynamical system observed with error. No chapter yet owns that argument, and that is the first of four open decisions recorded on the chapter board.
+**Chapters 14 and 19** entered the outline on 10 September 2026 from the brief at `publishing/chapter-briefs/risk-and-disaggregation.md`, and their source material is in the library.
+
+The spine was amended on 5 September 2026. The closing message of the book is disturbance ecology, and the spatio-temporal data cube is the instrument that makes it arguable rather than the destination. The final part takes up bifurcation and tipping behaviour, regime shift in forest carbon flux, and Markov chain Monte Carlo as the machinery for inference about a dynamical system observed with error. The disturbance disaggregation chapter, added as the last chapter on 10 September 2026, now owns that argument.

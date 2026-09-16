@@ -10,6 +10,12 @@ reach a methodological question by the middle, close on a number a verifier woul
 accept, and state somewhere in the chapter what geometry the arithmetic happened
 on and what support the answer has.
 
+Amended 10 September 2026. Two chapters entered the outline, risk mapping at the
+end of part three and natural disturbance disaggregation at the end of the book,
+both briefed in `risk-and-disaggregation.md`. The pages below keep their
+4 September numbers, so chapters 14 to 17 here are 15 to 18 in the
+nineteen-chapter outline.
+
 ---
 
 ## Part one. Data
@@ -524,7 +530,7 @@ period-doubling cascade needing three levels in ratios near two is not
 detectable in 65 annual observations. That is the strongest support argument in
 the whole corpus and it belongs at the end of this book.
 
-Two decisions are open. Whether one of the last chapters carries the
-dynamical-systems argument explicitly, since the seventeen-chapter outline as
-briefed spreads it across three. And whether the subtitle going to Elsevier
-names it.
+One decision is open, whether the subtitle going to Elsevier names it. The
+other, whether one of the last chapters carries the dynamical-systems argument
+explicitly, was settled on 10 September 2026 when the disaggregation chapter
+entered the outline as the last chapter.

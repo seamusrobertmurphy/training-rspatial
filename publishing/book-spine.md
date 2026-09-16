@@ -154,3 +154,8 @@ dynamical-systems argument. It is currently distributed across chapters 12, 13
 and the final part. Either one of the last chapters takes it explicitly, or the
 subtitle and the outline going to Elsevier promise something the manuscript does
 not deliver.
+
+Settled 10 September 2026. The disturbance disaggregation chapter entered the
+outline as the last chapter of the book and carries the dynamical-systems
+argument, so the outline going to Elsevier has a chapter that owns it. Its brief
+is `publishing/chapter-briefs/risk-and-disaggregation.md`.

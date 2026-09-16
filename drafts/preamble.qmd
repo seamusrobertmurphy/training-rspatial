@@ -175,7 +175,7 @@ support the answer has.
 Each one carries a single methodological question, an entry that earns its place,
 and an edge that does not flinch. The board at
 <https://claude.ai/code/artifact/4499bb90-ae13-4fdd-8051-ee6e63d01c74> holds all
-seventeen with their questions, their entries, their edges and their sources.
+nineteen with their questions, their entries, their edges and their sources.
 
 # One paragraph
 
@@ -190,18 +190,15 @@ with the primary registry documents open beside the code.
 
 # Open decisions
 
-Four, all recorded on the chapter board and none of them settled.
+Three, all recorded on the chapter board and none of them settled.
 
-1. Does one of the last chapters carry the dynamical-systems close explicitly?
-   The seventeen-chapter outline as briefed spreads it across chapters 12, 13 and
-   the closing part, so no chapter owns it and none is accountable for it.
-2. Does the subtitle going to Elsevier name disturbance ecology? It currently
+1. Does the subtitle going to Elsevier name disturbance ecology? It currently
    promises lidar, radar and optical data in mensuration, monitoring and
    inventory, and none of those three is the closing argument.
-3. Is the page budget 400 pages or 560? *Satellite Remote Sensing for Forest and
+2. Is the page budget 400 pages or 630? *Satellite Remote Sensing for Forest and
    Environmental Monitoring* runs 20 chapters over 663 pages, so 33 a chapter puts
-   seventeen at about 560 before front matter.
-4. Does the baseline chapter lose the word *counterfactual*? It appears nine times
+   nineteen at about 630 before front matter.
+3. Does the baseline chapter lose the word *counterfactual*? It appears nine times
    in that chapter's prose and the standing style rule excludes terms imported
    from programme evaluation where the field's own wording exists.
 

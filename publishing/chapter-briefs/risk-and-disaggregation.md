@@ -336,11 +336,11 @@ is nil and the cost of adding them after peer review is high.
 
 ## Open decisions this raises
 
-1. Does risk mapping become a chapter, or split between the baseline chapter and
-   the final chapter?
-2. Does disaggregation become a chapter, and if so does it take the
-   dynamical-systems close, which would settle the first decision already on the
-   board?
+1. Closed 10 September 2026. Risk mapping became a chapter of its own at the end
+   of part three, now chapter 14.
+2. Closed 10 September 2026. Disaggregation became the last chapter of the book,
+   now chapter 19, and takes the dynamical-systems close, which settles the first
+   decision that stood on the board.
 3. Closed 6 September 2026. The definitions were obtained from WAC 173-446-020
    as quoted in the Washington Ecology revisions document. The California
    Regulation itself is still not in the library, and should be obtained so the

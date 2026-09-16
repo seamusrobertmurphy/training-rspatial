@@ -95,11 +95,11 @@ Tier 1 table, the tropical row, and the observation that the area uncertainty
 established earlier in the chapter now multiplies an emission factor whose sign
 is unresolved.
 
-**Chapter 15 develops it**, since that chapter already owns emission factors,
+**Chapter 16 develops it**, since that chapter already owns emission factors,
 tiers and the error budget. The Table 2.1 confidence intervals belong in its
 variance-share calculation, and they will dominate it.
 
-**Chapter 14 needs one sentence**, because organic soil area is activity data
+**Chapter 15 needs one sentence**, because organic soil area is activity data
 and the IPCC treats Histosols as a stratum independent of land cover.
 
 ## What is still needed
