@@ -1,5 +1,5 @@
 ---
-title: "Baseline Modelling"
+title: "Constructing a deforestation baseline with fixed reference periods, the ratchet and risk-weighted allocation"
 aliases:
   - baseline-modelling.html
 execute:

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec publishing/eval/check-all.sh

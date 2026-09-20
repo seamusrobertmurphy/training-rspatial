@@ -1,5 +1,5 @@
 ---
-title: "Uncertainty"
+title: "Quantifying uncertainty and its cost: Monte Carlo propagation, registry deductions and the limits of a short record"
 aliases:
   - 07-uncertainty.html
 execute:

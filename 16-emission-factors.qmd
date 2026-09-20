@@ -1,5 +1,5 @@
 ---
-title: "Emission Factors"
+title: "Selecting emission factors across IPCC tiers and finding which term deserves the next measurement"
 aliases:
   - emission-factors.html
 execute:

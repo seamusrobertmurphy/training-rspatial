@@ -117,10 +117,42 @@ def check(path):
             for m in re.finditer(r':(?!\s*$)', c):
                 add("colon-in-prose", ln, l)
 
+        # 4b. bold styling in prose, banned outright
+        if not l.startswith('#') and (re.search(r'\*\*.+?\*\*', bare)
+                                      or re.search(r'__.+?__', bare)):
+            add("bold-in-prose", ln, l)
+
         # 5. first person
         fp = re.sub(r'\b[A-Z]\.(?=[,;)\s])', ' ', bare)   # author initials, not pronouns
         if re.search(r'\b(I|we|our|us|my)\b', fp) and not l.startswith('#'):
             add("first-person", ln, l, "candidate")
+
+    # 4a. heading register. A heading is a Title Case noun phrase of at most
+    #     four words, as in the contents accepted by the publisher. It is never
+    #     a question, never a sentence, and never opens with a verb or an
+    #     article.
+    VERB_START = ('what', 'why', 'how', 'when', 'where', 'which', 'who',
+                  'reading', 'fitting', 'finding', 'seeing', 'measuring',
+                  'building', 'making', 'choosing', 'the', 'a', 'an', 'two',
+                  'three', 'four', 'five', 'skip', 'does', 'do', 'is', 'are')
+    if not is_front:
+        for ln, l in prose:
+            m = re.match(r'^(#{2,})\s+(.*)$', l)
+            if not m:
+                continue
+            text = m.group(2).split('{')[0].strip()
+            if not text or text.lower() in ('exercises', 'references'):
+                continue
+            words = [w for w in re.split(r'\s+', text) if w]
+            if text.endswith('?'):
+                add("heading-is-question", ln, text)
+            if len(words) > 4:
+                add("heading-too-long", ln, f"{len(words)} words: {text}")
+            if words[0].lower() in VERB_START:
+                add("heading-not-noun-phrase", ln, text)
+            body = [w for w in words[1:] if w.isalpha() and len(w) > 3]
+            if body and all(w[0].islower() for w in body):
+                add("heading-not-title-case", ln, text)
 
     # 4. a chapter of THIS book referred to by number. Run over the joined prose
     #    with a window either side, because the marker naming someone else's
@@ -155,10 +187,13 @@ def check(path):
             add("heading-is-a-question", ln, h)
         if re.match(r'^(Read|Write|Inspect|Build|Make|Find|Use|Run|Get|Add)\b', h):
             add("heading-is-an-imperative", ln, h)
+        # Title Case is required, not banned. The register is the contents
+        # accepted by the publisher on 10 September 2026, Title Case noun
+        # phrases of at most four words. Sentence case is the failure now.
         words = [w for w in h.split() if w[:1].isalpha()]
-        capped = sum(1 for w in words[1:] if w[:1].isupper())
-        if len(words) > 2 and capped >= len(words[1:]) * 0.8:
-            add("heading-is-title-case", ln, h)
+        body = [w for w in words[1:] if len(w) > 3]
+        if body and all(w[:1].islower() for w in body):
+            add("heading-is-sentence-case", ln, h)
 
     # 7. reproducibility of anything random
     if re.search(r'\b(runif|rnorm|sample|rbinom|rpois|simulate)\s*\(', codetext) \

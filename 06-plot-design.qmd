@@ -1,5 +1,5 @@
 ---
-title: "Designing a Field Plot Network, and What the Next Plot Buys"
+title: "Designing a field plot network for forest carbon inventory: stratification, sample size and what the next plot buys"
 subtitle: "Chapter 6 draft, 8 September 2026"
 execute:
   eval: true
@@ -9,7 +9,7 @@ execute:
 ---
 
 ::: callout-note
-## Draft
+## Scope
 
 Drafted 8 September 2026 on the Smithsonian Conservation Biology Institute
 ForestGEO census, which is committed to this repository and needs no network.
@@ -34,7 +34,7 @@ H <- 640      # plot height in metres
 census_ha <- W * H / 1e4
 ```
 
-## A forest where the answer is already known
+## Study Data
 
 The Smithsonian Conservation Biology Institute plot sits in Front Royal,
 Virginia, and every woody stem inside its 400 by 640 metre rectangle was
@@ -62,7 +62,7 @@ plot size cost in fieldwork and buy in precision. It closes on positional
 accuracy, where the measured result contradicts the reason most projects give
 for wanting it.
 
-## The trees that carry the wood, and the trees that carry the work
+## Stem Distribution
 
 An inventory does not measure every stem it can see, because a protocol sets a
 minimum diameter and the crew ignores anything below it. The consequence of that
@@ -103,7 +103,7 @@ because it is measured rather than modelled, so the sampling behaviour below is
 the sampling behaviour of the design and not of an allometric equation. The
 equation enters in the next chapter and it enters carrying its own error.
 
-## The plot, and the population it is drawn from
+## Sampling Frame
 
 A fixed-area plot is a circle of stated size centred on a located point, and
 every stem whose centre falls inside it is measured. The plots used here were
@@ -178,7 +178,7 @@ standard error, which describes the mean of the sample and not the spread of the
 forest, and which carries a square root in its denominator that governs the
 economics of every inventory ever commissioned.
 
-## Forty plots, two thousand times
+## Estimator Performance
 
 The clearest way to see what a sample buys is to draw it repeatedly on ground
 whose answer is known. Simple random sampling was run at six sample sizes, two
@@ -231,7 +231,7 @@ standard error from `r sprintf("%.2f", R$mean_se[2])` to
 is the reason inventory budgets are what they are. Halving an uncertainty costs
 four times as much, and halving it again costs sixteen.
 
-## A forty-plot inventory is a coin toss
+## Sample Size
 
 Registries do not ask for a standard error, they ask whether an estimate clears
 a threshold. A common form of that test requires the half-width of the 90 per
@@ -266,7 +266,7 @@ of that distribution, which means a project that installs exactly the number the
 formula returns has designed an inventory that fails about half the time.
 
 ::: callout-tip
-## Verification track: what a sampling design must state
+## Design Requirements
 
 A design that cannot be re-run cannot be checked, and four things were needed
 here before any of the numbers above could be reproduced.
@@ -285,7 +285,7 @@ project area. The correct question is not how many plots were installed. It is
 what population the mean is a mean of.
 :::
 
-## The grid that is more precise than its own arithmetic admits
+## Systematic Sampling
 
 Plots are rarely thrown at a forest at random. A systematic grid with a random
 start is easier to navigate, spreads the crew evenly, and cannot by accident
@@ -334,7 +334,7 @@ for the extra precision in a better design and receives no credit for it in the
 reported interval, which is worth knowing before a design is defended to a
 verifier as more precise.
 
-## Stratifying on something visible everywhere
+## Stratification
 
 Stratification splits the population into groups, samples within each, and
 combines the group means with weights equal to the group areas. It reduces
@@ -422,7 +422,7 @@ a reflectance value and the laser chapter made about a height metric. The
 chapter on calibration returns to it, because a model fitted at plot support and
 applied at pixel support fails in exactly this way.
 
-## Where the fix does not matter, and where it decides everything
+## Plot Relocation
 
 Field crews are told that plot centres must be located accurately, and the
 reason usually given is that an inaccurate centre moves which trees fall inside
@@ -504,7 +504,7 @@ diameters are read. That is why permanent sample plots are monumented with
 rebar and witness trees rather than recorded as a coordinate, and the
 justification is the paired comparison rather than the tree list.
 
-## What a threshold and a plot size cost
+## Plot Dimensions
 
 Two design choices remain and both trade fieldwork against precision. The first
 is the diameter threshold, already introduced, and the second is the size of the

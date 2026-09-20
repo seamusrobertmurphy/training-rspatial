@@ -1,5 +1,5 @@
 ---
-title: "Spatial Patterns"
+title: "Analysing disturbance as a spatial point pattern and the information a clustered dataset actually holds"
 aliases:
   - 09-spatial-patterns.html
 execute:

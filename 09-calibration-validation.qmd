@@ -1,5 +1,5 @@
 ---
-title: "Fitting Basal Area to Laser Height, and the Validation That Catches It"
+title: "Predicting biomass wall to wall from lidar and optical metrics under spatially blocked cross-validation"
 subtitle: "Chapter 9 draft, 20 September 2026"
 execute:
   eval: true
@@ -9,7 +9,7 @@ execute:
 ---
 
 ::: callout-note
-## Draft
+## Scope
 
 Drafted 20 September 2026 on two public pairings of field plots with airborne
 laser scanning, the Smithsonian Conservation Biology Institute census under
@@ -41,7 +41,7 @@ form <- as.formula(paste("ba_ha ~", paste(predictors, collapse = " + ")))
 rmse <- function(observed, predicted) sqrt(mean((observed - predicted)^2))
 ```
 
-## A flight in December over a leafless forest
+## Study Data
 
 The Smithsonian Conservation Biology Institute plot in Front Royal, Virginia,
 carries the census the plot design chapter sampled, and the United States Geological
@@ -81,7 +81,7 @@ ggplot(scbi, aes(h_p95, ba_ha)) +
   theme_minimal(base_size = 11)
 ```
 
-## The model that scores itself
+## In-Sample Error
 
 A model fitted on every quadrat and then asked to predict those same quadrats
 reports the error it made on ground it has already seen.
@@ -134,7 +134,7 @@ new data through an argument named `newdata`, and passing it as `data` instead
 leaves the argument unread, so the function returns the fitted values and the
 reported test error is a training error wearing the name of a test.
 
-## Folds that know the answer
+## Spatial Cross-Validation
 
 Random folds scatter the held-out quadrats through the plot, so almost every
 test quadrat has a neighbour in the training set twenty metres away. Blocked
@@ -173,7 +173,7 @@ model with no skill has no borrowed neighbourhood information to lose. The
 blocked estimate is the honest one in both cases, and the next section shows
 what the two disagree by when a model does have something to lose.
 
-## The ground a model was never shown
+## Area of Applicability
 
 A fitted model will return a number for every cell it is handed, including cells
 whose predictors sit outside anything it was trained on. The area of
@@ -222,7 +222,7 @@ forest, which is about as uniform as a prediction problem gets, and
 reach of a model fitted in one corner of it.
 
 ::: callout-tip
-## Verification track: the gate a registry sets
+## Statistical Agreement
 
 Skip this box and the chapter still works. It applies the accuracy test a
 crediting standard would run against these validation plots.

@@ -1,5 +1,5 @@
 ---
-title: "Disturbance and Risk"
+title: "Detecting change and attributing its agent with multispectral time series: bark beetle, wildfire and harvest"
 execute:
   eval: true
   echo: true

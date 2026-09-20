@@ -1,5 +1,5 @@
 ---
-title: "Deriving Canopy Height from Airborne Laser Scanning"
+title: "Deriving canopy height from airborne laser scanning: how much is the sensor and how much the analyst"
 subtitle: "Chapter 4 draft, 6 September 2026"
 execute:
   eval: true
@@ -9,13 +9,13 @@ execute:
 ---
 
 ::: callout-note
-## Draft
+## Scope
 
 Every number in the prose is computed by a chunk on this page. The working
 example is `MixedConifer.laz`, which ships inside the `lidR` package, so this
 chapter needs no committed data and no network. Brief at
 `publishing/chapter-briefs/04-airborne-laser.md`. The chapter ends at the height
-metric; all plot-to-metric modelling moved to chapter 9 on 6 September 2026.
+metric, and plot-to-metric modelling belongs to the calibration chapter.
 
 The reader is the one the accepted proposal names. The main text is for graduate
 students in forestry, environmental science and remote sensing and for analysts
@@ -70,7 +70,7 @@ dens    <- round(n_pts / (area_ha * 1e4), 2)
 mixed conifer, a density of `r dens` returns per square metre. That is modest by
 current standards and typical of what a project actually receives.
 
-## Provenance and vertical accuracy
+## Vertical Accuracy
 
 Before any processing, ask what the product claims about itself. This is the
 first dataset in this book that can answer.
@@ -83,9 +83,9 @@ point density of at least eight returns per square metre. Canada's High
 Resolution Digital Elevation Model programme and New Zealand's national
 elevation holdings publish comparable statements.
 
-Three words in that specification do the work. **Absolute** means against
-surveyed control, not against itself. **In open terrain** means the figure does
-not apply under canopy, which is where forestry works. And **95 per cent** means
+Three words in that specification do the work. Absolute means against
+surveyed control, not against itself. In open terrain means the figure does
+not apply under canopy, which is where forestry works. And 95 per cent means
 one return in twenty is worse than the stated figure, by an unstated amount.
 
 The previous chapters argued that a dataset should state its realisation, its
@@ -128,11 +128,11 @@ that flew it, so the accuracy statement travels in a separate document that is
 easily parted from the data. Ask for that document by name, and ask which
 collection the tile came from, because the tile itself will not tell you.
 
-## Two ways in
+## Point Clouds
 
 Most people who work with lidar in forestry never see a point cloud. They are
-handed two rasters, a **digital surface model** giving the height of whatever is
-topmost at each cell, and a **digital elevation model** giving the height of the
+handed two rasters, a digital surface model giving the height of whatever is
+topmost at each cell, and a digital elevation model giving the height of the
 ground, and they subtract one from the other to get canopy height. National
 programmes distribute both, and the arithmetic is one line.
 
@@ -146,13 +146,13 @@ This chapter takes the point cloud route, because that is the one where the
 decisions are visible. Everything it demonstrates applies to the differenced
 route as well, with the difference that you cannot see it happening.
 
-## Ground classification
+## Ground Classification
 
 A return is ground or it is not, and no instrument reports which. Classifying
 them is an inference from geometry, and two standard algorithms make that
 inference differently.
 
-The **cloth simulation filter** imagines the terrain inverted and a stiff cloth
+The cloth simulation filter imagines the terrain inverted and a stiff cloth
 dropped onto it from below, then calls ground whatever the cloth touches. Its
 parameters are the cloth's rigidness and its resolution. A **progressive
 morphological filter** instead opens the surface with a window that grows in
@@ -191,7 +191,7 @@ where the terrain model most needs to be right, because an error in ground
 height propagates into every canopy height above it, one for one and with the
 opposite sign.
 
-## Normalisation, and an order that cannot be reversed
+## Height Normalisation
 
 Canopy height is height above ground, so the terrain surface has to be
 subtracted from every return. In `lidR` that is one call, and the cloud used
@@ -217,7 +217,7 @@ That is the cheapest trap in this chapter and the one most often sprung, because
 a workflow assembled from fragments of other people's scripts has no way of
 knowing which stage its input has already been through.
 
-## The canopy height model
+## Canopy Height Models
 
 Rasterising the returns into a canopy height model turns an irregular cloud into
 a grid, which is the same support decision the reflectance chapter made,
@@ -235,7 +235,7 @@ crowns and reached the ground. Pit filling is cosmetic in a picture and is not
 cosmetic in what follows, because a pit inside a crown can be detected as the
 edge between two trees.
 
-## The window function
+## Window Size
 
 Now the chapter's subject. Finding treetops means finding local maxima, and
 finding a local maximum means choosing how large a neighbourhood counts as
@@ -313,7 +313,7 @@ fr <- round(max(fixed$stems_ha) / min(fixed$stems_ha), 1)
 
 A `r fr`-fold spread from one parameter.
 
-### The function that travelled
+### Variable Windows
 
 The coefficients used above are not arbitrary. The pairing $a = 0.05$,
 $b = 0.6$ is by some distance the most widely copied in operational work, and
@@ -342,7 +342,7 @@ tested from the bottom. It is not a neutral default. It is a choice, and it
 behaves like one.
 
 ::: callout-tip
-## Verification track: what to ask of a stem density
+## Stem Density Checks
 
 A stem density derived from lidar is evidence, and evidence has to be traceable
 to a method. Ask for four things and none of them is onerous.
@@ -357,7 +357,7 @@ A submission that cannot answer the second and third questions has not given you
 a measurement. It has given you an output.
 :::
 
-## Height metrics and their support
+## Height Metrics
 
 Individual tree detection is the glamorous product and it is not what most
 carbon inventories run on. Area-based metrics are. Summarise the returns inside
@@ -391,13 +391,13 @@ mean return height dragged down by every pulse that passed through a gap. The
 95th percentile ignores those and reports something close to the tallest crown
 present, which is where the mass is.
 
-And it is why an upper percentile **is not stand height**. It is a statistic of
+And it is why an upper percentile is not stand height. It is a statistic of
 the returns in a cell, its support is the cell, and it belongs to no tree. A
 project that reports a 95th percentile as though it were a mensurational top
 height has changed what the number means without changing the number, which is
 the failure this book keeps returning to.
 
-## Where the metric decides the fieldwork
+## Area-Based Inventory
 
 The last section runs the argument backwards. Everything so far has used the
 sensor to describe the forest. This uses it to decide how much fieldwork the
@@ -485,7 +485,7 @@ classification is not a measurement.
 ::: callout-note
 ## Open decisions
 
-**The attribution needs checking.** Popescu and Wynne (2004) published
+The attribution needs checking. Popescu and Wynne (2004) published
 species-specific window functions for pine and deciduous stands, and the linear
 form used throughout this chapter appears to originate in a package vignette
 rather than in that paper. Open the paper before print. If the attribution is
@@ -493,7 +493,7 @@ wrong it should be corrected in both source repositories, and the correction is
 worth a sentence here, because a misattributed parameter is harder to audit than
 an uncalibrated one.
 
-**A units check is outstanding.** The Gisborne workflow converts a treetop count
+A units check is outstanding. The Gisborne workflow converts a treetop count
 on a ten metre summary grid to stems per hectare by multiplying by ten, where
 ten metre cells would require one hundred. `ForestTools::sp_summarise` is no
 longer exported by the installed version, so this could not be settled by
@@ -501,7 +501,7 @@ running it and is deliberately not stated in the chapter. If it holds it belongs
 in section 4.6, because that layer was compared against official stand
 attributes and passed.
 
-**Data.** The chapter currently runs entirely on `MixedConifer.laz` from `lidR`,
+Data. The chapter currently runs entirely on `MixedConifer.laz` from `lidR`,
 which is public, tiny and needs no commit. That is a virtue for reproducibility
 and a limitation for the argument, since the stand is 0.8 hectares of one forest
 type. Committing a one hectare clip of a national programme tile would let

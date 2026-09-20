@@ -1,5 +1,5 @@
 ---
-title: "Points, Lines, Polygons, and the Hectare That Moves"
+title: "Identification and correction of positional error in forest carbon project boundaries"
 subtitle: "Chapter 1, condensed 6 September 2026"
 execute:
   eval: true
@@ -9,7 +9,7 @@ execute:
 ---
 
 ::: callout-note
-## Condensed
+## Scope
 
 Cut from fifteen sections to eight on 6 September 2026 and refocused on one
 question, what a geospatial object is and how well its position on the Earth is
@@ -30,13 +30,14 @@ library(sf)
 library(dplyr)
 library(lwgeom)
 ```
-## The plot
+## Study Data
 
-Twenty-five point six hectares of oak and hickory sit on a hillside outside
-Front Royal, Virginia, and every tree on them has been measured. The plot is a
-rectangle 400 metres across and 640 metres up the slope, its stems mapped on a
-local grid that starts at zero in one corner. Somebody walked it, tagged it, and
-wrote down where each stem stood.
+The Smithsonian Conservation Biology Institute forest dynamics plot near Front
+Royal, Virginia, is a 400 by 640 metre rectangle of oak and hickory forest in
+which every stem has been tagged, mapped and measured. Positions are recorded on
+a local grid in metres from one corner. The plot serves this chapter because its
+nominal area, 25.6 hectares, follows from those grid dimensions and is therefore
+known independently of any area computed from its coordinates.
 
 ```{r first-look}
 stems <- read.csv("data/scbi_stems.csv") |>
@@ -53,36 +54,32 @@ w_m     <- diff(range(raw$gx, na.rm = TRUE))
 h_m     <- diff(range(raw$gy, na.rm = TRUE))
 claimed_ha <- 25.6
 ```
+
 ::: callout-important
-## Where these positions come from
+## Positional Provenance
 
-The stems are real and so are their positions within the plot. The census
-recorded each one on the plot's own grid, in metres from a corner, and those are
-the `gx` and `gy` columns.
-
-The longitude and latitude are not surveyed. They are reconstructed by
-`data-raw/prepare-scbi-data.R`, which lays the plot grid onto Universal
-Transverse Mercator zone 17 north with a fixed affine map, a rotation of about
-1.8 degrees together with scale factors of 1.001149 and 0.997105. Anything in
-this chapter that depends on where the plot sits on the Earth depends on that
-reconstruction, and is representative rather than a survey of record. This is
-said again wherever it bites.
+Stem positions on the plot grid are surveyed. The longitude and latitude are
+not. They are reconstructed in `data-raw/prepare-scbi-data.R`, which fits the
+plot grid to Universal Transverse Mercator zone 17 north through a fixed affine
+transform, a rotation of 1.8 degrees with scale factors of 1.001149 and
+0.997105. Every result below that depends on where the plot sits on the Earth
+inherits that reconstruction, and is illustrative rather than a survey of
+record.
 :::
 
-The file holds `r format(n_stems, big.mark = ",")` stems of `r n_spp` species.
-The local grid runs `r w_m` metres one way and `r h_m` the other, so the plot
-covers `r claimed_ha` hectares by construction, and that is the number it is
-known by. Hold onto it.
+The census holds `r format(n_stems, big.mark = ",")` stems of `r n_spp` species,
+and the grid spans `r w_m` metres by `r h_m` metres, giving the nominal
+`r claimed_ha` hectares against which the measurements below are compared.
 
-## Points, lines, polygons
+## Geometry Types
 
 Everything in a forest carbon project is one of three shapes, and the whole
 software stack agrees on what those three are.
 
-A **point** is a single position. A plot centre is a point, and so is a tree, a
-control monument and a soil pit. A **line**, or LineString, is an ordered list of
+A point is a single position. A plot centre is a point, and so is a tree, a
+control monument and a soil pit. A line, or LineString, is an ordered list of
 points. A road is a line, so is a stream, and so is the traverse a surveyor walks
-round a parcel. A **polygon** is a closed ring of points with the inside
+round a parcel. A polygon is a closed ring of points with the inside
 declared, optionally with further rings punched out of it as holes. A project
 boundary is a polygon. So is a stratum, a harvest unit and a lake.
 
@@ -147,7 +144,7 @@ to west boundary that difference changes an area. This is why a boundary quoted
 as a list of corner coordinates is an incomplete description of a parcel until
 you also say what the edges are.
 
-## Two areas disagree
+## Area Measurement
 
 The plot claims `r claimed_ha` hectares. Measure it two ways and neither answer
 is that.
@@ -208,35 +205,10 @@ things, so when a claimed area and a mapped area disagree the first question is
 not whether the survey is wrong. It is whether the thing being measured is the
 boundary or a box drawn round it.
 
-::: callout-tip
-## Verification track: what the gap is worth
-
-Skip this box and the chapter still works. It converts the area gap into the
-currency a crediting project is paid in.
-
-```{r area-cost}
-c_density <- 150          # tonnes of carbon per hectare, a plausible temperate figure
-co2_ratio <- 44 / 12      # molecular mass of carbon dioxide over carbon
-
-phantom_ha  <- bbox_ha - hull_ha
-phantom_co2 <- phantom_ha * c_density * co2_ratio
-
-round(c(phantom_hectares = phantom_ha, phantom_tonnes_co2e = phantom_co2), 1)
-```
-`r round(phantom_ha, 2)` hectares that are not there, and about
-`r format(round(phantom_co2), big.mark = ",")` tonnes of carbon dioxide
-equivalent that could be claimed on them, on a plot you can walk across in ten
-minutes and before a single tree has been mismeasured.
-
-Read that as an order of magnitude and no finer. The carbon density is a
-plausible temperate figure rather than a measured one, and the hectares rest on
-the reconstructed georeferencing declared at the top of this chapter.
-:::
-
-## What coordinates claim
+## Coordinate Reference Systems
 
 A coordinate is not a fact about the ground. It is a claim about a model of the
-Earth **and about a date**, and it is only as good as both.
+Earth and about a date, and it is only as good as both.
 
 The number 38.9 means nothing alone. It means something once you say it is
 degrees of latitude on WGS 84, a particular mathematical model of the Earth's
@@ -244,10 +216,10 @@ shape. A *coordinate reference system* is that model paired with the rules for
 turning positions on it into numbers, and every one in common use carries a code
 from the EPSG registry, a public catalogue that now conforms to ISO 19111:2019.
 
-Three kinds cover almost all forest carbon work. **Geographic** systems give
+Three kinds cover almost all forest carbon work. Geographic systems give
 latitude and longitude on an ellipsoid, and that is the storage and exchange
-convention. **Projected** systems give a flat grid in metres, and that is for
-display and for area computation. **Geocentric** systems give three distances
+convention. Projected systems give a flat grid in metres, and that is for
+display and for area computation. Geocentric systems give three distances
 from the Earth's centre, and that is what a satellite receiver actually solves
 before anything converts it. Errors enter at the junctions between these, not
 inside any one of them.
@@ -278,19 +250,19 @@ Reference Frame is dynamic and the Canadian realisation of the North American
 Datum of 1983 is plate-fixed, they differ by more than a metre on the west coast,
 and the gap widens every year.
 
-## Conversion and transformation
+## Transformation Provenance
 
 These two words are used interchangeably in speech and they name completely
 different operations. ISO 19111:2019 draws the line precisely, and it is the most
 useful distinction in this chapter.
 
-A **conversion** changes the coordinate system and not the datum. Latitude and
+A conversion changes the coordinate system and not the datum. Latitude and
 longitude on WGS 84 to Universal Transverse Mercator zone 17 north on WGS 84 is a
 conversion. It is defined by an exact formula, it reverses to the limits of
 floating point arithmetic, and it has no uncertainty of its own. Nothing moves on
 the ground.
 
-A **transformation** changes the datum. The Canadian realisation of the North
+A transformation changes the datum. The Canadian realisation of the North
 American Datum of 1983 to WGS 84 realisation G1762 is a transformation. It is
 estimated from observations, so it carries a published accuracy. It is not
 unique, so several valid transformations exist between the same pair of datums
@@ -327,7 +299,7 @@ metres, which is floating point noise. Whether the transformation moved anything
 depends on which operation the software chose, and that is the question to ask.
 Not whether one was used, but which one.
 
-## Projection distortion
+## Projection Distortion
 
 Every book says a projection distorts. Almost none says by how much, in
 hectares, on ground a reader works on. Here it is measured twice.
@@ -391,12 +363,11 @@ next to the hectare and a half the bounding box cost earlier. Both errors are
 invisible in the output. Neither raises a warning.
 
 ::: callout-important
-## A correction to the working notes
+## Zone Boundaries
 
-The notes for this chapter proposed teaching this with a cutblock straddling the
-boundary between two zones at 126 degrees west, measured once in each, expecting
-the two answers to disagree. They do not, and the reason is better than the
-original example.
+A block straddling the boundary between two Universal Transverse Mercator zones
+is often expected to measure differently in each. It does not, and the reason
+identifies what the choice of projection actually costs.
 
 ```{r zone-straddle}
 p <- square_500ha(-126.02, 49.5)
@@ -426,13 +397,13 @@ to three decimal places, because preserving area is the property it was built to
 preserve and the property Universal Transverse Mercator gave away.
 :::
 
-## Horizontal accuracy
+## GNSS Accuracy Assessment
 
 Now the quantity this chapter is named for, and the reason the previous two
 sections had to come first.
 
 WGS 84, as most software resolves it, is not a datum at all. It is an
-**ensemble**, defined in ISO 19111:2019 as a set of successive realisations
+ensemble, defined in ISO 19111:2019 as a set of successive realisations
 treated as interchangeable for approximate work, and the register states its
 accuracy inside the definition. Do not take that on trust. Print what your own
 machine returns, because the answer changes between library versions and that is
@@ -459,8 +430,8 @@ inherits that.
 
 ISO 19157, the standard on data quality, gives the vocabulary for saying so
 without either accepting or rejecting the data. Positional accuracy is not one
-quantity but several. **Absolute external accuracy** is how far the positions sit
-from truth. **Relative internal accuracy** is how well the vertices agree among
+quantity but several. Absolute external accuracy is how far the positions sit
+from truth. Relative internal accuracy is how well the vertices agree among
 themselves. The ensemble damages the first and leaves the second untouched, which
 is why the honest statement about a boundary like this one is that it is
 internally excellent and externally uncertain to about two metres, rather than
@@ -482,7 +453,7 @@ contract is not a coordinate reference system declaration. It is a specification
 with numbers in it.
 
 ::: callout-tip
-## Verification track: writing it up
+## Documentation Requirements
 
 ISO 19011, the auditing standard, asks four questions of the metadata and not
 only of the geometry. Is the information complete, correct, consistent and
@@ -500,7 +471,7 @@ first thing a shapefile export destroys, because that format records the system
 the data is in now and nothing about where it has been.
 :::
 
-## Engines and versions
+## Geometry Engines
 
 Two analysts measure the same polygon and get different areas. Neither has made a
 mistake, and this is not a rare event.
@@ -561,24 +532,24 @@ chain is missing because nobody writes it, which is a working practice rather
 than a technical limit.
 
 ::: callout-tip
-## Verification track: what a submission should carry
+## Submission Requirements
 
 Seven items, and they belong in a data product specification as conformance
 criteria rather than in an email as requests.
 
-1. The **realisation**, not the family. WGS 84 (G1762) or NAD83(CSRS), never
+1. The realisation, not the family. WGS 84 (G1762) or NAD83(CSRS), never
    plain WGS 84.
-2. The **coordinate epoch**, as a decimal year.
-3. The **transformation used**, by EPSG code, with its published accuracy.
-4. **Software versions**, meaning PROJ, the EPSG database, and any correction
+2. The coordinate epoch, as a decimal year.
+3. The transformation used, by EPSG code, with its published accuracy.
+4. Software versions, meaning PROJ, the EPSG database, and any correction
    grids.
-5. The **edge rule**, planar or geodesic.
-6. The **measurement basis**, meaning the method and the ellipsoid the area was
+5. The edge rule, planar or geodesic.
+6. The measurement basis, meaning the method and the ellipsoid the area was
    computed on.
-7. A **checksum** over the geometry.
+7. A checksum over the geometry.
 :::
 
-## Three surfaces
+## Geoid and Ellipsoid
 
 Everything above reduces to three rules, stated last because they are
 conclusions. Globe for geometry, ellipsoid for measurement, plane for pictures.
@@ -598,7 +569,7 @@ data.frame(surface = c("sphere, radius 6371010 m", "ellipsoid, geodesic",
 s2_rel  <- abs((ellips - sphere) / sphere)
 box_rel <- abs(bbox_ha - hull_ha) / hull_ha
 ```
-**Do the geometry on the globe.** Predicates, overlays and indexing on longitude
+Do the geometry on the globe. Predicates, overlays and indexing on longitude
 and latitude are computed with spherical geometry, which in R is the `s2` engine
 `sf` uses by default. The reason is not that a sphere is more accurate than an
 ellipsoid. It is that a sphere has no edges and no singular points, so a polygon
@@ -606,11 +577,11 @@ crossing the antimeridian is ordinary and the poles behave like everywhere else,
 and exact spherical predicates do not manufacture the thin false slivers a planar
 intersection of two nearly coincident boundaries produces.
 
-**Measure on the ellipsoid.** Areas and distances reported as numbers are
+Measure on the ellipsoid. Areas and distances reported as numbers are
 computed geodesically, on the shape that fits the planet, which is the middle row
 above.
 
-**Project only to draw.** A plane is for pictures and for legacy area
+Project only to draw. A plane is for pictures and for legacy area
 computation, and it is the row that carries the distortion.
 
 Now rank them, because the instinct on meeting a new source of error is to fear
@@ -648,17 +619,3 @@ to.
    degrees, with no epoch and no statement of what lies between the corners.
    List what you cannot compute from it, and say which single piece of missing
    information you would ask for first.
-
-::: callout-note
-## Open decisions
-
-**Confirm the ISO 19157 edition before submission.** The working notes cite
-ISO 19157:2013 and flag the citation for checking. A later edition exists and the
-clause numbering may have moved, so the reference is verified against the
-standard itself rather than against the notes.
-
-**Chapter 2 has not been checked against the accepted proposal's audience.** The
-two-track structure applied here, main text free of registry dependence with
-verification material in tinted boxes, has not been applied to the reflectance
-chapter.
-:::

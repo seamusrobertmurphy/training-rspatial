@@ -1,5 +1,5 @@
 ---
-title: "Conditioning a Digital Elevation Model for Hydrological Routing"
+title: "Conditioning a digital elevation model for hydrological routing and what depression removal destroys"
 subtitle: "Chapter 5 draft, 6 September 2026"
 execute:
   eval: true
@@ -9,7 +9,7 @@ execute:
 ---
 
 ::: callout-note
-## Draft
+## Scope
 
 A restructure of `04-terrain-hydrology.qmd`, which retires when this is
 promoted. What is new is the opening, which leads with the failure and its
@@ -40,7 +40,7 @@ basin  <- st_read("data/chilwa_hydro.gpkg", layer = "basin",  quiet = TRUE)
 rivers <- st_read("data/chilwa_hydro.gpkg", layer = "rivers", quiet = TRUE)
 ```
 
-## One metre
+## Grid Resolution
 
 Lake Chilwa sits in southern Malawi. Water enters from the surrounding hills and
 leaves only by evaporation, so it is *endorheic*, meaning it has no outlet. Its
@@ -110,7 +110,7 @@ inundated area can mean when the surface it is measured on cannot resolve the
 step that determines it. Everything below works toward an answer, and the answer
 is not that the data are unusable.
 
-## What the elevation model is
+## Digital Elevation Models
 
 The previous chapter read a vertical accuracy off a lidar product, 9.8
 centimetres or better at 95 per cent confidence, stated by the programme that
@@ -137,7 +137,7 @@ That is the ordinary condition of terrain data in this field, and it is worth
 stating plainly rather than working around quietly. A lidar collection tells you
 how wrong it might be. A global elevation mosaic tells you the number.
 
-## The grid it sits on
+## Projection Distortion
 
 One property has to be settled before any area is quoted, because it silently
 corrupts every hydrological figure that follows.
@@ -158,10 +158,10 @@ cs_err  <- round(100 * (1 / cs_mean - 1), 1)
 
 A cell covers `r round(cs_mean, 3)` hectares, not one. Treating each cell as a
 hectare, which is the standard shortcut for converting a flow accumulation count
-into contributing area, **overstates area by `r cs_err` per cent**.
+into contributing area, overstates area by `r cs_err` per cent.
 
 ::: callout-warning
-## A contradiction in this book's own data script
+## Cell Area
 
 `data-raw/prepare-chilwa-data.R` states in its header that "at 100 m each cell
 is exactly one hectare, so flow accumulation counts convert to contributing area
@@ -182,7 +182,7 @@ This chapter uses `cellSize()` throughout and reports areas after reprojection
 to UTM zone 36S, which is close enough to equal-area at this extent to serve as
 truth.
 
-## Terrain derivatives
+## Terrain Derivatives
 
 Elevation is rarely the variable of interest. What it implies is.
 
@@ -211,7 +211,7 @@ cells, so both inherit the one metre quantisation, and on ground this flat that
 matters. A slope computed from integer elevations across 100 metre cells cannot
 express anything shallower than about half a degree.
 
-## Depressions, real and artefact
+## Stochastic Depressions
 
 Water moves downhill, so an elevation model already encodes drainage. It does not
 encode it cleanly. Every model contains cells with no lower neighbour, produced
@@ -258,10 +258,10 @@ No threshold on depth alone separates real basins from interpolation pits,
 because the two overlap in size. The deepest single pit in this grid is an
 artefact, not the lake.
 
-## Conditioning, and the parameter that does the damage
+## Hydrological Conditioning
 
-Two families of algorithm exist. **Filling** raises the floor of a depression
-until it overflows, which is simple and destroys the depression. **Breaching**
+Two families of algorithm exist. Filling raises the floor of a depression
+until it overflows, which is simple and destroys the depression. Breaching
 carves a channel out through the lowest point of the rim, which changes far
 fewer cells and preserves the basin's shape.
 
@@ -328,7 +328,7 @@ the parameter's name suggests.
 a channel deeper than three metres, and the only way out of a four hundred metre
 basin is a channel deeper than three metres, so it fills the basin instead.
 
-**Unconstrained, it does not raise a single cell.** The lake is untouched, and
+Unconstrained, it does not raise a single cell. The lake is untouched, and
 the largest carve is `r c_unc` metres, which is one channel out of the basin.
 
 The parameter intended to protect deep basins is the parameter that destroys
@@ -365,7 +365,7 @@ altered cell was carved by nothing at all and nine in ten by less than two
 metres, because almost all of the work is removing single-cell pits. One channel
 carries the whole `r c_unc` metre carve.
 
-## What conditioning destroys, and what it need not
+## Depression Breaching
 
 ```{r endorheic}
 lake_mask <- rasterize(vect(lake), dem)
@@ -412,11 +412,11 @@ extent and any stage-area relationship, including the calculation this chapter
 opened with. On a constrained-breach or filled surface the basin is already
 gone, and running an inundation model on one is a silent and total error.
 
-**And the conditioning parameters belong in the report.** Two analysts running
+And the conditioning parameters belong in the report. Two analysts running
 the same function on the same file, one with a depth cap and one without, get a
 lake and no lake. Neither is warned.
 
-## Flow routing, and a maximum in the wrong place
+## Flow Routing
 
 ```{r routing}
 wbt_d8_pointer(dem = "breached.tif", output = "d8.tif", wd = wd,
@@ -447,7 +447,7 @@ lmax <- lake_acc
 ```
 
 The largest flow accumulation in the grid is
-`r format(gmax, big.mark = ",")` cells, and it is **not in the lake**. It belongs
+`r format(gmax, big.mark = ",")` cells, and it is not in the lake. It belongs
 to a neighbouring catchment draining off the edge of the raster. Chilwa's own
 convergence peaks at `r format(lmax, big.mark = ",")` cells.
 
@@ -459,7 +459,7 @@ which case you are in. The check is two lines and almost nobody writes them.
 Multiplying either figure by a nominal hectare per cell would then compound the
 error by the `r cs_err` per cent established earlier.
 
-## Stage and area
+## Stage and Area
 
 Return to the opening calculation with everything the chapter has established.
 
@@ -497,7 +497,7 @@ maximum to within a couple of per cent, which is a useful anchor for a rating
 curve and a poor substitute for a gauge.
 
 ::: callout-tip
-## Verification track: accepting an inundated area
+## Inundation Requirements
 
 A wetland methodology asks for an inundated area, usually as an annual figure or
 a class transition. Four questions decide whether the figure can be accepted.
@@ -518,7 +518,7 @@ And in what projection was the area computed. A `r cs_err` per cent error is
 available for free to anyone who counts cells on a Mercator grid.
 :::
 
-## Which soil, and therefore which method
+## Soil Classification
 
 An inundated area is worth knowing because of what lies under it. This section
 is about the three global layers a Tier 1 estimate stratifies on, where each of
@@ -526,7 +526,7 @@ them comes from, and why one binary inside the soil layer changes the method
 rather than the number.
 
 ::: callout-tip
-## Verification track: this whole section
+## Wetland Methodologies
 
 Everything from here to the conclusions rests on the IPCC Guidelines and their
 2013 Wetlands Supplement, so it is registry material rather than method. A
@@ -539,26 +539,26 @@ decides which method applies rather than only which number is reported. Whether 
 moves to the appendix is an open decision, recorded at the foot of this chapter.
 :::
 
-### The binary that decides everything
+### Organic Soils
 
 The IPCC divides every soil in the world into two classes and gives them
 different accounting.
 
-An **organic soil**, meaning a peat or Histosol, is defined by the 2006
+An organic soil, meaning a peat or Histosol, is defined by the 2006
 Guidelines after FAO. The organic horizon must be at least ten centimetres
 thick; a horizon under twenty centimetres must hold twelve per cent or more
 organic carbon when mixed to twenty centimetres; a soil never saturated for more
 than a few days must exceed twenty per cent organic carbon by weight. Everything
-that is not an organic soil is a **mineral soil**.
+that is not an organic soil is a mineral soil.
 
 That single classification changes the method.
 
 | | Organic soil | Mineral soil |
 |---|---|---|
-| Method | Area-based annual **emission factor** | **Stock change** against a reference |
-| Quantity | Tonnes per hectare **per year** | Tonnes per hectare, differenced over a period |
+| Method | Area-based annual emission factor | Stock change against a reference |
+| Quantity | Tonnes per hectare per year | Tonnes per hectare, differenced over a period |
 | Reference needed | None | Reference stock, plus land use, management and input factors |
-| Default period | None. At Tier 1 there is **no transition period** | Twenty years by default |
+| Default period | None. At Tier 1 there is no transition period | Twenty years by default |
 | Recently against long drained | Tier 1 does not distinguish them | Tier 1 does not distinguish them |
 
 The consequence is that the two are not comparable and cannot be summed
@@ -571,12 +571,12 @@ organic soil is always a *drained* organic soil, whatever anyone did or did not
 do to it. Drainage is not established by evidence of ditching. It is inferred
 from the soil being dry.
 
-### The gases are not the same either
+### Greenhouse Gases
 
 Drained organic soils emit carbon dioxide, and the Wetlands Supplement gives
 Tier 1 factors for it in Table 2.1. They also emit methane, which the 2006
 Guidelines had assumed negligible, and the Supplement gives that in Table 2.3
-for the land and separately in Table 2.4 **for the drainage ditches**, which are
+for the land and separately in Table 2.4 for the drainage ditches, which are
 a small fraction of the area and a large fraction of the methane. Nitrous oxide
 comes from the nitrogen in the organic matter and from any fertiliser. And
 carbon leaves in the water as dissolved organic carbon, which the Supplement
@@ -593,7 +593,7 @@ where the wetland receives agricultural run-off or sewage**. Saline inland
 wetlands, the playas and pans and sabkhas, get no factors at all, because the
 Supplement records that the literature cannot support them.
 
-### The one number that matters most, and its interval
+### Emission Factors
 
 ```{r ipcc-defaults}
 # IPCC 2013 Wetlands Supplement, Table 2.1, transcribed from
@@ -618,7 +618,7 @@ temp <- tier1[tier1$zone == "Temperate", ]
 
 The tropical factor is `r trop$ef_tCO2C_ha_yr` tonnes of carbon dioxide carbon
 per hectare per year, and its ninety-five per cent interval runs from
-`r trop$ci_low` to `r trop$ci_high`. **It spans zero.** On `r trop$sites` sites,
+`r trop$ci_low` to `r trop$ci_high`. It spans zero. On `r trop$sites` sites,
 the published Tier 1 default cannot establish whether a tropical drained organic
 forest soil is emitting or removing.
 
@@ -628,7 +628,7 @@ than sixty sites each. The width of a confidence interval here is telling you
 about the spread of the underlying sites, not about how much evidence there is,
 and the two are easy to confuse.
 
-### Three layers stand behind every default
+### Stratification Layers
 
 A Tier 1 estimate is a lookup, and the lookup cannot start until three questions
 have been answered for the ground in front of you. Which climate region it sits
@@ -707,7 +707,7 @@ plot(soil, mar = c(2, 2, 1, 10), plg = list(cex = 0.65), axes = TRUE)
 points(here_xy[1], here_xy[2], pch = 21, bg = "red", cex = 1.2)
 ```
 
-### What the three layers say about this basin
+### Basin Stratification
 
 ```{r strata-here}
 here <- vect(st_transform(basin, 4326))
@@ -772,7 +772,7 @@ chapter measured on the west and south are far below what that grid can carry. A
 compiler has to pick one layer, and the version a verifier can accept is the one
 written down with its reason.
 
-### What the soil layer cannot settle
+### Survey Scale
 
 The seven IPCC soil classes include wetland and organic, and the layer puts
 neither of them anywhere in this basin. The committed Chilwa window holds the
@@ -804,7 +804,7 @@ three times is the expected outcome rather than a surprise.
 So the organic-or-mineral binary, the one that decides whether the emission
 factors above apply at all, has to be answered from something finer.
 
-**Globally**, the reference soil group probabilities from SoilGrids give a
+Globally, the reference soil group probabilities from SoilGrids give a
 Histosol layer at 250 metres, and they answer the question directly. The layer
 below was fetched from the ISRIC coverage service over this basin and is
 committed with the book.
@@ -832,7 +832,7 @@ Across the whole Chilwa basin the highest Histosol probability anywhere is
 layers, one from a soil survey and one from a machine learning model over soil
 profiles, agree.
 
-**Chilwa is not a peatland.** That is a result rather than a disappointment, and
+Chilwa is not a peatland. That is a result rather than a disappointment, and
 it settles the method. The organic soil apparatus above, Table 2.1 and its
 methane companions, does not apply here. What applies is Chapter 5 of the
 Supplement, on inland wetland mineral soils, which covers riparian wetlands,
@@ -844,7 +844,7 @@ Anyone who had reached for the tropical drained organic soil factor of
 the word would have applied a rate to a soil that has no such rate, and would
 have done it on a factor whose sign is unresolved.
 
-**At country level** the global layers are a screening tool and not the answer.
+At country level the global layers are a screening tool and not the answer.
 National soil surveys, and in many countries a national wetland or peatland
 inventory, carry the mapping the inventory compiler is expected to use, and
 their class boundaries will not match either layer above. The global layer tells
@@ -907,7 +907,7 @@ between an inundated area a verifier can accept and one they cannot.
 ::: callout-note
 ## Open decisions
 
-**Does the soil section stay in the main text?** It runs from "Which soil, and
+Does the soil section stay in the main text? It runs from "Which soil, and
 therefore which method" to the conclusions, rests entirely on the IPCC
 Guidelines and the 2013 Wetlands Supplement, and the accepted proposal commits
 that the main narrative can be read straight through without reference to any
@@ -915,18 +915,18 @@ crediting standard. It is marked as a track at its head rather than moved,
 because moving 150 lines and a table into the appendix is a decision about the
 book rather than about this chapter.
 
-**The data script contradicts itself** and must be corrected.
+The data script contradicts itself and must be corrected.
 `data-raw/prepare-chilwa-data.R` asserts the one-cell-one-hectare identity in
 one paragraph and refutes it two paragraphs later. The measurement in this
 chapter settles it at `r cs_err` per cent.
 
-**No vertical accuracy is available for this surface.** The chapter states the
+No vertical accuracy is available for this surface. The chapter states the
 precision, which is measurable, and says plainly that no accuracy figure exists.
 If a published assessment of the AWS Terrain Tiles mosaic over southern Africa
 can be found, section two should cite it and the conclusions should be
 rewritten around it.
 
-**The stage-area anchor is not a validation** and the draft says so. Whether a
+The stage-area anchor is not a validation and the draft says so. Whether a
 gauge record for Chilwa can be obtained is worth an hour. If it can, the rating
 curve becomes a real one and this chapter gains its strongest number.
 :::

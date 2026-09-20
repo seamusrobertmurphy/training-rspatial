@@ -1,5 +1,5 @@
 ---
-title: "Time Series"
+title: "Building a spatio-temporal data cube from optical records: phenological aliasing and the drifting acquisition date"
 aliases:
   - 08-time-series.html
 execute:

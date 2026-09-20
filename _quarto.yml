@@ -25,20 +25,20 @@ book:
 
   chapters:
     - index.qmd
-    - positional-accuracy.qmd
-    - reflectance.qmd
-    - airborne-laser.qmd
-    - terrain-conditioning.qmd
-    - plot-design.qmd
+    - 01-positional-accuracy.qmd
+    - 02-reflectance.qmd
+    - 04-airborne-laser.qmd
+    - 05-terrain-conditioning.qmd
+    - 06-plot-design.qmd
     - 07-allometry.qmd
-    - calibration-validation.qmd
-    - 09-activity-data.qmd
-    - 06-disturbance-risk.qmd
+    - 09-calibration-validation.qmd
+    - 11-disturbance-risk.qmd
     - 12-time-series.qmd
     - 13-spatial-patterns.qmd
-    - 08-emission-factors.qmd
-    - 10-baseline-modelling.qmd
-    - 11-uncertainty.qmd
+    - 15-activity-data.qmd
+    - 16-emission-factors.qmd
+    - 17-baseline-modelling.qmd
+    - 18-uncertainty.qmd
 
   appendices:
     - A1-primers.qmd

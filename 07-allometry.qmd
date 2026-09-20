@@ -1,5 +1,5 @@
 ---
-title: "Allometry and Biomass"
+title: "Selecting an allometric equation and how model choice propagates into a reported carbon stock"
 aliases:
   - allometry.html
 execute:

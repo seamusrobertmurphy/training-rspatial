@@ -1,5 +1,5 @@
 ---
-title: "Reading Reflectance, and What an Index Can Support"
+title: "Reading surface reflectance with Sentinel-2 data: what a spectral index can and cannot support"
 subtitle: "Chapter 2 redraft, 6 September 2026"
 execute:
   eval: true
@@ -9,7 +9,7 @@ execute:
 ---
 
 ::: callout-note
-## Revision
+## Scope
 
 Revised 6 September 2026 against the proposal Elsevier accepted, in step with
 the opening chapter.
@@ -50,7 +50,7 @@ class <- project(lulc, clear, method = "near")
 names(class) <- "class"
 ```
 ::: callout-important
-## What these classes are
+## Class Definitions
 
 The satellite imagery in this chapter is real. Two Sentinel-2 surface reflectance
 scenes over the same 24 kilometre window in Rondonia, ten bands each, on 16 July
@@ -118,7 +118,7 @@ surface built to prove a point.
 plotRGB(clear[[c("B04", "B03", "B02")]], stretch = "lin",
         main = "Rondonia, 16 July 2022, true colour")
 ```
-## Spectral response
+## Spectral Response
 
 All of optical vegetation monitoring rests on one physical contrast, and the
 contrast is not a convention that could have been chosen differently.
@@ -182,7 +182,7 @@ regenerating stand holds less water than a closed mature one. Hold that
 observation. The section on class separability turns it into the chapter's first
 result.
 
-## Reflectance retrieval
+## Reflectance Retrieval
 
 The files above are Level-2A products, which means an atmospheric correction has
 already run on them. It is worth knowing what it corrected and what it did not.
@@ -243,7 +243,7 @@ lesson is that a processing convention changed on a stated date, so any time
 series crossing that date without accounting for it carries a step that looks
 exactly like an event.
 
-## Band support
+## Band Support
 
 The opening chapter asked what a point, a line and a polygon are, and which
 surface the arithmetic happens on. Asked of a sensor, the same question becomes what area of
@@ -341,7 +341,7 @@ the typical disagreement in a pure one.
 Which order is correct depends on what the number is for. Whether it matters is
 settled. It matters most exactly where you are most likely to be looking.
 
-## Index construction
+## Index Construction
 
 A spectral index compresses several bands into one number. The normalised
 difference is the standard form,
@@ -391,7 +391,7 @@ burn ratio keep pulling the clearings away from the forest long after the
 vegetation index has stopped. That is not a trick of the display. It is the next
 section's result.
 
-## Class separability
+## Class Separability
 
 Take the two classes a deforestation project has to tell apart and ask whether
 an index can do it. Intact forest and clear cut with regrowth are, respectively,
@@ -476,7 +476,7 @@ None of this argues against the vegetation index. It argues for choosing a band
 pair by the physics of the difference you are trying to see, which is a
 decision, and for reporting which one you chose, which almost nobody does.
 
-## Atmospheric sensitivity
+## Atmospheric Sensitivity
 
 Now the second date. On 2 September 2022 the same ground lay under smoke from
 biomass burning, which is an ordinary condition in Rondonia in September and not
@@ -571,7 +571,7 @@ condition on the value in the same way the cell size is. The number describes th
 ground and the column of air above it, and the retrieval is the attempt to tell
 those two apart.
 
-## Disturbance signatures
+## Disturbance Signatures
 
 Two disturbances dominate the forest carbon landscapes this book is about, and
 both were mapped with the indices computed above long before anyone modelled
@@ -585,7 +585,7 @@ tested both disturbances against field plots on the same ground. Their tables
 are quoted rather than paraphrased, because the useful part is in the per-class
 numbers rather than in the headline.
 
-### Insect attack
+### Insect Attack
 
 Mountain pine beetle, *Dendroctonus ponderosae* Hopkins, kills lodgepole pine by
 tunnelling into the layer of living tissue just under the bark, and the crown
@@ -625,7 +625,7 @@ That is a good result, and the fire section below shows what a good headline
 figure can still hide.
 
 ::: callout-tip
-## Verification track: what one in five costs
+## Omission Cost
 
 One cell in five is fine for mapping where an outbreak is. It is not fine for a
 project claiming payment on the difference between two years. A twenty per cent
@@ -680,7 +680,7 @@ sensor's support, not to the ecology. That is the correct decision, it is almost
 never written down, and a reader who understands why it was taken has understood
 most of what this book is about.
 
-### Where this leads
+### Forward Linkage
 
 A disturbance is not only a patch on a map. It is an event in a system that has
 states, and the interesting question about a beetle outbreak or a fire regime is

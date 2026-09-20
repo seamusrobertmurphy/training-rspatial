@@ -1,5 +1,5 @@
 ---
-title: "Activity Data"
+title: "Estimating activity data from a probability sample where the classified map is a stratifier"
 aliases:
   - activity-data.html
 execute:
