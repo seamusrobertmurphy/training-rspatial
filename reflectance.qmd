@@ -35,17 +35,17 @@ library(terra)
 
 # Two dates over the same ground, ten Sentinel-2 Level-2A bands each, stored as
 # signed integers scaled by 10,000. The division recovers reflectance.
-clear <- rast("../data/rondonia_s2_2022-07-16.tif") / 1e4
-smoke <- rast("../data/rondonia_s2_2022-09-02.tif") / 1e4
+clear <- rast("data/rondonia_s2_2022-07-16.tif") / 1e4
+smoke <- rast("data/rondonia_s2_2022-09-02.tif") / 1e4
 
-legend <- read.csv("../data/rondonia_legend.csv")
-bands  <- read.csv("../data/sentinel2_bands.csv")
+legend <- read.csv("data/rondonia_legend.csv")
+bands  <- read.csv("data/sentinel2_bands.csv")
 
 # The published nine-class map, projected onto the tile grid. It is stored in
 # EPSG:3857 at about 20.26 m and the scene is in EPSG:32720 at 20 m, so a
 # resampling happens here whether or not anyone writes it down. Nearest
 # neighbour, because the values are labels and a label has no mean.
-lulc  <- rast("../data/rondonia_class_2022.tif")
+lulc  <- rast("data/rondonia_class_2022.tif")
 class <- project(lulc, clear, method = "near")
 names(class) <- "class"
 ```
@@ -215,7 +215,7 @@ is read, never assumed. Code written before 2022 and run afterwards subtracts
 nothing, and the consequence is not subtle.
 
 ```{r offset}
-dn <- rast("../data/rondonia_s2_2022-07-16.tif")
+dn <- rast("data/rondonia_s2_2022-07-16.tif")
 
 nd <- function(r, a, b) (r[[a]] - r[[b]]) / (r[[a]] + r[[b]])
 forest_only <- function(r) mask(r, class == 4, maskvalues = FALSE)

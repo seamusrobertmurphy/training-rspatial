@@ -106,3 +106,6 @@ data/chilwa-hydro/
 # 96 MB (FAO GEZ 2010 shapefile) and are re-fetched by
 # data-raw/prepare-ipcc-strata.R; only the small derived layers are committed.
 data-raw/cache/
+
+# Third-party clones and prior engagement material, see publishing/research-integration-blueprint.md
+research/

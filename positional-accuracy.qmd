@@ -39,14 +39,14 @@ local grid that starts at zero in one corner. Somebody walked it, tagged it, and
 wrote down where each stem stood.
 
 ```{r first-look}
-stems <- read.csv("../data/scbi_stems.csv") |>
+stems <- read.csv("data/scbi_stems.csv") |>
   st_as_sf(coords = c("lon", "lat"), crs = 4326)
 
 st_crs(stems)$epsg
 st_bbox(stems)
 ```
 ```{r plot-facts, echo=FALSE}
-raw <- read.csv("../data/scbi_stems.csv")
+raw <- read.csv("data/scbi_stems.csv")
 n_stems <- nrow(raw)
 n_spp   <- length(unique(raw$species))
 w_m     <- diff(range(raw$gx, na.rm = TRUE))

@@ -1,0 +1,257 @@
+---
+title: "Fitting Basal Area to Laser Height, and the Validation That Catches It"
+subtitle: "Chapter 9 draft, 20 September 2026"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+::: callout-note
+## Draft
+
+Drafted 20 September 2026 on two public pairings of field plots with airborne
+laser scanning, the Smithsonian Conservation Biology Institute census under
+United States Geological Survey lidar, and the Quebec permanent sample plot
+network under the province's open lidar. Both are committed to this repository
+and need no network. Every number in the prose is computed by a chunk on this
+page. The chapter begins where the plot design chapter ended, with a plot network
+already designed and measured, and it ends at a fitted model and the evidence that the
+model is worth trusting. Converting a diameter into mass belongs to the
+allometry chapter and the error budget belongs to the chapter after it.
+:::
+
+```{r setup}
+library(ranger)
+library(blockCV)
+library(CAST)
+library(sf)
+library(terra)
+library(ggplot2)
+
+set.seed(2026)
+
+scbi <- read.csv("data/scbi_lidar_plots.csv")
+chm <- rast("data/scbi_chm_2020.tif")
+
+predictors <- c("h_mean", "h_max", "h_p95", "h_sd", "cover")
+form <- as.formula(paste("ba_ha ~", paste(predictors, collapse = " + ")))
+
+rmse <- function(observed, predicted) sqrt(mean((observed - predicted)^2))
+```
+
+## A flight in December over a leafless forest
+
+The Smithsonian Conservation Biology Institute plot in Front Royal, Virginia,
+carries the census the plot design chapter sampled, and the United States Geological
+Survey flew lidar over the same ground for the VA_NShenandoah_1_2020 project.
+The flight ran on 9 and 10 December 2020, which the point cloud records in its
+own timestamps, and the forest is deciduous, so the laser met bare branches
+rather than leaves. The census nearest that flight was measured in 2018.
+
+Each of the census's own 20 by 20 metre quadrats is a field plot here, because
+that is the support the crew worked at and the support the plot design chapter
+handed forward.
+For every quadrat the chapter has the basal area of the stems standing in it and
+five metrics summarising the laser returns above it.
+
+```{r scbi-summary}
+n_quadrats <- nrow(scbi)
+ba_mean <- mean(scbi$ba_ha)
+ba_sd <- sd(scbi$ba_ha)
+ba_cv <- 100 * ba_sd / ba_mean
+h_range <- range(scbi$h_p95)
+r_p95 <- cor(scbi$ba_ha, scbi$h_p95)
+```
+
+The `r n_quadrats` quadrats held a mean basal area of `r round(ba_mean, 1)`
+square metres per hectare with a standard deviation of `r round(ba_sd, 1)`, a
+coefficient of variation of `r round(ba_cv, 1)` per cent. The 95th percentile of
+canopy height ran from `r round(h_range[1], 1)` to `r round(h_range[2], 1)`
+metres. Its correlation with basal area was `r round(r_p95, 2)`.
+
+```{r scbi-scatter}
+#| fig-cap: "Basal area against the 95th percentile of canopy height on 640 census quadrats at the Smithsonian plot, with the fitted line."
+ggplot(scbi, aes(h_p95, ba_ha)) +
+  geom_point(alpha = 0.4, size = 1) +
+  geom_smooth(method = "lm", se = FALSE, colour = "firebrick") +
+  labs(x = "95th percentile of canopy height (m)",
+       y = expression("Basal area (" * m^2 * " " * ha^-1 * ")")) +
+  theme_minimal(base_size = 11)
+```
+
+## The model that scores itself
+
+A model fitted on every quadrat and then asked to predict those same quadrats
+reports the error it made on ground it has already seen.
+
+```{r scbi-insample}
+rf_all <- ranger(form, data = scbi, num.trees = 500, seed = 2026)
+in_sample <- rmse(scbi$ba_ha, predict(rf_all, scbi)$predictions)
+```
+
+```{r scbi-randomcv}
+folds <- sample(rep(1:10, length.out = nrow(scbi)))
+pred_rf <- numeric(nrow(scbi))
+pred_lm <- numeric(nrow(scbi))
+
+for (k in 1:10) {
+  train <- scbi[folds != k, ]
+  test <- scbi[folds == k, ]
+  pred_rf[folds == k] <- predict(ranger(form, train, num.trees = 500,
+                                        seed = 2026), test)$predictions
+  pred_lm[folds == k] <- predict(lm(form, train), test)
+}
+
+rmse_rf <- rmse(scbi$ba_ha, pred_rf)
+rmse_lm <- rmse(scbi$ba_ha, pred_lm)
+r2_rf <- 1 - rmse_rf^2 / var(scbi$ba_ha)
+r2_lm <- 1 - rmse_lm^2 / var(scbi$ba_ha)
+```
+
+The random forest scored on its own training data reported a root mean square
+error of `r round(in_sample, 2)` square metres per hectare. Held out of the
+fitting in ten random folds, the same model reported `r round(rmse_rf, 2)`, so
+the in-sample figure flattered it by a factor of
+`r round(rmse_rf / in_sample, 1)`. The linear model reported
+`r round(rmse_lm, 2)` against a standard deviation of `r round(ba_sd, 2)`, which
+is what predicting the mean of the plots would have cost, so the explained
+variance was `r round(r2_lm, 3)` for the linear model and
+`r round(r2_rf, 3)` for the random forest.
+
+Neither model has any skill, and the reason is in the flight date rather than in
+the fitting. A December flight over a deciduous forest measures branches, so
+canopy cover ran from `r round(min(scbi$cover), 2)` to
+`r round(max(scbi$cover), 2)` where a closed summer canopy would sit near one,
+and a height metric taken through leafless crowns carries little of the stem
+packing that basal area counts.
+
+The gap between `r round(in_sample, 2)` and `r round(rmse_rf, 2)` is the one a
+reader is most likely to reproduce by accident, because the commonest way to
+produce it is a single argument. Several widely used prediction functions take
+new data through an argument named `newdata`, and passing it as `data` instead
+leaves the argument unread, so the function returns the fitted values and the
+reported test error is a training error wearing the name of a test.
+
+## Folds that know the answer
+
+Random folds scatter the held-out quadrats through the plot, so almost every
+test quadrat has a neighbour in the training set twenty metres away. Blocked
+folds hold out whole patches of ground instead, and nearest neighbour distance
+matching chooses folds so that the distances from test quadrat to training data
+resemble the distances a real prediction would face.
+
+```{r scbi-spatialcv}
+scbi_sf <- st_as_sf(scbi, coords = c("x", "y"), crs = 32617, remove = FALSE)
+
+blocks <- cv_spatial(x = scbi_sf, size = 100, k = 10, selection = "random",
+                     iteration = 20, progress = FALSE, report = FALSE,
+                     plot = FALSE, seed = 2026)
+
+cv_predict <- function(fold_id) {
+  pred <- numeric(nrow(scbi))
+  for (k in sort(unique(fold_id))) {
+    train <- scbi[fold_id != k, ]
+    test_rows <- fold_id == k
+    pred[test_rows] <- predict(ranger(form, train, num.trees = 500,
+                                      seed = 2026), scbi[test_rows, ])$predictions
+  }
+  pred
+}
+
+block_id <- blocks$folds_ids
+rmse_block <- rmse(scbi$ba_ha, cv_predict(block_id))
+```
+
+Blocked folds returned a root mean square error of `r round(rmse_block, 2)`
+square metres per hectare against the `r round(rmse_rf, 2)` the random folds
+returned, a difference of
+`r round(100 * (rmse_block - rmse_rf) / rmse_rf, 1)` per cent. The gap is small
+here, and that is the expected result rather than a reassuring one, because a
+model with no skill has no borrowed neighbourhood information to lose. The
+blocked estimate is the honest one in both cases, and the next section shows
+what the two disagree by when a model does have something to lose.
+
+## The ground a model was never shown
+
+A fitted model will return a number for every cell it is handed, including cells
+whose predictors sit outside anything it was trained on. The area of
+applicability marks the ground where the model's cross-validated error still
+describes what it is doing, by measuring how far each cell sits from the
+training data in the space of the predictors, weighted by how much the model
+leans on each one.
+
+```{r scbi-aoa}
+metrics <- c(aggregate(chm, 20, mean, na.rm = TRUE),
+             aggregate(chm, 20, max, na.rm = TRUE),
+             aggregate(chm, 20, function(x, ...) quantile(x, 0.95, na.rm = TRUE)),
+             aggregate(chm, 20, sd, na.rm = TRUE),
+             aggregate(chm > 2, 20, mean, na.rm = TRUE))
+names(metrics) <- predictors
+
+library(caret)
+clustered <- scbi[scbi$qx < 160 & scbi$qy < 240, ]
+
+set.seed(2026)
+fit_corner <- train(clustered[, predictors], clustered$ba_ha, method = "rf",
+                    importance = TRUE, ntree = 200,
+                    trControl = trainControl(method = "cv", number = 5))
+set.seed(2026)
+fit_all <- train(scbi[, predictors], scbi$ba_ha, method = "rf",
+                 importance = TRUE, ntree = 200,
+                 trControl = trainControl(method = "cv", number = 5))
+
+aoa_corner <- aoa(metrics, fit_corner, verbose = FALSE)
+aoa_all <- aoa(metrics, fit_all, verbose = FALSE)
+
+inside <- function(x) 100 * global(x$AOA, "mean", na.rm = TRUE)[[1]]
+```
+
+Building the five metrics as layers rather than as columns uses `c()` on the
+aggregated rasters and names them afterwards, because naming them inside the
+call returns a list of rasters rather than one raster with five layers, and the
+difference only surfaces later when something asks how many layers there are.
+
+Trained on the `r nrow(clustered)` quadrats in one corner of the plot, the model
+covered `r round(inside(aoa_corner), 1)` per cent of the same plot. Trained on
+all `r n_quadrats`, it covered `r round(inside(aoa_all), 1)` per cent. The
+predictors here are five summaries of one canopy over 25 hectares of continuous
+forest, which is about as uniform as a prediction problem gets, and
+`r round(100 - inside(aoa_corner), 1)` per cent of it still sat outside the
+reach of a model fitted in one corner of it.
+
+::: callout-tip
+## Verification track: the gate a registry sets
+
+Skip this box and the chapter still works. It applies the accuracy test a
+crediting standard would run against these validation plots.
+
+The American Carbon Registry's Framework for Remotely Sensed Quantification of
+Forest Carbon, version 1.0 of 27 March 2026, declares a predictive model to be
+in statistical agreement with its validation plots when two conditions hold at
+once. Equation 4 puts the root mean square error over the mean density and
+requires the result to be less than 20 per cent. Equation 5 turns the same root
+mean square error into a 90 per cent confidence interval by dividing by the
+square root of the plot count and multiplying by 1.645, and Equation 6 puts that
+over the mean density and requires 10 per cent or less.
+
+```{r acr-gate}
+unc_rmse <- 100 * rmse_block / ba_mean
+ci_pct <- 100 * (rmse_block / sqrt(n_quadrats)) * 1.645 / ba_mean
+
+n_seq <- 2:60
+forced <- min(n_seq[20 * 1.645 / sqrt(n_seq) <= 10])
+```
+
+Measured on the blocked cross-validation, the first test returned
+`r round(unc_rmse, 1)` per cent against a limit of 20, so the model fails. The
+second returned `r round(ci_pct, 2)` per cent against a limit of 10, so it
+passes comfortably, and it passes for a reason that has nothing to do with the
+model. Dividing by the square root of the plot count means that any model
+sitting just inside the first test satisfies the second as soon as there are
+`r forced` validation plots, since 20 per cent times 1.645 over the square root
+of `r forced` is `r round(20 * 1.645 / sqrt(forced), 2)` per cent. Above that
+count the two tests are not two tests. The first does all the work and the
+second records how many plots were installed.
+:::

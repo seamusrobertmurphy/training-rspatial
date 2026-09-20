@@ -25,19 +25,20 @@ book:
 
   chapters:
     - index.qmd
-    - 01-getting-started.qmd
-    - 02-vector-data.qmd
-    - 03-raster-data.qmd
-    - 04-terrain-hydrology.qmd
-    - 05-lidar-point-clouds.qmd
-    - 06-disturbance-risk.qmd
+    - positional-accuracy.qmd
+    - reflectance.qmd
+    - airborne-laser.qmd
+    - terrain-conditioning.qmd
+    - plot-design.qmd
     - 07-allometry.qmd
-    - 08-emission-factors.qmd
+    - calibration-validation.qmd
     - 09-activity-data.qmd
-    - 10-baseline-modelling.qmd
-    - 11-uncertainty.qmd
+    - 06-disturbance-risk.qmd
     - 12-time-series.qmd
     - 13-spatial-patterns.qmd
+    - 08-emission-factors.qmd
+    - 10-baseline-modelling.qmd
+    - 11-uncertainty.qmd
 
   appendices:
     - A1-primers.qmd

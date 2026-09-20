@@ -26,7 +26,7 @@ library(ggplot2)
 
 set.seed(2026)
 
-stems <- read.csv("../data/scbi_stems.csv")
+stems <- read.csv("data/scbi_stems.csv")
 stems$ba <- pi * (stems$dbh / 200)^2   # basal area in square metres, dbh in cm
 
 W <- 400      # plot width in metres, along the census grid

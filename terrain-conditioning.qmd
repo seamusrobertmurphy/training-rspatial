@@ -34,10 +34,10 @@ library(whitebox)
 
 sf_use_s2(FALSE)
 
-dem    <- rast("../data/chilwa_dem.tif")
-lake   <- st_read("../data/chilwa_hydro.gpkg", layer = "lake",   quiet = TRUE)
-basin  <- st_read("../data/chilwa_hydro.gpkg", layer = "basin",  quiet = TRUE)
-rivers <- st_read("../data/chilwa_hydro.gpkg", layer = "rivers", quiet = TRUE)
+dem    <- rast("data/chilwa_dem.tif")
+lake   <- st_read("data/chilwa_hydro.gpkg", layer = "lake",   quiet = TRUE)
+basin  <- st_read("data/chilwa_hydro.gpkg", layer = "basin",  quiet = TRUE)
+rivers <- st_read("data/chilwa_hydro.gpkg", layer = "rivers", quiet = TRUE)
 ```
 
 ## One metre
@@ -220,9 +220,9 @@ routing algorithm entering one has nowhere to send the water, and the drainage
 network fragments.
 
 ```{r sinks}
-dir.create("../data/chilwa-hydro", showWarnings = FALSE)
-wd <- "../data/chilwa-hydro/"
-file.copy("../data/chilwa_dem.tif", paste0(wd, "dem.tif"), overwrite = TRUE)
+dir.create("data/chilwa-hydro", showWarnings = FALSE)
+wd <- "data/chilwa-hydro/"
+file.copy("data/chilwa_dem.tif", paste0(wd, "dem.tif"), overwrite = TRUE)
 
 wbt_depth_in_sink(dem = "dem.tif", output = "sink_depth.tif",
                   wd = wd, zero_background = TRUE, verbose_mode = FALSE)
@@ -643,9 +643,9 @@ this book at a size it can carry. `data-raw/prepare-ipcc-strata.R` records what
 each one is, what licence it carries and what was done to it.
 
 ```{r strata}
-climate <- rast("../data/ipcc_climate_zones.tif")
-ecozone <- rast("../data/fao_gez_2010.tif")
-soil    <- rast("../data/ipcc_soil_classes.tif")
+climate <- rast("data/ipcc_climate_zones.tif")
+ecozone <- rast("data/fao_gez_2010.tif")
+soil    <- rast("data/ipcc_soil_classes.tif")
 
 lyr <- list(climate, ecozone, soil)
 data.frame(
@@ -780,7 +780,7 @@ same data at the full 30 arc-seconds, which is the resolution the coarsening
 threw away.
 
 ```{r soil-fine}
-fine <- rast("../data/chilwa_ipcc_soil.tif")
+fine <- rast("data/chilwa_ipcc_soil.tif")
 f <- extract(fine, here)[[2]]; f <- f[!is.na(f)]
 
 round(100 * sort(table(f), decreasing = TRUE)[1:4] / length(f), 1)
@@ -810,7 +810,7 @@ below was fetched from the ISRIC coverage service over this basin and is
 committed with the book.
 
 ```{r histosol}
-histosol <- rast("../data/chilwa_histosol_pct.tif")
+histosol <- rast("data/chilwa_histosol_pct.tif")
 names(histosol) <- "histosol_pct"
 
 hb <- mask(crop(histosol, vect(st_transform(basin, crs(histosol)))),

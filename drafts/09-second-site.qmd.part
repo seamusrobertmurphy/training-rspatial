@@ -1,0 +1,62 @@
+
+## A second forest, and a laser that met leaves
+
+Nothing above separates a failed calibration from a failed method, because one
+site cannot. The second pairing is Quebec's permanent sample plot network under
+the province's open lidar, where the plots are 400 square metre circles, the
+canopy height models are published by map sheet, and every acquisition carries
+the year it was flown. Plots were kept only where the field measurement and the
+flight fall within two years of each other.
+
+```{r qc-load}
+qc <- read.csv("../data/qc_lidar_plots.csv")
+
+qc_n <- nrow(qc)
+qc_sheets <- length(unique(qc$feuillet))
+qc_gap <- mean(qc$gap)
+qc_r <- cor(qc$ba_ha, qc$h_p95)
+qc_ba <- mean(qc$ba_ha)
+```
+
+The sample held `r qc_n` plots across `r qc_sheets` map sheets, with a mean gap
+of `r round(qc_gap, 1)` years between the field visit and the flight, a mean
+basal area of `r round(qc_ba, 1)` square metres per hectare, and a correlation
+between basal area and the 95th height percentile of `r round(qc_r, 2)`.
+
+```{r qc-cv}
+qc_form <- as.formula(paste("ba_ha ~", paste(predictors, collapse = " + ")))
+
+set.seed(2026)
+qc_folds <- sample(rep(1:10, length.out = nrow(qc)))
+qc_pred <- numeric(nrow(qc))
+for (k in 1:10) {
+  qc_pred[qc_folds == k] <- predict(
+    ranger(qc_form, qc[qc_folds != k, ], num.trees = 500, seed = 2026),
+    qc[qc_folds == k, ])$predictions
+}
+qc_rmse_random <- rmse(qc$ba_ha, qc_pred)
+qc_r2 <- 1 - qc_rmse_random^2 / var(qc$ba_ha)
+
+qc_sf <- st_as_sf(qc, coords = c("x", "y"), crs = 32198, remove = FALSE)
+qc_knndm <- knndm(qc_sf, k = 10, clustering = "kmeans")
+
+qc_pred_sp <- numeric(nrow(qc))
+for (k in seq_along(qc_knndm$indx_test)) {
+  test_rows <- qc_knndm$indx_test[[k]]
+  train_rows <- qc_knndm$indx_train[[k]]
+  qc_pred_sp[test_rows] <- predict(
+    ranger(qc_form, qc[train_rows, ], num.trees = 500, seed = 2026),
+    qc[test_rows, ])$predictions
+}
+qc_rmse_spatial <- rmse(qc$ba_ha, qc_pred_sp)
+
+qc_unc_rmse <- 100 * qc_rmse_spatial / qc_ba
+qc_ci <- 100 * (qc_rmse_spatial / sqrt(qc_n)) * 1.645 / qc_ba
+```
+
+Random folds returned a root mean square error of
+`r round(qc_rmse_random, 2)` square metres per hectare, an explained variance of
+`r round(qc_r2, 3)`. Folds chosen by nearest neighbour distance matching, which
+spaces the held-out plots so that the distances they face resemble the distances
+a real prediction faces, returned `r round(qc_rmse_spatial, 2)`, a difference of
+`r round(100 * (qc_rmse_spatial - qc_rmse_random) / qc_rmse_random, 1)` per cent.
