@@ -19,7 +19,7 @@ At the 6 September revision 11 of the then seventeen chapters were drafted and 1
 
 *Applications of lidar, radar and optical data*
 
-## 1. Identification and correction of positional error in forest carbon project boundaries
+## 1. Identification and correction of positional error in forest carbon project boundaries and points
 
 *Source ready. Owes the spine, Geometry. Which plane the arithmetic ran on.*
 
@@ -111,7 +111,7 @@ Sections not yet drafted. Planned scope. Synthetic aperture radar, polarisation,
 
 *Measuring trees and scaling to the stand*
 
-## 6. Designing a field plot network for forest carbon inventory: stratification, sample size and what the next plot buys
+## 6. Designing a field plot network against a complete census: what the next plot buys and what a relocation error destroys
 
 *Source ready. Owes the spine, Support. A plot has it and a stand does not inherit it for free.*
 

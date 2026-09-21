@@ -1,5 +1,5 @@
 ---
-title: "Identification and correction of positional error in forest carbon project boundaries"
+title: "Identification and correction of positional error in forest carbon project boundaries and points"
 subtitle: "Chapter 1, condensed 6 September 2026"
 execute:
   eval: true

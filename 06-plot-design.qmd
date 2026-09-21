@@ -1,5 +1,5 @@
 ---
-title: "Designing a field plot network for forest carbon inventory: stratification, sample size and what the next plot buys"
+title: "Designing a field plot network against a complete census: what the next plot buys and what a relocation error destroys"
 subtitle: "Chapter 6 draft, 8 September 2026"
 execute:
   eval: true
